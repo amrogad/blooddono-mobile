@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { acceptRequest, getRequestDetails } from '../../../services/donationService';
-import { geocodeAddress } from '../../../services/geocodeService';
+import { geocodeHospital } from '../../../services/geocodeService';
 import { useLocation } from '../../../hooks/useLocation';
 import { distanceKm } from '../../../utils/distance';
 
@@ -20,12 +20,25 @@ export default function RequestDetail() {
     enabled: !!id,
   });
 
-  const geoQuery = `${data?.hospital_name ?? ''}, ${data?.full_address ?? ''}, ${data?.recipient_city ?? ''}, ${data?.recipient_governorate ?? ''}`;
-  const { data: hospital } = useQuery({
-    queryKey: ['geocode', geoQuery],
-    queryFn: () => geocodeAddress(geoQuery),
+  const hospitalKey = data
+    ? [data.hospital_name, data.full_address, data.recipient_city, data.recipient_governorate].join('|')
+    : '';
+  const {
+    data: hospital,
+    isFetching: geocoding,
+    error: geoError,
+  } = useQuery({
+    queryKey: ['geocode', hospitalKey],
+    queryFn: () =>
+      geocodeHospital({
+        hospitalName: data!.hospital_name,
+        fullAddress: data!.full_address,
+        city: data!.recipient_city,
+        governorate: data!.recipient_governorate,
+      }),
     enabled: !!data,
     staleTime: 1000 * 60 * 60 * 24,
+    retry: 1,
   });
 
   const accept = useMutation({
@@ -96,10 +109,16 @@ export default function RequestDetail() {
               <Marker coordinate={me} title="You" pinColor="#1e90ff" />
             )}
           </MapView>
-        ) : (
+        ) : geocoding ? (
           <View style={[styles.map, styles.mapPlaceholder]}>
             <ActivityIndicator />
             <Text style={styles.mapPlaceholderText}>Locating hospital…</Text>
+          </View>
+        ) : (
+          <View style={[styles.map, styles.mapPlaceholder]}>
+            <Text style={styles.mapPlaceholderText}>
+              {geoError ? "Couldn't reach the map service." : "Couldn't locate this hospital."}
+            </Text>
           </View>
         )}
         {distance != null && (
