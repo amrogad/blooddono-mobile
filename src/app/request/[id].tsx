@@ -1,18 +1,31 @@
-import { View, Text, Button, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { acceptRequest, getRequestDetails } from '../../../services/donationService';
+import { geocodeAddress } from '../../../services/geocodeService';
+import { useLocation } from '../../../hooks/useLocation';
+import { distanceKm } from '../../../utils/distance';
 
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { coords: me } = useLocation();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
     queryFn: () => getRequestDetails(id!),
     enabled: !!id,
+  });
+
+  const geoQuery = `${data?.hospital_name ?? ''}, ${data?.full_address ?? ''}, ${data?.recipient_city ?? ''}, ${data?.recipient_governorate ?? ''}`;
+  const { data: hospital } = useQuery({
+    queryKey: ['geocode', geoQuery],
+    queryFn: () => geocodeAddress(geoQuery),
+    enabled: !!data,
+    staleTime: 1000 * 60 * 60 * 24,
   });
 
   const accept = useMutation({
@@ -43,9 +56,13 @@ export default function RequestDetail() {
   }
 
   const isOpen = data.donation_status === 'pending';
+  const distance =
+    hospital && me
+      ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude)
+      : null;
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.group}>{data.blood_group}</Text>
       <Text style={styles.name}>{data.recipient_name}</Text>
       <Text style={styles.meta}>
@@ -56,6 +73,39 @@ export default function RequestDetail() {
       <Text style={styles.meta}>
         {data.donation_date} · {data.donation_time.slice(0, 5)}
       </Text>
+
+      <View style={styles.mapWrap}>
+        {hospital ? (
+          <MapView
+            style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            initialRegion={{
+              latitude: hospital.latitude,
+              longitude: hospital.longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+          >
+            <Marker
+              coordinate={hospital}
+              title={data.hospital_name}
+              description={data.full_address}
+              pinColor="#8B0000"
+            />
+            {me && (
+              <Marker coordinate={me} title="You" pinColor="#1e90ff" />
+            )}
+          </MapView>
+        ) : (
+          <View style={[styles.map, styles.mapPlaceholder]}>
+            <ActivityIndicator />
+            <Text style={styles.mapPlaceholderText}>Locating hospital…</Text>
+          </View>
+        )}
+        {distance != null && (
+          <Text style={styles.distance}>{distance.toFixed(1)} km from you</Text>
+        )}
+      </View>
 
       <View style={styles.messageBox}>
         <Text style={styles.messageLabel}>Message</Text>
@@ -74,16 +124,30 @@ export default function RequestDetail() {
           disabled={accept.isPending}
         />
       )}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { flex: 1, padding: 24, gap: 6 },
+  container: { padding: 24, gap: 6 },
   group: { fontSize: 30, fontWeight: 'bold', color: '#8B0000' },
   name: { fontSize: 20, fontWeight: '600', marginBottom: 8 },
   meta: { color: '#555' },
+  mapWrap: { marginTop: 16, borderRadius: 12, overflow: 'hidden' },
+  map: { width: '100%', height: 220 },
+  mapPlaceholder: {
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  mapPlaceholderText: { color: '#666' },
+  distance: {
+    marginTop: 8,
+    color: '#8B0000',
+    fontWeight: '600',
+  },
   messageBox: {
     marginTop: 16,
     padding: 12,
