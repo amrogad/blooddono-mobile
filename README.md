@@ -1,56 +1,103 @@
-# Welcome to your Expo app 👋
+# BloodDono Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native companion app for BloodDono, built with Expo, TypeScript, and Supabase.
 
-## Get started
+Donors browse blood donation requests near them, post their own, and search for compatible donors by blood group and location. Each request detail shows a Google Map with the hospital pinned and the distance from the donor's current location.
 
-1. Install dependencies
+The [BloodDono web app](https://blooddono-two.vercel.app/) shares the same Supabase backend.
 
-   ```bash
-   npm install
-   ```
+## Try it yourself
 
-2. Start the app
+The login screen has one-click Demo logins for all three roles, no signup needed:
 
-   ```bash
-   npx expo start
-   ```
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@blooddono.demo` | `Demo123!` |
+| Donor | `donor@blooddono.demo` | `Demo123!` |
+| Volunteer | `volunteer@blooddono.demo` | `Demo123!` |
 
-In the output, you'll find options to open the app in a
+## Features
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Browse pending requests, sorted by proximity to the donor's governorate and city (with an "In your area" badge)
+- Post a donation request with recipient details, hospital, address, blood group, and time
+- Open a request to see the hospital on a Google Map, your live position, and the kilometer distance between them
+- Accept a request as a donor, which moves it from pending to inprogress
+- Search for compatible donors by patient blood group and location (matches by blood-type compatibility, not exact type)
+- Real profile screen with role, blood group, and location
+- Persistent sessions with AsyncStorage, so you stay signed in across restarts
+- Pull-to-refresh on the requests list
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Tech stack
 
-## Get a fresh project
+### App
+- React Native and Expo (SDK 56)
+- TypeScript
+- expo-router (file-based navigation)
+- TanStack Query (server state, caching, refetch)
+- React Context (auth session)
+- react-native-maps with Google Maps
+- expo-location for the user's current position
+- Nominatim (OpenStreetMap) for hospital geocoding
+- expo-linear-gradient, @expo-google-fonts/inter
 
-When you're ready, run:
+### Backend (managed service)
+- [Supabase](https://supabase.com/) for hosted authentication, database, and RPCs. Same project as the web app.
+
+### Testing
+- Jest with jest-expo
+- React Native Testing Library
+
+## Getting started
+
+You'll need Node LTS, a Supabase project, and either an Android emulator (with Google Play services) or the Expo Go app on a physical device.
 
 ```bash
-npm run reset-project
+npm install
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Fill in `.env` with your Supabase URL and anon key:
 
-### Other setup steps
+```
+EXPO_PUBLIC_SUPABASE_URL=your-project-url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+Start Metro and open the app:
 
-## Learn more
+```bash
+npx expo start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Press `a` for Android, or scan the QR code in Expo Go.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Google Maps on Android
 
-## Join the community
+The hospital map uses Google Maps. In Expo Go the tiles ship with Expo's bundled configuration, which is fine for a quick look but often flaky. To use your own key you'll need a development build.
 
-Join our community of developers creating universal apps.
+1. Create a Google Maps API key in the Google Cloud Console and enable "Maps SDK for Android"
+2. Set it in `app.json` under `android.config.googleMaps.apiKey`
+3. Build a development client with EAS:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx eas-cli build --platform android --profile development
+```
+
+## Testing
+
+```bash
+npm test
+```
+
+Covers the auth service, the auth provider bootstrap, and the distance utility.
+
+## Project structure
+
+- `src/app/` – expo-router routes, grouped as `(auth)` for the login and `(tabs)` for the main app
+- `services/` – thin wrappers over Supabase RPCs and the Nominatim geocoder
+- `providers/AuthProvider.tsx` – session context, mirrors the web app's auth bootstrap
+- `hooks/` – `useProfile`, `useLocation`
+- `components/` – shared UI like the logo and the gradient header
+- `constants/theme.ts` – colors, spacing, and typography that match the web app's palette
+- `utils/distance.ts` – haversine formula for kilometer distance between two coordinates
+- `data/` – governorate and city data reused from the web app
