@@ -1,12 +1,21 @@
-import { View, Text, Button, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 
 import { acceptRequest, getRequestDetails } from '../../../services/donationService';
 import { geocodeHospital } from '../../../services/geocodeService';
 import { useLocation } from '../../../hooks/useLocation';
 import { distanceKm } from '../../../utils/distance';
+import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
 
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,7 +64,7 @@ export default function RequestDetail() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
@@ -63,7 +72,7 @@ export default function RequestDetail() {
   if (error || !data) {
     return (
       <View style={styles.center}>
-        <Text>Request not found.</Text>
+        <Text style={type.body}>Request not found.</Text>
       </View>
     );
   }
@@ -75,23 +84,21 @@ export default function RequestDetail() {
       : null;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.group}>{data.blood_group}</Text>
-      <Text style={styles.name}>{data.recipient_name}</Text>
-      <Text style={styles.meta}>
-        {data.recipient_city}, {data.recipient_governorate}
-      </Text>
-      <Text style={styles.meta}>{data.hospital_name}</Text>
-      <Text style={styles.meta}>{data.full_address}</Text>
-      <Text style={styles.meta}>
-        {data.donation_date} · {data.donation_time.slice(0, 5)}
-      </Text>
+    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+      <View style={styles.hero}>
+        <View style={styles.groupPill}>
+          <Text style={styles.groupPillText}>{data.blood_group}</Text>
+        </View>
+        <Text style={styles.name}>{data.recipient_name}</Text>
+        <Text style={styles.meta}>
+          {data.recipient_city}, {data.recipient_governorate}
+        </Text>
+      </View>
 
       <View style={styles.mapWrap}>
         {hospital ? (
           <MapView
             style={styles.map}
-            provider={PROVIDER_GOOGLE}
             initialRegion={{
               latitude: hospital.latitude,
               longitude: hospital.longitude,
@@ -103,15 +110,13 @@ export default function RequestDetail() {
               coordinate={hospital}
               title={data.hospital_name}
               description={data.full_address}
-              pinColor="#8B0000"
+              pinColor={colors.primary}
             />
-            {me && (
-              <Marker coordinate={me} title="You" pinColor="#1e90ff" />
-            )}
+            {me && <Marker coordinate={me} title="You" pinColor="#1e90ff" />}
           </MapView>
         ) : geocoding ? (
           <View style={[styles.map, styles.mapPlaceholder]}>
-            <ActivityIndicator />
+            <ActivityIndicator color={colors.accent} />
             <Text style={styles.mapPlaceholderText}>Locating hospital…</Text>
           </View>
         ) : (
@@ -126,56 +131,129 @@ export default function RequestDetail() {
         )}
       </View>
 
-      <View style={styles.messageBox}>
-        <Text style={styles.messageLabel}>Message</Text>
-        <Text>{data.request_message}</Text>
-      </View>
+      <Section label="Hospital">
+        <Text style={styles.sectionValue}>{data.hospital_name}</Text>
+        <Text style={styles.sectionMeta}>{data.full_address}</Text>
+      </Section>
 
-      <View style={styles.status}>
+      <Section label="When">
+        <Text style={styles.sectionValue}>
+          {data.donation_date} · {data.donation_time.slice(0, 5)}
+        </Text>
+      </Section>
+
+      <Section label="Message">
+        <Text style={type.body}>{data.request_message}</Text>
+      </Section>
+
+      <View style={styles.statusRow}>
         <Text style={styles.statusLabel}>Status</Text>
-        <Text style={styles.statusValue}>{data.donation_status}</Text>
+        <View style={[styles.statusPill, isOpen ? styles.statusOpen : styles.statusClosed]}>
+          <Text style={styles.statusPillText}>{data.donation_status}</Text>
+        </View>
       </View>
 
       {isOpen && (
-        <Button
-          title={accept.isPending ? 'Accepting…' : 'Accept'}
+        <Pressable
+          style={({ pressed }) => [
+            styles.acceptButton,
+            pressed && { opacity: 0.9 },
+            accept.isPending && { opacity: 0.6 },
+          ]}
           onPress={() => accept.mutate()}
           disabled={accept.isPending}
-        />
+        >
+          {accept.isPending ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.acceptButtonText}>Accept request</Text>
+          )}
+        </Pressable>
       )}
     </ScrollView>
   );
 }
 
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionLabel}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { padding: 24, gap: 6 },
-  group: { fontSize: 30, fontWeight: 'bold', color: '#8B0000' },
-  name: { fontSize: 20, fontWeight: '600', marginBottom: 8 },
-  meta: { color: '#555' },
-  mapWrap: { marginTop: 16, borderRadius: 12, overflow: 'hidden' },
+  container: { padding: spacing.xl, gap: spacing.md },
+  hero: { alignItems: 'flex-start', gap: 4, marginBottom: spacing.sm },
+  groupPill: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 8,
+    borderRadius: radius.pill,
+    marginBottom: spacing.sm,
+  },
+  groupPillText: { color: colors.white, fontFamily: fonts.extrabold, fontSize: 18, letterSpacing: 0.5 },
+  name: { ...type.h1, color: colors.text },
+  meta: { ...type.body, color: colors.textMuted },
+  mapWrap: {
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   map: { width: '100%', height: 220 },
   mapPlaceholder: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
-  mapPlaceholderText: { color: '#666' },
+  mapPlaceholderText: { ...type.body, color: colors.textMuted },
   distance: {
-    marginTop: 8,
-    color: '#8B0000',
-    fontWeight: '600',
+    ...type.bodyBold,
+    color: colors.primary,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
   },
-  messageBox: {
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 10,
-    backgroundColor: '#f6f6f6',
+  section: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
     gap: 4,
   },
-  messageLabel: { fontSize: 12, color: '#888', textTransform: 'uppercase' },
-  status: { marginTop: 16 },
-  statusLabel: { fontSize: 12, color: '#888', textTransform: 'uppercase' },
-  statusValue: { fontSize: 16, fontWeight: '600', textTransform: 'capitalize' },
+  sectionLabel: { ...type.label, color: colors.textMuted, textTransform: 'uppercase' },
+  sectionValue: { ...type.bodyBold, color: colors.text },
+  sectionMeta: { ...type.small, color: colors.textMuted },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
+  statusLabel: { ...type.label, color: colors.textMuted, textTransform: 'uppercase' },
+  statusPill: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  statusOpen: { backgroundColor: '#FDECEC' },
+  statusClosed: { backgroundColor: colors.surface },
+  statusPillText: {
+    color: colors.primary,
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    textTransform: 'capitalize',
+  },
+  acceptButton: {
+    backgroundColor: colors.black,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  acceptButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
 });

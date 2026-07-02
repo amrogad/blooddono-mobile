@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, Pressable, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+} from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -10,6 +18,7 @@ import { useAuth } from '../../../providers/AuthProvider';
 import { useProfile } from '../../../hooks/useProfile';
 import governorates from '../../../data/governorates.json';
 import cities from '../../../data/cities.json';
+import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -69,63 +78,84 @@ export default function Create() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Recipient name"
-        value={recipientName}
-        onChangeText={setRecipientName}
-      />
+    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+      <Text style={styles.pageTitle}>Post a request</Text>
+      <Text style={styles.pageSubtitle}>Reach donors near your hospital</Text>
 
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={governorate}
-          onValueChange={(v) => {
-            setGovernorate(v);
-            setCity('');
-          }}
-        >
-          <Picker.Item label="Select governorate" value="" />
-          {governorates.map((g) => (
-            <Picker.Item key={g.id} label={g.name} value={g.name} />
-          ))}
-        </Picker>
-      </View>
+      <Field label="Recipient name">
+        <TextInput
+          style={styles.input}
+          placeholder="Full name"
+          placeholderTextColor="#aaa"
+          value={recipientName}
+          onChangeText={setRecipientName}
+        />
+      </Field>
 
-      <View style={styles.pickerWrap}>
-        <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
-          <Picker.Item label="Select city" value="" />
-          {filteredCities.map((c) => (
-            <Picker.Item key={c.id} label={c.name} value={c.name} />
-          ))}
-        </Picker>
-      </View>
+      <Field label="Governorate">
+        <View style={styles.pickerWrap}>
+          <Picker
+            selectedValue={governorate}
+            onValueChange={(v) => {
+              setGovernorate(v);
+              setCity('');
+            }}
+          >
+            <Picker.Item label="Select governorate" value="" />
+            {governorates.map((g) => (
+              <Picker.Item key={g.id} label={g.name} value={g.name} />
+            ))}
+          </Picker>
+        </View>
+      </Field>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Hospital name"
-        value={hospitalName}
-        onChangeText={setHospitalName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Full address"
-        value={fullAddress}
-        onChangeText={setFullAddress}
-      />
+      <Field label="City">
+        <View style={styles.pickerWrap}>
+          <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+            <Picker.Item label="Select city" value="" />
+            {filteredCities.map((c) => (
+              <Picker.Item key={c.id} label={c.name} value={c.name} />
+            ))}
+          </Picker>
+        </View>
+      </Field>
 
-      <View style={styles.pickerWrap}>
-        <Picker selectedValue={bloodGroup} onValueChange={setBloodGroup}>
-          <Picker.Item label="Select blood group" value="" />
-          {BLOOD_GROUPS.map((g) => (
-            <Picker.Item key={g} label={g} value={g} />
-          ))}
-        </Picker>
-      </View>
+      <Field label="Hospital">
+        <TextInput
+          style={styles.input}
+          placeholder="Hospital name"
+          placeholderTextColor="#aaa"
+          value={hospitalName}
+          onChangeText={setHospitalName}
+        />
+      </Field>
 
-      <Pressable style={styles.input} onPress={() => setShowDate(true)}>
-        <Text>Date: {fmtDate(date)}</Text>
-      </Pressable>
+      <Field label="Full address">
+        <TextInput
+          style={styles.input}
+          placeholder="Street, area"
+          placeholderTextColor="#aaa"
+          value={fullAddress}
+          onChangeText={setFullAddress}
+        />
+      </Field>
+
+      <Field label="Blood group">
+        <View style={styles.pickerWrap}>
+          <Picker selectedValue={bloodGroup} onValueChange={setBloodGroup}>
+            <Picker.Item label="Select blood group" value="" />
+            {BLOOD_GROUPS.map((g) => (
+              <Picker.Item key={g} label={g} value={g} />
+            ))}
+          </Picker>
+        </View>
+      </Field>
+
+      <Field label="Date">
+        <Pressable style={styles.input} onPress={() => setShowDate(true)}>
+          <Text style={styles.inputText}>{fmtDate(date)}</Text>
+        </Pressable>
+      </Field>
       {showDate && (
         <DateTimePicker
           value={date}
@@ -137,9 +167,11 @@ export default function Create() {
         />
       )}
 
-      <Pressable style={styles.input} onPress={() => setShowTime(true)}>
-        <Text>Time: {fmtTime(time)}</Text>
-      </Pressable>
+      <Field label="Time">
+        <Pressable style={styles.input} onPress={() => setShowTime(true)}>
+          <Text style={styles.inputText}>{fmtTime(time)}</Text>
+        </Pressable>
+      </Field>
       {showTime && (
         <DateTimePicker
           value={time}
@@ -151,29 +183,79 @@ export default function Create() {
         />
       )}
 
-      <TextInput
-        style={[styles.input, styles.multiline]}
-        placeholder="Message"
-        value={message}
-        onChangeText={setMessage}
-        multiline
-      />
+      <Field label="Message">
+        <TextInput
+          style={[styles.input, styles.multiline]}
+          placeholder="Anything donors should know…"
+          placeholderTextColor="#aaa"
+          value={message}
+          onChangeText={setMessage}
+          multiline
+        />
+      </Field>
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Button
-        title={submitting ? 'Posting…' : 'Post Request'}
+      <Pressable
+        style={({ pressed }) => [
+          styles.submit,
+          pressed && { opacity: 0.9 },
+          submitting && { opacity: 0.6 },
+        ]}
         onPress={handleCreate}
         disabled={submitting}
-      />
+      >
+        {submitting ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.submitText}>Post Request</Text>
+        )}
+      </Pressable>
     </ScrollView>
   );
 }
 
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={{ gap: 4 }}>
+      <Text style={styles.label}>{label}</Text>
+      {children}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { padding: 24, gap: 12 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 },
-  multiline: { height: 80, textAlignVertical: 'top' },
-  pickerWrap: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8 },
-  error: { color: 'red' },
+  container: { padding: spacing.xl, gap: spacing.md },
+  pageTitle: { ...type.h2, color: colors.text },
+  pageSubtitle: { ...type.body, color: colors.textMuted, marginBottom: spacing.sm },
+  label: { ...type.label, color: colors.textMuted, marginTop: spacing.xs },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    backgroundColor: colors.white,
+    color: colors.text,
+  },
+  inputText: { fontFamily: fonts.regular, fontSize: 15, color: colors.text },
+  multiline: { height: 90, textAlignVertical: 'top' },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
+  },
+  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13 },
+  submit: {
+    backgroundColor: colors.black,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  submitText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
 });

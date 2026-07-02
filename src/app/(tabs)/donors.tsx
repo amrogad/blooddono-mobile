@@ -4,7 +4,7 @@ import {
   Text,
   Image,
   FlatList,
-  Button,
+  Pressable,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
@@ -14,6 +14,7 @@ import { useMutation } from '@tanstack/react-query';
 import { searchDonors, DonorMatch } from '../../../services/profileService';
 import governorates from '../../../data/governorates.json';
 import cities from '../../../data/cities.json';
+import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -35,12 +36,16 @@ export default function FindDonors() {
     <View style={styles.container}>
       <Text style={styles.title}>Find compatible donors</Text>
       <Text style={styles.help}>
-        Enter the patient&apos;s blood group — we&apos;ll match donors whose blood is safe to
+        Enter the patient&apos;s blood group. We&apos;ll match donors whose blood is safe to
         donate to them.
       </Text>
 
       <View style={styles.pickerWrap}>
-        <Picker selectedValue={bloodGroup} onValueChange={setBloodGroup}>
+        <Picker
+          selectedValue={bloodGroup}
+          onValueChange={setBloodGroup}
+          style={styles.picker}
+        >
           <Picker.Item label="Patient blood group" value="" />
           {BLOOD_GROUPS.map((g) => (
             <Picker.Item key={g} label={g} value={g} />
@@ -55,6 +60,7 @@ export default function FindDonors() {
             setGovernorate(v);
             setCity('');
           }}
+          style={styles.picker}
         >
           <Picker.Item label="Governorate" value="" />
           {governorates.map((g) => (
@@ -64,7 +70,12 @@ export default function FindDonors() {
       </View>
 
       <View style={styles.pickerWrap}>
-        <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+        <Picker
+          selectedValue={city}
+          onValueChange={setCity}
+          enabled={!!selectedGov}
+          style={styles.picker}
+        >
           <Picker.Item label="City (optional)" value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
@@ -72,13 +83,22 @@ export default function FindDonors() {
         </Picker>
       </View>
 
-      <Button title="Search" onPress={() => search.mutate()} disabled={!canSearch} />
+      <Pressable
+        style={({ pressed }) => [
+          styles.searchButton,
+          !canSearch && { opacity: 0.5 },
+          pressed && { opacity: 0.9 },
+        ]}
+        onPress={() => search.mutate()}
+        disabled={!canSearch}
+      >
+        {search.isPending ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.searchButtonText}>Search</Text>
+        )}
+      </Pressable>
 
-      {search.isPending && (
-        <View style={styles.status}>
-          <ActivityIndicator />
-        </View>
-      )}
       {search.error && <Text style={styles.error}>{search.error.message}</Text>}
 
       {search.data && search.data.length === 0 && (
@@ -104,8 +124,11 @@ export default function FindDonors() {
               <View style={styles.donorText}>
                 <Text style={styles.donorName}>{item.display_name ?? 'Anonymous'}</Text>
                 <Text style={styles.donorMeta}>
-                  {item.blood_group} · {item.city}, {item.governorate}
+                  {item.city}, {item.governorate}
                 </Text>
+              </View>
+              <View style={styles.groupPill}>
+                <Text style={styles.groupPillText}>{item.blood_group}</Text>
               </View>
             </View>
           )}
@@ -116,27 +139,49 @@ export default function FindDonors() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 12 },
-  title: { fontSize: 22, fontWeight: 'bold' },
-  help: { color: '#666' },
-  pickerWrap: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8 },
-  status: { marginTop: 8 },
-  error: { color: 'red' },
-  empty: { textAlign: 'center', color: '#888', marginTop: 24 },
-  results: { paddingTop: 12, gap: 10 },
+  container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl, gap: spacing.md },
+  title: { ...type.h2, color: colors.text },
+  help: { ...type.body, color: colors.textMuted, marginBottom: spacing.sm },
+  pickerWrap: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: colors.white,
+  },
+  picker: { fontFamily: fonts.regular },
+  searchButton: {
+    backgroundColor: colors.black,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  searchButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.sm },
+  empty: { textAlign: 'center', color: colors.textMuted, fontFamily: fonts.regular, marginTop: spacing.xl },
+  results: { paddingTop: spacing.md, gap: spacing.sm },
   donor: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
     borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 10,
-    padding: 12,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    backgroundColor: colors.white,
   },
   avatar: { width: 44, height: 44, borderRadius: 22 },
-  avatarFallback: { backgroundColor: '#8B0000', alignItems: 'center', justifyContent: 'center' },
-  avatarLetter: { color: 'white', fontWeight: 'bold', fontSize: 18 },
+  avatarFallback: { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  avatarLetter: { color: colors.white, fontFamily: fonts.bold, fontSize: 18 },
   donorText: { flex: 1 },
-  donorName: { fontSize: 16, fontWeight: '600' },
-  donorMeta: { color: '#666' },
+  donorName: { ...type.bodyBold, color: colors.text },
+  donorMeta: { ...type.small, color: colors.textMuted },
+  groupPill: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  groupPillText: { color: colors.white, fontFamily: fonts.bold, fontSize: 12 },
 });

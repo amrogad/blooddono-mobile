@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 
 import { useAuth } from '../../../providers/AuthProvider';
 import { DEMO_ACCOUNTS } from '../../../constants/demoAccounts';
+import { Logo } from '../../../components/Logo';
+import { GradientHeader } from '../../../components/GradientHeader';
+import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -24,50 +27,137 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>BloodDono</Text>
+    <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.header}>
+        <Logo size={40} />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.card}>
+        <GradientHeader title="Login" subtitle="Welcome back" />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+        <View style={styles.body}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="you@example.com"
+            placeholderTextColor="#aaa"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
 
-      <Button
-        title={submitting ? 'Signing in…' : 'Sign In'}
-        onPress={() => handleSignIn(email, password)}
-        disabled={submitting}
-      />
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            placeholderTextColor="#aaa"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-      <Text style={styles.demoLabel}>Demo logins</Text>
-      {DEMO_ACCOUNTS.map((acc) => (
-        <Button
-          key={acc.role}
-          title={acc.label}
-          onPress={() => handleSignIn(acc.email, acc.password)}
-          disabled={submitting}
-        />
-      ))}
-    </View>
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && { opacity: 0.9 },
+              submitting && { opacity: 0.6 },
+            ]}
+            onPress={() => handleSignIn(email, password)}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text style={styles.primaryButtonText}>Login</Text>
+            )}
+          </Pressable>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Demo logins</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={{ gap: spacing.sm }}>
+            {DEMO_ACCOUNTS.map((acc) => (
+              <Pressable
+                key={acc.role}
+                style={({ pressed }) => [
+                  styles.outlineButton,
+                  pressed && { backgroundColor: colors.accent, borderColor: colors.accent },
+                ]}
+                onPress={() => handleSignIn(acc.email, acc.password)}
+                disabled={submitting}
+              >
+                {({ pressed }) => (
+                  <Text style={[styles.outlineButtonText, pressed && { color: colors.white }]}>
+                    {acc.label}
+                  </Text>
+                )}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 12 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12 },
-  error: { color: 'red' },
-  demoLabel: { textAlign: 'center', marginTop: 16, color: '#666' },
+  scroll: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+    padding: spacing.xl,
+    justifyContent: 'center',
+  },
+  header: { alignItems: 'center', marginBottom: spacing.xl },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  body: { padding: spacing.xl, gap: spacing.md },
+  label: { ...type.label, color: colors.textMuted, marginTop: spacing.xs },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    fontFamily: fonts.regular,
+    fontSize: 15,
+  },
+  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13 },
+  primaryButton: {
+    backgroundColor: colors.black,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  primaryButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginVertical: spacing.md,
+  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { ...type.small, color: colors.textMuted },
+  outlineButton: {
+    borderWidth: 2,
+    borderColor: colors.accent,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  outlineButtonText: { color: colors.accent, fontFamily: fonts.semibold, fontSize: 14 },
 });
