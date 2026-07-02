@@ -27,6 +27,20 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 - Persistent sessions with AsyncStorage, so you stay signed in across restarts
 - Pull-to-refresh on the requests list
 
+## Screenshots
+
+| Login | Requests |
+|---|---|
+| ![Login](screenshots/login.png) | ![Requests list](screenshots/requests.png) |
+
+| Request detail | Create request |
+|---|---|
+| ![Request detail with hospital map](screenshots/request-detail.png) | ![Create request form](screenshots/create.png) |
+
+| Find donors | Profile |
+|---|---|
+| ![Compatible donor search](screenshots/donors.png) | ![Profile](screenshots/profile.png) |
+
 ## Tech stack
 
 ### App
