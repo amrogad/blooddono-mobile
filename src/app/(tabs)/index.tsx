@@ -1,19 +1,16 @@
 import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 
-import { listRequests } from '../../../services/donationService';
-import { useLocation } from '../../../hooks/useLocation';
-import { distanceKm } from '../../../utils/distance';
+import { getPendingRequests } from '../../../services/donationService';
 
 function Centered({ children }: { children: React.ReactNode }) {
   return <View style={styles.center}>{children}</View>;
 }
 
 export default function Requests() {
-  const { coords } = useLocation();
   const { data, isLoading, error } = useQuery({
-    queryKey: ['requests'],
-    queryFn: listRequests,
+    queryKey: ['pendingRequests'],
+    queryFn: getPendingRequests,
   });
 
   if (isLoading) {
@@ -32,40 +29,28 @@ export default function Requests() {
     );
   }
 
-  const withDistance = (data ?? []).map((r) => ({
-    ...r,
-    distance:
-      coords && r.latitude != null && r.longitude != null
-        ? distanceKm(coords.latitude, coords.longitude, r.latitude, r.longitude)
-        : null,
-  }));
-
-  withDistance.sort((a, b) => {
-    if (a.distance == null) return 1;
-    if (b.distance == null) return -1;
-    return a.distance - b.distance;
-  });
-
-  if (withDistance.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <Centered>
-        <Text>No open requests yet.</Text>
+        <Text>No open requests right now.</Text>
       </Centered>
     );
   }
 
   return (
     <FlatList
-      data={withDistance}
+      data={data}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.list}
       renderItem={({ item }) => (
         <View style={styles.card}>
           <Text style={styles.group}>{item.blood_group}</Text>
-          <Text>{item.hospital_name}</Text>
+          <Text style={styles.name}>{item.recipient_name}</Text>
           <Text style={styles.meta}>
-            {item.urgency === 'urgent' ? '🔴 Urgent' : 'Normal'} · {item.units} unit(s)
-            {item.distance != null ? ` · ${item.distance.toFixed(1)} km away` : ''}
+            {item.recipient_city}, {item.recipient_governorate}
+          </Text>
+          <Text style={styles.meta}>
+            {item.donation_date} · {item.donation_time.slice(0, 5)}
           </Text>
         </View>
       )}
@@ -84,5 +69,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   group: { fontSize: 22, fontWeight: 'bold', color: '#8B0000' },
+  name: { fontSize: 16, fontWeight: '600' },
   meta: { color: '#666' },
 });

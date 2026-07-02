@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function Create() {
   return (
     <View style={styles.center}>
-      <Text>Create Request (placeholder)</Text>
+      <Text>Create request — coming next</Text>
     </View>
   );
 }
