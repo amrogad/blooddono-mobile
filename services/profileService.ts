@@ -11,6 +11,15 @@ export type Profile = {
   is_searchable: boolean;
 };
 
+export type DonorMatch = {
+  id: string;
+  display_name: string | null;
+  photo_url: string | null;
+  blood_group: string;
+  governorate: string;
+  city: string;
+};
+
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')
@@ -19,4 +28,18 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
     .single();
   if (error) throw new Error(error.message);
   return data as Profile | null;
+};
+
+export const searchDonors = async (
+  bloodGroup: string,
+  governorate: string,
+  city: string | null,
+): Promise<DonorMatch[]> => {
+  const { data, error } = await supabase.rpc('search_donors', {
+    p_blood_group: bloodGroup,
+    p_governorate: governorate,
+    p_city: city,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as DonorMatch[];
 };
