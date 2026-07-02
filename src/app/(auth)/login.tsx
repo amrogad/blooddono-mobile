@@ -6,6 +6,7 @@ import { DEMO_ACCOUNTS } from '../../../constants/demoAccounts';
 import { Logo } from '../../../components/Logo';
 import { GradientHeader } from '../../../components/GradientHeader';
 import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
+import { isEmail, friendlyAuthError } from '../../../utils/errors';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -14,13 +15,17 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSignIn = async (e: string, p: string) => {
+  const handleSignIn = async (e: string, p: string, skipValidate = false) => {
     setError(null);
+    if (!skipValidate) {
+      if (!isEmail(e)) return setError('Please enter a valid email.');
+      if (p.length < 6) return setError('Password must be at least 6 characters.');
+    }
     setSubmitting(true);
     try {
       await signIn(e, p);
     } catch (err) {
-      setError((err as Error).message);
+      setError(friendlyAuthError((err as Error).message));
     } finally {
       setSubmitting(false);
     }
@@ -67,6 +72,8 @@ export default function Login() {
             ]}
             onPress={() => handleSignIn(email, password)}
             disabled={submitting}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in"
           >
             {submitting ? (
               <ActivityIndicator color={colors.white} />
@@ -89,8 +96,10 @@ export default function Login() {
                   styles.outlineButton,
                   pressed && { backgroundColor: colors.accent, borderColor: colors.accent },
                 ]}
-                onPress={() => handleSignIn(acc.email, acc.password)}
+                onPress={() => handleSignIn(acc.email, acc.password, true)}
                 disabled={submitting}
+                accessibilityRole="button"
+                accessibilityLabel={`Sign in as ${acc.label} demo account`}
               >
                 {({ pressed }) => (
                   <Text style={[styles.outlineButtonText, pressed && { color: colors.white }]}>
