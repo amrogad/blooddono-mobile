@@ -20,6 +20,25 @@ export type DonorMatch = {
   city: string;
 };
 
+export type ProfileUpdate = {
+  display_name?: string;
+  blood_group?: string;
+  governorate?: string;
+  city?: string;
+  is_searchable?: boolean;
+};
+
+export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile> => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updates)
+    .eq('id', userId)
+    .select('display_name, photo_url, role, status, blood_group, governorate, city, is_searchable')
+    .single();
+  if (error) throw new Error(error.message);
+  return data as Profile;
+};
+
 export const getProfile = async (userId: string): Promise<Profile | null> => {
   const { data, error } = await supabase
     .from('profiles')

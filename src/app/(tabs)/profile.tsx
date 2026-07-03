@@ -1,10 +1,12 @@
 import { View, Text, Image, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { useAuth } from '../../../providers/AuthProvider';
 import { useProfile } from '../../../hooks/useProfile';
 import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
 
 export default function Profile() {
+  const router = useRouter();
   const { session, signOut } = useAuth();
   const { data: profile, isLoading } = useProfile(session?.user.id);
 
@@ -46,6 +48,24 @@ export default function Profile() {
       </View>
 
       <Pressable
+        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
+        onPress={() => router.push('/my-requests')}
+        accessibilityRole="button"
+        accessibilityLabel="View my requests"
+      >
+        <Text style={styles.actionText}>My requests</Text>
+      </Pressable>
+
+      <Pressable
+        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
+        onPress={() => router.push('/profile-edit')}
+        accessibilityRole="button"
+        accessibilityLabel="Edit profile"
+      >
+        <Text style={styles.actionText}>Edit profile</Text>
+      </Pressable>
+
+      <Pressable
         style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.85 }]}
         onPress={signOut}
       >
@@ -82,12 +102,24 @@ const styles = StyleSheet.create({
   },
   rowLabel: { ...type.body, color: colors.textMuted },
   rowValue: { ...type.bodyBold, color: colors.text, textTransform: 'capitalize' },
+  action: {
+    alignSelf: 'stretch',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  actionText: { color: colors.text, fontFamily: fonts.semibold, fontSize: 15 },
   signOut: {
     alignSelf: 'stretch',
     backgroundColor: colors.black,
     borderRadius: radius.md,
     paddingVertical: 14,
     alignItems: 'center',
+    marginTop: spacing.sm,
   },
   signOutText: { color: colors.white, fontFamily: fonts.bold, fontSize: 15 },
 });
