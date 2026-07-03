@@ -1,25 +1,54 @@
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import type { ColorValue } from 'react-native';
+
 import { colors, fonts } from '../../../constants/theme';
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
+function tabIcon(active: IoniconName, inactive: IoniconName) {
+  return ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => (
+    <Ionicons name={focused ? active : inactive} size={size} color={color} />
+  );
+}
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.accent,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: fonts.semibold, fontSize: 11 },
         tabBarStyle: {
-          borderTopColor: colors.border,
           backgroundColor: colors.white,
+          borderTopColor: colors.border,
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 6,
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Requests' }} />
-      <Tabs.Screen name="create" options={{ title: 'Create' }} />
-      <Tabs.Screen name="donors" options={{ title: 'Donors' }} />
-      <Tabs.Screen name="assistant" options={{ title: 'Assistant' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: 'Requests', tabBarIcon: tabIcon('water', 'water-outline') }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{ title: 'Create', tabBarIcon: tabIcon('add-circle', 'add-circle-outline') }}
+      />
+      <Tabs.Screen
+        name="donors"
+        options={{ title: 'Donors', tabBarIcon: tabIcon('search', 'search-outline') }}
+      />
+      <Tabs.Screen
+        name="assistant"
+        options={{ title: 'Assistant', tabBarIcon: tabIcon('sparkles', 'sparkles-outline') }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{ title: 'Profile', tabBarIcon: tabIcon('person-circle', 'person-circle-outline') }}
+      />
     </Tabs>
   );
 }
