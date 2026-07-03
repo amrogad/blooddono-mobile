@@ -1,20 +1,13 @@
 import { memo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Pressable,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 
 import { getPendingRequests, PendingRequest } from '../../../services/donationService';
 import { useAuth } from '../../../providers/AuthProvider';
 import { useProfile } from '../../../hooks/useProfile';
-import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
-import { Logo } from '../../../components/Logo';
+import { colors, spacing, radius, fonts, type, shadow } from '../../../constants/theme';
+import { BrandHeader } from '../../../components/BrandHeader';
 import { SkeletonCard } from '../../../components/SkeletonCard';
 
 function scoreProximity(r: PendingRequest, gov?: string | null, city?: string | null) {
@@ -24,9 +17,6 @@ function scoreProximity(r: PendingRequest, gov?: string | null, city?: string | 
   return 2;
 }
 
-const CARD_HEIGHT = 160;
-
-// Memoized so identical rows don't re-render when parent state (refetching, profile) shifts.
 const RequestCard = memo(function RequestCard({
   item,
   nearHome,
@@ -41,25 +31,28 @@ const RequestCard = memo(function RequestCard({
         accessibilityRole="button"
         accessibilityLabel={`Open request for ${item.recipient_name}, blood group ${item.blood_group}`}
       >
-        <View style={styles.cardTopRow}>
-          <View style={styles.groupPill}>
-            <Text style={styles.groupPillText}>{item.blood_group}</Text>
-          </View>
-          {nearHome && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>In your area</Text>
+        <View style={styles.accentStripe} />
+        <View style={styles.cardBody}>
+          <View style={styles.cardTopRow}>
+            <View style={styles.groupPill}>
+              <Text style={styles.groupPillText}>{item.blood_group}</Text>
             </View>
-          )}
-        </View>
+            {nearHome && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>◍ In your area</Text>
+              </View>
+            )}
+          </View>
 
-        <Text style={styles.name}>{item.recipient_name}</Text>
-        <Text style={styles.meta}>
-          {item.recipient_city}, {item.recipient_governorate}
-        </Text>
-        <View style={styles.divider} />
-        <Text style={styles.metaMuted}>
-          {item.donation_date} · {item.donation_time.slice(0, 5)}
-        </Text>
+          <Text style={styles.name}>{item.recipient_name}</Text>
+          <Text style={styles.meta}>
+            {item.recipient_city}, {item.recipient_governorate}
+          </Text>
+          <View style={styles.divider} />
+          <Text style={styles.metaMuted}>
+            {item.donation_date} · {item.donation_time.slice(0, 5)}
+          </Text>
+        </View>
       </Pressable>
     </Link>
   );
@@ -73,17 +66,12 @@ export default function Requests() {
     queryFn: getPendingRequests,
   });
 
-  const Header = (
-    <View style={styles.pageHeader}>
-      <Logo size={26} />
-      <Text style={styles.pageTitle}>Open requests</Text>
-    </View>
-  );
+  const header = <BrandHeader title="Open requests" subtitle="Someone nearby needs you" />;
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        {Header}
+      <View style={styles.screen}>
+        {header}
         <View style={styles.skeletonList}>
           <SkeletonCard />
           <SkeletonCard />
@@ -95,11 +83,11 @@ export default function Requests() {
 
   if (error) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        {Header}
+      <View style={styles.screen}>
+        {header}
         <View style={styles.centered}>
           <Text style={styles.emptyTitle}>Couldn&apos;t load requests</Text>
-          <Text style={styles.emptyBody}>Check your connection and pull down to try again.</Text>
+          <Text style={styles.emptyBody}>Check your connection and try again.</Text>
           <Pressable
             style={styles.retryButton}
             onPress={() => refetch()}
@@ -115,8 +103,8 @@ export default function Requests() {
 
   if (!data || data.length === 0) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        {Header}
+      <View style={styles.screen}>
+        {header}
         <View style={styles.centered}>
           <Text style={styles.emptyTitle}>No open requests</Text>
           <Text style={styles.emptyBody}>New requests will appear here as they&apos;re posted.</Text>
@@ -132,41 +120,31 @@ export default function Requests() {
   );
 
   return (
-    <FlatList
-      data={sorted}
-      keyExtractor={(item) => item.id}
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={styles.list}
-      ListHeaderComponent={Header}
-      refreshControl={
-        <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={refetch}
-          tintColor={colors.accent}
-        />
-      }
-      // Perf tuning: fixed-height card + windowSize keeps the list smooth at scale.
-      initialNumToRender={8}
-      windowSize={7}
-      removeClippedSubviews
-      getItemLayout={(_, index) => ({
-        length: CARD_HEIGHT,
-        offset: CARD_HEIGHT * index,
-        index,
-      })}
-      renderItem={({ item }) => (
-        <RequestCard
-          item={item}
-          nearHome={
-            !!profile?.governorate && item.recipient_governorate === profile.governorate
-          }
-        />
-      )}
-    />
+    <View style={styles.screen}>
+      <FlatList
+        data={sorted}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.accent} />
+        }
+        initialNumToRender={8}
+        windowSize={7}
+        removeClippedSubviews
+        renderItem={({ item }) => (
+          <RequestCard
+            item={item}
+            nearHome={!!profile?.governorate && item.recipient_governorate === profile.governorate}
+          />
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl, gap: spacing.sm },
   emptyTitle: { ...type.h3, color: colors.text },
   emptyBody: { ...type.body, color: colors.textMuted, textAlign: 'center' },
@@ -174,33 +152,22 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingHorizontal: spacing.xl,
     paddingVertical: 10,
-    backgroundColor: colors.black,
+    backgroundColor: colors.primary,
     borderRadius: radius.md,
   },
   retryText: { color: colors.white, fontFamily: fonts.bold, fontSize: 14 },
-  pageHeader: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-    gap: spacing.xs,
-  },
-  pageTitle: { ...type.h2, color: colors.text },
-  skeletonList: { paddingHorizontal: spacing.lg, gap: spacing.md },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
+  skeletonList: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.md },
+  listContent: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, paddingBottom: spacing.xl, gap: spacing.md },
   card: {
+    flexDirection: 'row',
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
     borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    overflow: 'hidden',
+    ...shadow.card,
   },
-  cardPressed: { transform: [{ translateY: -1 }], opacity: 0.98 },
+  cardPressed: { transform: [{ translateY: -2 }] },
+  accentStripe: { width: 5, backgroundColor: colors.primary },
+  cardBody: { flex: 1, padding: spacing.lg, gap: 4 },
   cardTopRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -9,6 +9,7 @@ import {
   Inter_700Bold,
   Inter_800ExtraBold,
 } from '@expo-google-fonts/inter';
+import { PlaywriteAUSA_400Regular } from '@expo-google-fonts/playwrite-au-sa';
 
 import { AuthProvider, useAuth } from '../../providers/AuthProvider';
 import { colors, fonts } from '../../constants/theme';
@@ -60,6 +61,7 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
     Inter_800ExtraBold,
+    PlaywriteAUSA_400Regular,
   });
 
   if (!fontsReady) {
