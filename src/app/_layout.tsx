@@ -42,6 +42,7 @@ function RootNavigator() {
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="request/[id]" options={{ headerShown: true, title: 'Request' }} />
+        <Stack.Screen name="map" options={{ headerShown: true, title: 'Map' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)/login" />

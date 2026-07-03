@@ -7,9 +7,10 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import { useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 
 import { acceptRequest, getRequestDetails } from '../../../services/donationService';
 import { geocodeHospital } from '../../../services/geocodeService';
@@ -22,6 +23,15 @@ export default function RequestDetail() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { coords: me } = useLocation();
+  const mapRef = useRef<MapView>(null);
+
+  const fitBoth = (h: { latitude: number; longitude: number }) => {
+    const points = me ? [h, me] : [h];
+    mapRef.current?.fitToCoordinates(points, {
+      edgePadding: { top: 50, bottom: 50, left: 50, right: 50 },
+      animated: false,
+    });
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
@@ -97,23 +107,49 @@ export default function RequestDetail() {
 
       <View style={styles.mapWrap}>
         {hospital ? (
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: hospital.latitude,
-              longitude: hospital.longitude,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            }}
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: '/map',
+                params: {
+                  lat: String(hospital.latitude),
+                  lng: String(hospital.longitude),
+                  label: data.hospital_name,
+                },
+              })
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Expand map to full screen"
           >
-            <Marker
-              coordinate={hospital}
-              title={data.hospital_name}
-              description={data.full_address}
-              pinColor={colors.primary}
-            />
-            {me && <Marker coordinate={me} title="You" pinColor="#1e90ff" />}
-          </MapView>
+            <View pointerEvents="none">
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                initialRegion={{
+                  latitude: hospital.latitude,
+                  longitude: hospital.longitude,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }}
+                onMapReady={() => fitBoth(hospital)}
+                scrollEnabled={false}
+                zoomEnabled={false}
+              >
+                <Marker coordinate={hospital} pinColor={colors.primary} />
+                {me && <Marker coordinate={me} pinColor="#1e90ff" />}
+                {me && (
+                  <Polyline
+                    coordinates={[me, hospital]}
+                    strokeColor={colors.primary}
+                    strokeWidth={3}
+                  />
+                )}
+              </MapView>
+            </View>
+            <View style={styles.expandHint}>
+              <Text style={styles.expandHintText}>Tap to expand</Text>
+            </View>
+          </Pressable>
         ) : geocoding ? (
           <View style={[styles.map, styles.mapPlaceholder]}>
             <ActivityIndicator color={colors.accent} />
@@ -204,6 +240,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   map: { width: '100%', height: 220 },
+  expandHint: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: radius.pill,
+  },
+  expandHintText: { color: colors.white, fontFamily: fonts.semibold, fontSize: 11 },
   mapPlaceholder: {
     backgroundColor: colors.surface,
     alignItems: 'center',
