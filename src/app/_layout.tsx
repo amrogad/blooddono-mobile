@@ -11,8 +11,8 @@ import {
 } from '@expo-google-fonts/inter';
 import { PlaywriteAUSA_400Regular } from '@expo-google-fonts/playwrite-au-sa';
 
-import { AuthProvider, useAuth } from '../../providers/AuthProvider';
-import { colors, fonts } from '../../constants/theme';
+import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { colors, fonts } from '@/constants/theme';
 
 const queryClient = new QueryClient();
 

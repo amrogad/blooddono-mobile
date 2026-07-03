@@ -3,9 +3,9 @@ import { View, Text, Pressable, StyleSheet, Linking } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
-import { useLocation } from '../../hooks/useLocation';
-import { distanceKm } from '../../utils/distance';
-import { colors, spacing, radius, fonts } from '../../constants/theme';
+import { useLocation } from '@/hooks/useLocation';
+import { distanceKm } from '@/utils/distance';
+import { colors, spacing, radius, fonts } from '@/constants/theme';
 
 export default function FullscreenMap() {
   const { lat, lng, label } = useLocalSearchParams<{ lat: string; lng: string; label: string }>();

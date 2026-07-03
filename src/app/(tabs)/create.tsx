@@ -13,13 +13,13 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { createDonationRequest } from '../../../services/donationService';
-import { useAuth } from '../../../providers/AuthProvider';
-import { useProfile } from '../../../hooks/useProfile';
-import governorates from '../../../data/governorates.json';
-import cities from '../../../data/cities.json';
-import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
-import { friendlyRequestError } from '../../../utils/errors';
+import { createDonationRequest } from '@/services/donationService';
+import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/hooks/useProfile';
+import governorates from '@/data/governorates.json';
+import cities from '@/data/cities.json';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { friendlyRequestError } from '@/utils/errors';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

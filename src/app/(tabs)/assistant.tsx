@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, type, radius, fonts } from '../../../constants/theme';
+import { colors, spacing, type, radius, fonts } from '@/constants/theme';
 
 export default function Assistant() {
   return (

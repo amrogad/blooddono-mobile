@@ -1,5 +1,5 @@
 import { Session } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/services/supabase';
 
 
 export const signIn = async (email: string, password: string): Promise<Session> => {

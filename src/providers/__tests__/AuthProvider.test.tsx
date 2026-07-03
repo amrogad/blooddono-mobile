@@ -1,9 +1,9 @@
 import { Text } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { AuthProvider, useAuth } from '../AuthProvider';
-import * as authService from '../../services/authService';
+import * as authService from '@/services/authService';
 
-jest.mock('../../lib/supabase', () => ({
+jest.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
       onAuthStateChange: jest.fn(() => ({
@@ -13,7 +13,7 @@ jest.mock('../../lib/supabase', () => ({
   },
 }));
 
-jest.mock('../../services/authService', () => ({
+jest.mock('@/services/authService', () => ({
   getSession: jest.fn(),
   signIn: jest.fn(),
   signOut: jest.fn(),

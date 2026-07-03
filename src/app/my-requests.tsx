@@ -2,9 +2,9 @@ import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-nativ
 import { useQuery } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 
-import { getMyRequests, MyRequest } from '../../services/donationService';
-import { useAuth } from '../../providers/AuthProvider';
-import { colors, spacing, radius, fonts, type } from '../../constants/theme';
+import { getMyRequests, MyRequest } from '@/services/donationService';
+import { useAuth } from '@/providers/AuthProvider';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 const STATUS_STYLE: Record<MyRequest['donation_status'], { bg: string; fg: string }> = {
   pending: { bg: '#FDECEC', fg: colors.primary },

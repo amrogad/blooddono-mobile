@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, fonts, type } from '../constants/theme';
+import { colors, spacing, fonts, type } from '@/constants/theme';
 
 export function BrandHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (

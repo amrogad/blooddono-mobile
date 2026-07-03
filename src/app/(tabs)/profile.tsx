@@ -1,9 +1,9 @@
 import { View, Text, Image, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { useAuth } from '../../../providers/AuthProvider';
-import { useProfile } from '../../../hooks/useProfile';
-import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
+import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/hooks/useProfile';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 export default function Profile() {
   const router = useRouter();

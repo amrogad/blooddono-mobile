@@ -12,11 +12,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 
-import { acceptRequest, getRequestDetails } from '../../../services/donationService';
-import { geocodeHospital } from '../../../services/geocodeService';
-import { useLocation } from '../../../hooks/useLocation';
-import { distanceKm } from '../../../utils/distance';
-import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
+import { acceptRequest, getRequestDetails } from '@/services/donationService';
+import { geocodeHospital } from '@/services/geocodeService';
+import { useLocation } from '@/hooks/useLocation';
+import { distanceKm } from '@/utils/distance';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -11,10 +11,10 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useMutation } from '@tanstack/react-query';
 
-import { searchDonors, DonorMatch } from '../../../services/profileService';
-import governorates from '../../../data/governorates.json';
-import cities from '../../../data/cities.json';
-import { colors, spacing, radius, fonts, type } from '../../../constants/theme';
+import { searchDonors, DonorMatch } from '@/services/profileService';
+import governorates from '@/data/governorates.json';
+import cities from '@/data/cities.json';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

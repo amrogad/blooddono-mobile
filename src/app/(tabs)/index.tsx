@@ -3,12 +3,12 @@ import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl } from 'rea
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 
-import { getPendingRequests, PendingRequest } from '../../../services/donationService';
-import { useAuth } from '../../../providers/AuthProvider';
-import { useProfile } from '../../../hooks/useProfile';
-import { colors, spacing, radius, fonts, type, shadow } from '../../../constants/theme';
-import { BrandHeader } from '../../../components/BrandHeader';
-import { SkeletonCard } from '../../../components/SkeletonCard';
+import { getPendingRequests, PendingRequest } from '@/services/donationService';
+import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/hooks/useProfile';
+import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { BrandHeader } from '@/components/BrandHeader';
+import { SkeletonCard } from '@/components/SkeletonCard';
 
 function scoreProximity(r: PendingRequest, gov?: string | null, city?: string | null) {
   if (!gov) return 2;

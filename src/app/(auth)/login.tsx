@@ -10,10 +10,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { useAuth } from '../../../providers/AuthProvider';
-import { DEMO_ACCOUNTS } from '../../../constants/demoAccounts';
-import { colors, spacing, radius, fonts, type, shadow } from '../../../constants/theme';
-import { isEmail, friendlyAuthError } from '../../../utils/errors';
+import { useAuth } from '@/providers/AuthProvider';
+import { DEMO_ACCOUNTS } from '@/constants/demoAccounts';
+import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { isEmail, friendlyAuthError } from '@/utils/errors';
 
 export default function Login() {
   const { signIn } = useAuth();

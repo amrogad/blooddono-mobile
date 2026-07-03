@@ -1,7 +1,7 @@
 import { signIn, signOut, getSession } from '../authService';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/services/supabase';
 
-jest.mock('../../lib/supabase', () => ({
+jest.mock('@/services/supabase', () => ({
   supabase: {
     auth: {
       signInWithPassword: jest.fn(),

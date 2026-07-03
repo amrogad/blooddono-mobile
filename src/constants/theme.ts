@@ -1,65 +1,71 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+export const colors = {
+  primary: '#8B0000',
+  primaryDeep: '#6B0000',
+  primaryLight: '#C41230',
+  accent: '#ff4136',
+  accentHover: '#d63027',
+  black: '#1B1416',
+  ink: '#201A1B',
+  white: '#ffffff',
+  text: '#201A1B',
+  textMuted: '#8A7C79',
+  background: '#FBF7F5',
+  surface: '#F4ECE9',
+  border: '#EBE1DD',
+  error: '#dc2626',
+  success: '#16a34a',
+};
 
-import '@/global.css';
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+};
 
-import { Platform } from 'react-native';
+export const radius = {
+  sm: 6,
+  md: 12,
+  lg: 18,
+  xl: 24,
+  pill: 999,
+};
 
-export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+export const fonts = {
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  extrabold: 'Inter_800ExtraBold',
+  script: 'PlaywriteAUSA_400Regular',
+};
+
+export const shadow = {
+  card: {
+    shadowColor: '#3A0000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 3,
   },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+  floating: {
+    shadowColor: '#3A0000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 8,
   },
-} as const;
+};
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const type = {
+  display: { fontFamily: fonts.extrabold, fontSize: 34, letterSpacing: -1 },
+  h1: { fontFamily: fonts.extrabold, fontSize: 28, letterSpacing: -0.6 },
+  h2: { fontFamily: fonts.bold, fontSize: 22, letterSpacing: -0.3 },
+  h3: { fontFamily: fonts.semibold, fontSize: 18 },
+  body: { fontFamily: fonts.regular, fontSize: 15 },
+  bodyBold: { fontFamily: fonts.semibold, fontSize: 15 },
+  small: { fontFamily: fonts.regular, fontSize: 13 },
+  label: { fontFamily: fonts.semibold, fontSize: 11, letterSpacing: 0.8 },
+};

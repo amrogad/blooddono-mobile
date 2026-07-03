@@ -13,12 +13,12 @@ import { Picker } from '@react-native-picker/picker';
 import { Stack, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { updateProfile } from '../../services/profileService';
-import { useAuth } from '../../providers/AuthProvider';
-import { useProfile } from '../../hooks/useProfile';
-import governorates from '../../data/governorates.json';
-import cities from '../../data/cities.json';
-import { colors, spacing, radius, fonts, type } from '../../constants/theme';
+import { updateProfile } from '@/services/profileService';
+import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/hooks/useProfile';
+import governorates from '@/data/governorates.json';
+import cities from '@/data/cities.json';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

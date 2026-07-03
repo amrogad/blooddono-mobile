@@ -90,7 +90,7 @@ Press `a` for Android, or scan the QR code in Expo Go.
 The hospital map uses Google Maps. In Expo Go the tiles ship with Expo's bundled configuration, which is fine for a quick look but often flaky. To use your own key you'll need a development build.
 
 1. Create a Google Maps API key in the Google Cloud Console and enable "Maps SDK for Android"
-2. Set it in `app.json` under `android.config.googleMaps.apiKey`
+2. Add it to `.env` as `GOOGLE_MAPS_API_KEY` (read by `app.config.js`)
 3. Build a development client with EAS:
 
 ```bash
@@ -107,11 +107,13 @@ Covers the auth service, the auth provider bootstrap, and the distance utility.
 
 ## Project structure
 
+Everything lives under `src/`:
+
 - `src/app/` – expo-router routes, grouped as `(auth)` for the login and `(tabs)` for the main app
-- `services/` – thin wrappers over Supabase RPCs and the Nominatim geocoder
-- `providers/AuthProvider.tsx` – session context, mirrors the web app's auth bootstrap
-- `hooks/` – `useProfile`, `useLocation`
-- `components/` – shared UI like the logo and the gradient header
-- `constants/theme.ts` – colors, spacing, and typography that match the web app's palette
-- `utils/distance.ts` – haversine formula for kilometer distance between two coordinates
-- `data/` – governorate and city data reused from the web app
+- `src/services/` – thin wrappers over Supabase RPCs, the Supabase client, and the Nominatim geocoder
+- `src/providers/AuthProvider.tsx` – session context, mirrors the web app's auth bootstrap
+- `src/hooks/` – `useProfile`, `useLocation`
+- `src/components/` – shared UI like the brand header and skeleton loader
+- `src/constants/` – `theme` (colors/spacing/type matching the web palette) and the demo accounts
+- `src/utils/` – `distance` (haversine km) and `errors` (friendly Supabase messages)
+- `src/data/` – governorate and city data reused from the web app
