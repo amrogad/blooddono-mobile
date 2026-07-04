@@ -20,6 +20,7 @@ import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 import { friendlyRequestError } from '@/utils/errors';
+import { validateNewRequest } from '@/utils/validation';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -53,13 +54,16 @@ export default function Create() {
   const handleCreate = async () => {
     if (!session) return;
     setError(null);
-    if (!recipientName.trim()) return setError('Recipient name is required.');
-    if (!governorate) return setError('Please pick a governorate.');
-    if (!city) return setError('Please pick a city.');
-    if (!hospitalName.trim()) return setError('Hospital name is required.');
-    if (!fullAddress.trim()) return setError('Full address is required.');
-    if (!bloodGroup) return setError('Please pick a blood group.');
-    if (!message.trim()) return setError('Please add a short message.');
+    const validationError = validateNewRequest({
+      recipientName,
+      governorate,
+      city,
+      hospitalName,
+      fullAddress,
+      bloodGroup,
+      message,
+    });
+    if (validationError) return setError(validationError);
     setSubmitting(true);
     try {
       await createDonationRequest({

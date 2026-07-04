@@ -6,16 +6,10 @@ import { Link } from 'expo-router';
 import { getPendingRequests, PendingRequest } from '@/services/donationService';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
+import { sortByProximity } from '@/utils/proximity';
 import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
 import { BrandHeader } from '@/components/BrandHeader';
 import { SkeletonCard } from '@/components/SkeletonCard';
-
-function scoreProximity(r: PendingRequest, gov?: string | null, city?: string | null) {
-  if (!gov) return 2;
-  if (r.recipient_governorate === gov && r.recipient_city === city) return 0;
-  if (r.recipient_governorate === gov) return 1;
-  return 2;
-}
 
 const RequestCard = memo(function RequestCard({
   item,
@@ -113,11 +107,7 @@ export default function Requests() {
     );
   }
 
-  const sorted = [...data].sort(
-    (a, b) =>
-      scoreProximity(a, profile?.governorate, profile?.city) -
-      scoreProximity(b, profile?.governorate, profile?.city),
-  );
+  const sorted = sortByProximity(data, profile?.governorate, profile?.city);
 
   return (
     <View style={styles.screen}>
