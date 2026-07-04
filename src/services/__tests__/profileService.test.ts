@@ -1,4 +1,4 @@
-import { getProfile, updateProfile, searchDonors } from '@/services/profileService';
+import { getProfile, updateProfile, searchDonors, savePushToken } from '@/services/profileService';
 import { supabase } from '@/services/supabase';
 
 jest.mock('@/services/supabase', () => ({
@@ -80,5 +80,21 @@ describe('searchDonors', () => {
   test('throws on error', async () => {
     rpc.mockResolvedValue({ data: null, error: { message: 'rpc failed' } });
     await expect(searchDonors('O-', 'Cairo', null)).rejects.toThrow('rpc failed');
+  });
+});
+
+describe('savePushToken', () => {
+  test('writes the token to the profile row', async () => {
+    const q = makeQuery({ data: null, error: null });
+    from.mockReturnValue(q);
+    await savePushToken('u1', 'ExponentPushToken[abc]');
+    expect(from).toHaveBeenCalledWith('profiles');
+    expect(q.update).toHaveBeenCalledWith({ push_token: 'ExponentPushToken[abc]' });
+    expect(q.eq).toHaveBeenCalledWith('id', 'u1');
+  });
+
+  test('throws on error', async () => {
+    from.mockReturnValue(makeQuery({ data: null, error: { message: 'blocked' } }));
+    await expect(savePushToken('u1', 't')).rejects.toThrow('blocked');
   });
 });

@@ -62,3 +62,8 @@ export const searchDonors = async (
   if (error) throw new Error(error.message);
   return (data ?? []) as DonorMatch[];
 };
+
+export const savePushToken = async (userId: string, token: string): Promise<void> => {
+  const { error } = await supabase.from('profiles').update({ push_token: token }).eq('id', userId);
+  if (error) throw new Error(error.message);
+};
