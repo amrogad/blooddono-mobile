@@ -87,5 +87,7 @@ export const createDonationRequest = async (input: NewDonationRequest) => {
     .select()
     .single();
   if (error) throw new Error(error.message);
+  // Fire-and-forget: notify compatible donors. Never block or fail the request on this.
+  supabase.functions.invoke('notify-donors', { body: { record: data } }).catch(() => {});
   return data;
 };

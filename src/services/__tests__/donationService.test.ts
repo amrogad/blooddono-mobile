@@ -8,11 +8,16 @@ import {
 import { supabase } from '@/services/supabase';
 
 jest.mock('@/services/supabase', () => ({
-  supabase: { rpc: jest.fn(), from: jest.fn() },
+  supabase: {
+    rpc: jest.fn(),
+    from: jest.fn(),
+    functions: { invoke: jest.fn(() => Promise.resolve({ data: null, error: null })) },
+  },
 }));
 
 const rpc = supabase.rpc as jest.Mock;
 const from = supabase.from as jest.Mock;
+const invoke = supabase.functions.invoke as jest.Mock;
 
 type QueryMock = {
   select: jest.Mock;
@@ -109,6 +114,7 @@ describe('createDonationRequest', () => {
     await expect(createDonationRequest(input)).resolves.toEqual({ id: 'new' });
     expect(from).toHaveBeenCalledWith('blood_donation_requests');
     expect(q.insert).toHaveBeenCalledWith(input);
+    expect(invoke).toHaveBeenCalledWith('notify-donors', { body: { record: { id: 'new' } } });
   });
 
   test('throws when the insert fails', async () => {
