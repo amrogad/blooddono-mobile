@@ -7,15 +7,15 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { useRef } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 
 import { acceptRequest, getRequestDetails } from '@/services/donationService';
 import { geocodeHospital } from '@/services/geocodeService';
 import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
+import { mapHtml } from '@/utils/mapHtml';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 export default function RequestDetail() {
@@ -23,15 +23,6 @@ export default function RequestDetail() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { coords: me } = useLocation();
-  const mapRef = useRef<MapView>(null);
-
-  const fitBoth = (h: { latitude: number; longitude: number }) => {
-    const points = me ? [h, me] : [h];
-    mapRef.current?.fitToCoordinates(points, {
-      edgePadding: { top: 50, bottom: 50, left: 50, right: 50 },
-      animated: false,
-    });
-  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
@@ -122,29 +113,13 @@ export default function RequestDetail() {
             accessibilityLabel="Expand map to full screen"
           >
             <View pointerEvents="none">
-              <MapView
-                ref={mapRef}
+              <WebView
+                key={me ? 'route' : 'hospital'}
                 style={styles.map}
-                initialRegion={{
-                  latitude: hospital.latitude,
-                  longitude: hospital.longitude,
-                  latitudeDelta: 0.05,
-                  longitudeDelta: 0.05,
-                }}
-                onMapReady={() => fitBoth(hospital)}
+                originWhitelist={['*']}
                 scrollEnabled={false}
-                zoomEnabled={false}
-              >
-                <Marker coordinate={hospital} pinColor={colors.primary} />
-                {me && <Marker coordinate={me} pinColor="#1e90ff" />}
-                {me && (
-                  <Polyline
-                    coordinates={[me, hospital]}
-                    strokeColor={colors.primary}
-                    strokeWidth={3}
-                  />
-                )}
-              </MapView>
+                source={{ html: mapHtml(hospital, me, data.hospital_name, false) }}
+              />
             </View>
             <View style={styles.expandHint}>
               <Text style={styles.expandHintText}>Tap to expand</Text>

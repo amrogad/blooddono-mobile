@@ -49,7 +49,7 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 - expo-router (file-based navigation)
 - TanStack Query (server state, caching, refetch)
 - React Context (auth session)
-- react-native-maps with Google Maps
+- Leaflet in a WebView with OpenStreetMap tiles
 - expo-location for the user's current position
 - Nominatim (OpenStreetMap) for hospital geocoding
 - expo-linear-gradient, @expo-google-fonts/inter

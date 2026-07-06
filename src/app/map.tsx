@@ -1,32 +1,17 @@
-import { useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Linking } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 
 import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
+import { mapHtml, MapPoint } from '@/utils/mapHtml';
 import { colors, spacing, radius, fonts } from '@/constants/theme';
 
 export default function FullscreenMap() {
   const { lat, lng, label } = useLocalSearchParams<{ lat: string; lng: string; label: string }>();
   const { coords: me } = useLocation();
-  const mapRef = useRef<MapView>(null);
 
-  const hospital = { latitude: parseFloat(lat), longitude: parseFloat(lng) };
-
-  const fit = () => {
-    const points = me ? [hospital, me] : [hospital];
-    mapRef.current?.fitToCoordinates(points, {
-      edgePadding: { top: 100, bottom: 140, left: 80, right: 80 },
-      animated: true,
-    });
-  };
-
-  useEffect(() => {
-    if (me) fit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me]);
-
+  const hospital: MapPoint = { latitude: parseFloat(lat), longitude: parseFloat(lng) };
   const distance = me ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude) : null;
 
   const openInGoogleMaps = () => {
@@ -39,24 +24,12 @@ export default function FullscreenMap() {
     <View style={styles.container}>
       <Stack.Screen options={{ title: label ?? 'Map', headerShown: true }} />
 
-      <MapView
-        ref={mapRef}
+      <WebView
+        key={me ? 'route' : 'hospital'}
         style={styles.map}
-        initialRegion={{
-          latitude: hospital.latitude,
-          longitude: hospital.longitude,
-          latitudeDelta: 0.08,
-          longitudeDelta: 0.08,
-        }}
-        onMapReady={fit}
-        showsUserLocation
-      >
-        <Marker coordinate={hospital} title={label} pinColor={colors.primary} />
-        {me && <Marker coordinate={me} title="You" pinColor="#1e90ff" />}
-        {me && (
-          <Polyline coordinates={[me, hospital]} strokeColor={colors.primary} strokeWidth={3} />
-        )}
-      </MapView>
+        originWhitelist={['*']}
+        source={{ html: mapHtml(hospital, me, label ?? 'Location') }}
+      />
 
       {distance != null && (
         <View style={styles.distanceChip}>
