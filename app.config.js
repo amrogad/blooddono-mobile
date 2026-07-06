@@ -7,23 +7,15 @@ module.exports = {
     icon: './assets/images/icon.png',
     scheme: 'blooddono',
     userInterfaceStyle: 'automatic',
-    ios: {
-      icon: './assets/expo.icon',
-    },
     android: {
       package: 'com.amrogad.blooddonomobile',
       adaptiveIcon: {
-        backgroundColor: '#8B0000',
+        backgroundColor: '#FFFFFF',
         foregroundImage: './assets/images/android-icon-foreground.png',
         backgroundImage: './assets/images/android-icon-background.png',
         monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
-      config: {
-        googleMaps: {
-          apiKey: process.env.GOOGLE_MAPS_API_KEY,
-        },
-      },
     },
     web: {
       output: 'static',
@@ -47,7 +39,6 @@ module.exports = {
     ],
     experiments: {
       typedRoutes: true,
-      reactCompiler: true,
     },
     extra: {
       router: {},

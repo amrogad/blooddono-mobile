@@ -39,11 +39,12 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-example
-
 # generated native folders
 /ios
 /android
 
 # local env (keys)
 .env
+
+# agent scratch
+.superpowers/
