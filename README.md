@@ -1,10 +1,10 @@
 # BloodDono Mobile
 
-React Native companion app for BloodDono, built with Expo, TypeScript, and Supabase.
+A React Native app for connecting blood donors with nearby requests, built with Expo, TypeScript, and Supabase.
 
-Donors browse blood donation requests near them, post their own, and search for compatible donors by blood group and location. Each request detail shows a Google Map with the hospital pinned and the distance from the donor's current location.
+Donors browse blood donation requests near them, post their own, and search for compatible donors by blood group and location. Each request detail shows a map with the hospital pinned and the distance from the donor's current location.
 
-The [BloodDono web app](https://blooddono-two.vercel.app/) shares the same Supabase backend.
+There's also a [web version](https://blooddono-two.vercel.app/) that shares the same Supabase backend.
 
 ## Try it yourself
 
@@ -20,9 +20,11 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 
 - Browse pending requests, sorted by proximity to the donor's governorate and city (with an "In your area" badge)
 - Post a donation request with recipient details, hospital, address, blood group, and time
-- Open a request to see the hospital on a Google Map, your live position, and the kilometer distance between them
+- Open a request to see the hospital on an OpenStreetMap map, your live position, and the kilometer distance between them
 - Accept a request as a donor, which moves it from pending to inprogress
 - Search for compatible donors by patient blood group and location (matches by blood-type compatibility, not exact type)
+- Ask an eligibility assistant questions like "I got a tattoo two weeks ago, can I donate?" and get answers personalized to your blood group and city
+- Get a push notification when a new request needs a compatible blood type in your governorate
 - Real profile screen with role, blood group, and location
 - Persistent sessions with AsyncStorage, so you stay signed in across restarts
 - Pull-to-refresh on the requests list
@@ -31,15 +33,19 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 
 | Login | Requests |
 |---|---|
-| ![Login](screenshots/login.png) | ![Requests list](screenshots/requests.png) |
+| ![Login with demo accounts](screenshots/login.png) | ![Requests list sorted by proximity](screenshots/requests.png) |
 
-| Request detail | Create request |
+| Request detail | Fullscreen map |
 |---|---|
-| ![Request detail with hospital map](screenshots/request-detail.png) | ![Create request form](screenshots/create.png) |
+| ![Request detail with hospital map and distance](screenshots/request-detail.png) | ![Fullscreen map with route to the hospital](screenshots/map.png) |
+
+| Eligibility assistant | Create request |
+|---|---|
+| ![AI eligibility assistant chat](screenshots/assistant.png) | ![Create request form](screenshots/create.png) |
 
 | Find donors | Profile |
 |---|---|
-| ![Compatible donor search](screenshots/donors.png) | ![Profile](screenshots/profile.png) |
+| ![Compatible donor search](screenshots/donors.png) | ![Profile with role and blood group](screenshots/profile.png) |
 
 ## Tech stack
 
@@ -55,7 +61,10 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 - expo-linear-gradient, @expo-google-fonts/inter
 
 ### Backend (managed service)
-- [Supabase](https://supabase.com/) for hosted authentication, database, and RPCs. Same project as the web app.
+- [Supabase](https://supabase.com/) for hosted authentication, database, and RPCs
+- Supabase Edge Functions (Deno) for push notification fan-out and the eligibility assistant
+- Groq (Llama 3.1) for the assistant, called server-side from the Edge Function
+- Expo push notifications
 
 ### Testing
 - Jest with jest-expo
@@ -63,7 +72,7 @@ The login screen has one-click Demo logins for all three roles, no signup needed
 
 ## Getting started
 
-You'll need Node LTS, a Supabase project, and either an Android emulator (with Google Play services) or the Expo Go app on a physical device.
+You'll need Node LTS, a Supabase project, and either an Android emulator or the Expo Go app on a physical device.
 
 ```bash
 npm install
@@ -85,17 +94,7 @@ npx expo start
 
 Press `a` for Android, or scan the QR code in Expo Go.
 
-### Google Maps on Android
-
-The hospital map uses Google Maps. In Expo Go the tiles ship with Expo's bundled configuration, which is fine for a quick look but often flaky. To use your own key you'll need a development build.
-
-1. Create a Google Maps API key in the Google Cloud Console and enable "Maps SDK for Android"
-2. Add it to `.env` as `GOOGLE_MAPS_API_KEY` (read by `app.config.js`)
-3. Build a development client with EAS:
-
-```bash
-npx eas-cli build --platform android --profile development
-```
+The map uses Leaflet with OpenStreetMap tiles rendered in a WebView, so there's no maps API key to set up.
 
 ## Testing
 
@@ -103,17 +102,17 @@ npx eas-cli build --platform android --profile development
 npm test
 ```
 
-Covers the auth service, the auth provider bootstrap, and the distance utility.
+71 tests across the Supabase service wrappers (auth, donations, profiles, geocoding, assistant), the auth provider bootstrap, the login screen, and the pure utilities (distance, proximity sorting, form validation, error mapping).
 
 ## Project structure
 
 Everything lives under `src/`:
 
 - `src/app/` – expo-router routes, grouped as `(auth)` for the login and `(tabs)` for the main app
-- `src/services/` – thin wrappers over Supabase RPCs, the Supabase client, and the Nominatim geocoder
-- `src/providers/AuthProvider.tsx` – session context, mirrors the web app's auth bootstrap
-- `src/hooks/` – `useProfile`, `useLocation`
+- `src/services/` – thin wrappers over Supabase RPCs, the Supabase client, the Nominatim geocoder, and the eligibility assistant Edge Function
+- `src/providers/AuthProvider.tsx` – session context and auth bootstrap
+- `src/hooks/` – `useProfile`, `useLocation`, `usePushNotifications`
 - `src/components/` – shared UI like the brand header and skeleton loader
-- `src/constants/` – `theme` (colors/spacing/type matching the web palette) and the demo accounts
-- `src/utils/` – `distance` (haversine km) and `errors` (friendly Supabase messages)
-- `src/data/` – governorate and city data reused from the web app
+- `src/constants/` – `theme` (colors/spacing/type) and the demo accounts
+- `src/utils/` – `distance` (haversine km), `proximity` (request sorting), `validation`, `errors`, and `mapHtml` (the Leaflet map document)
+- `src/data/` – governorate and city data
