@@ -21,9 +21,12 @@ describe('askAssistant', () => {
   });
 
   it('throws when the edge function returns an error', async () => {
-    mockInvoke.mockResolvedValueOnce({ data: null, error: { message: 'Function failed' } });
+    mockInvoke.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Edge Function returned a non-2xx status code' },
+    });
     await expect(
       askAssistant([{ role: 'user', text: 'Can I donate?' }], 'O+', 'Cairo'),
-    ).rejects.toThrow('Function failed');
+    ).rejects.toThrow('Edge Function returned a non-2xx status code');
   });
 });

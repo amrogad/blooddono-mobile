@@ -38,7 +38,8 @@ export default function Assistant() {
       if (!trimmed || loading) return;
 
       const userMsg: Message = { role: 'user', text: trimmed };
-      const next = [...messages, userMsg];
+      const validHistory = messages.filter((m) => m.text !== 'Something went wrong. Try again.');
+      const next = [...validHistory, userMsg];
       setMessages(next);
       setInput('');
       setLoading(true);
