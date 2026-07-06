@@ -1,7 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization');
@@ -19,9 +18,9 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const geminiKey = Deno.env.get('GEMINI_API_KEY');
-  if (!geminiKey) {
-    return Response.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
+  const groqKey = Deno.env.get('GROQ_API_KEY');
+  if (!groqKey) {
+    return Response.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
   }
 
   const body = await req.json().catch(() => null);
@@ -42,28 +41,33 @@ Deno.serve(async (req) => {
     `Be concise and direct. ` +
     `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.`;
 
-  const contents = messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.text }],
-  }));
+  const groqMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages.map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.text,
+    })),
+  ];
 
-  const geminiRes = await fetch(`${GEMINI_URL}?key=${geminiKey}`, {
+  const groqRes = await fetch(GROQ_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${groqKey}`,
+    },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents,
+      model: 'llama-3.1-8b-instant',
+      messages: groqMessages,
     }),
   });
 
-  if (!geminiRes.ok) {
-    const errText = await geminiRes.text();
+  if (!groqRes.ok) {
+    const errText = await groqRes.text();
     return Response.json({ error: errText }, { status: 502 });
   }
 
-  const geminiData = await geminiRes.json();
-  const reply: string =
-    geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No response received.';
+  const groqData = await groqRes.json();
+  const reply: string = groqData.choices?.[0]?.message?.content ?? 'No response received.';
 
   return Response.json({ reply });
 });
