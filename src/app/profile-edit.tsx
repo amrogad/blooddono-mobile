@@ -8,14 +8,17 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { updateProfile } from '@/services/profileService';
+import { updateProfile, uploadAvatar } from '@/services/profileService';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
+import { Avatar } from '@/components/Avatar';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
@@ -33,23 +36,41 @@ export default function ProfileEdit() {
   const [governorate, setGovernorate] = useState(profile?.governorate ?? '');
   const [city, setCity] = useState(profile?.city ?? '');
   const [searchable, setSearchable] = useState(profile?.is_searchable ?? false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selectedGov = governorates.find((g) => g.name === governorate);
   const filteredCities = cities.filter((c) => c.governorate_id === selectedGov?.id);
 
+  const pickImage = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow photo access to change your avatar.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled) setPhotoUri(result.assets[0].uri);
+  };
+
   const handleSave = async () => {
     if (!session) return;
     setError(null);
     setSaving(true);
     try {
+      const photo_url = photoUri ? await uploadAvatar(session.user.id, photoUri) : undefined;
       await updateProfile(session.user.id, {
         display_name: displayName.trim(),
         blood_group: bloodGroup || undefined,
         governorate: governorate || undefined,
         city: city || undefined,
         is_searchable: searchable,
+        ...(photo_url ? { photo_url } : {}),
       });
       await queryClient.invalidateQueries({ queryKey: ['profile', session.user.id] });
       router.back();
@@ -72,6 +93,13 @@ export default function ProfileEdit() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
       <Stack.Screen options={{ title: 'Edit profile' }} />
+
+      <View style={styles.avatarSection}>
+        <Avatar uri={photoUri ?? profile?.photo_url} size={96} />
+        <Pressable onPress={pickImage} hitSlop={8}>
+          <Text style={styles.changePhoto}>Change photo</Text>
+        </Pressable>
+      </View>
 
       <Text style={styles.label}>Display name</Text>
       <TextInput
@@ -152,6 +180,8 @@ export default function ProfileEdit() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   container: { padding: spacing.xl, gap: spacing.sm },
+  avatarSection: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
+  changePhoto: { ...type.bodyBold, color: colors.primary },
   label: { ...type.label, color: colors.textMuted, marginTop: spacing.sm },
   input: {
     borderWidth: 1,

@@ -1,5 +1,7 @@
 import { supabase } from '@/services/supabase';
 
+export type DonationStatus = 'pending' | 'inprogress' | 'done' | 'canceled';
+
 export type PendingRequest = {
   id: string;
   recipient_name: string;
@@ -36,7 +38,7 @@ export type RequestDetails = {
   donation_date: string;
   donation_time: string;
   request_message: string;
-  donation_status: 'pending' | 'inprogress' | 'done' | 'canceled';
+  donation_status: DonationStatus;
   donor_id: string | null;
 };
 
@@ -48,7 +50,19 @@ export type MyRequest = {
   blood_group: string;
   donation_date: string;
   donation_time: string;
-  donation_status: 'pending' | 'inprogress' | 'done' | 'canceled';
+  donation_status: DonationStatus;
+};
+
+export type EditableRequest = {
+  recipient_name: string;
+  recipient_governorate: string;
+  recipient_city: string;
+  hospital_name: string;
+  full_address: string;
+  blood_group: string;
+  donation_date: string;
+  donation_time: string;
+  request_message: string;
 };
 
 export const getPendingRequests = async (): Promise<PendingRequest[]> => {
@@ -90,4 +104,22 @@ export const createDonationRequest = async (input: NewDonationRequest) => {
   // Fire-and-forget: notify compatible donors. Never block or fail the request on this.
   supabase.functions.invoke('notify-donors', { body: { record: data } }).catch(() => {});
   return data;
+};
+
+export type RequestUpdate = Partial<EditableRequest> & { donation_status?: DonationStatus };
+
+export const updateDonationRequest = async (id: string, updates: RequestUpdate) => {
+  const { data, error } = await supabase
+    .from('blood_donation_requests')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+export const deleteDonationRequest = async (id: string) => {
+  const { error } = await supabase.from('blood_donation_requests').delete().eq('id', id);
+  if (error) throw new Error(error.message);
 };

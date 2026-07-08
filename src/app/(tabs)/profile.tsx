@@ -1,8 +1,9 @@
-import { View, Text, Image, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
+import { Avatar } from '@/components/Avatar';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
 export default function Profile() {
@@ -18,17 +19,9 @@ export default function Profile() {
     );
   }
 
-  const initial = (profile?.display_name ?? session?.user.email ?? '?').slice(0, 1).toUpperCase();
-
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      {profile?.photo_url ? (
-        <Image source={{ uri: profile.photo_url }} style={styles.avatar} />
-      ) : (
-        <View style={[styles.avatar, styles.avatarFallback]}>
-          <Text style={styles.avatarLetter}>{initial}</Text>
-        </View>
-      )}
+      <Avatar uri={profile?.photo_url} size={104} style={styles.avatar} />
 
       <Text style={styles.name}>{profile?.display_name ?? 'Unnamed user'}</Text>
       <Text style={styles.email}>{session?.user.email}</Text>
@@ -66,6 +59,15 @@ export default function Profile() {
       </Pressable>
 
       <Pressable
+        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
+        onPress={() => router.push('/funds')}
+        accessibilityRole="button"
+        accessibilityLabel="Donate funds"
+      >
+        <Text style={styles.actionText}>Donate funds</Text>
+      </Pressable>
+
+      <Pressable
         style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.85 }]}
         onPress={signOut}
       >
@@ -87,9 +89,7 @@ function Row({ label, value, accent }: { label: string; value: string; accent?: 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   container: { padding: spacing.xl, alignItems: 'center' },
-  avatar: { width: 104, height: 104, borderRadius: 52, marginBottom: spacing.lg },
-  avatarFallback: { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarLetter: { color: colors.white, fontFamily: fonts.extrabold, fontSize: 40 },
+  avatar: { marginBottom: spacing.lg },
   name: { ...type.h2, color: colors.text },
   email: { ...type.body, color: colors.textMuted, marginBottom: spacing.lg },
   rows: { alignSelf: 'stretch', marginBottom: spacing.xl },

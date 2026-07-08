@@ -8,9 +8,11 @@ import { colors, fonts } from '@/constants/theme';
 type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 function tabIcon(active: IoniconName, inactive: IoniconName) {
-  return ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => (
+  const TabBarIcon = ({ focused, color, size }: { focused: boolean; color: ColorValue; size: number }) => (
     <Ionicons name={focused ? active : inactive} size={size} color={color} />
   );
+  TabBarIcon.displayName = 'TabBarIcon';
+  return TabBarIcon;
 }
 
 export default function TabsLayout() {

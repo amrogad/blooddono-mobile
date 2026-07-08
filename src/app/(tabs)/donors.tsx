@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  Image,
   FlatList,
   Pressable,
   ActivityIndicator,
@@ -12,6 +11,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useMutation } from '@tanstack/react-query';
 
 import { searchDonors, DonorMatch } from '@/services/profileService';
+import { Avatar } from '@/components/Avatar';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
@@ -112,15 +112,7 @@ export default function FindDonors() {
           contentContainerStyle={styles.results}
           renderItem={({ item }) => (
             <View style={styles.donor}>
-              {item.photo_url ? (
-                <Image source={{ uri: item.photo_url }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarLetter}>
-                    {(item.display_name ?? '?').slice(0, 1).toUpperCase()}
-                  </Text>
-                </View>
-              )}
+              <Avatar uri={item.photo_url} size={44} />
               <View style={styles.donorText}>
                 <Text style={styles.donorName}>{item.display_name ?? 'Anonymous'}</Text>
                 <Text style={styles.donorMeta}>
@@ -171,9 +163,6 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     backgroundColor: colors.white,
   },
-  avatar: { width: 44, height: 44, borderRadius: 22 },
-  avatarFallback: { backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarLetter: { color: colors.white, fontFamily: fonts.bold, fontSize: 18 },
   donorText: { flex: 1 },
   donorName: { ...type.bodyBold, color: colors.text },
   donorMeta: { ...type.small, color: colors.textMuted },

@@ -4,6 +4,8 @@ import {
   getRequestDetails,
   acceptRequest,
   createDonationRequest,
+  updateDonationRequest,
+  deleteDonationRequest,
 } from '@/services/donationService';
 import { supabase } from '@/services/supabase';
 
@@ -23,6 +25,7 @@ type QueryMock = {
   select: jest.Mock;
   insert: jest.Mock;
   update: jest.Mock;
+  delete: jest.Mock;
   eq: jest.Mock;
   order: jest.Mock;
   single: jest.Mock;
@@ -34,6 +37,7 @@ function makeQuery(result: { data: unknown; error: unknown }): QueryMock {
   q.select = jest.fn(() => q);
   q.insert = jest.fn(() => q);
   q.update = jest.fn(() => q);
+  q.delete = jest.fn(() => q);
   q.eq = jest.fn(() => q);
   q.order = jest.fn(() => q);
   q.single = jest.fn(() => q);
@@ -120,5 +124,40 @@ describe('createDonationRequest', () => {
   test('throws when the insert fails', async () => {
     from.mockReturnValue(makeQuery({ data: null, error: { message: 'duplicate' } }));
     await expect(createDonationRequest(input)).rejects.toThrow('duplicate');
+  });
+});
+
+describe('updateDonationRequest', () => {
+  test('updates the row by id and returns the fresh record', async () => {
+    const q = makeQuery({ data: { id: 'r1', donation_status: 'done' }, error: null });
+    from.mockReturnValue(q);
+    await expect(updateDonationRequest('r1', { donation_status: 'done' })).resolves.toEqual({
+      id: 'r1',
+      donation_status: 'done',
+    });
+    expect(from).toHaveBeenCalledWith('blood_donation_requests');
+    expect(q.update).toHaveBeenCalledWith({ donation_status: 'done' });
+    expect(q.eq).toHaveBeenCalledWith('id', 'r1');
+  });
+
+  test('throws on update error', async () => {
+    from.mockReturnValue(makeQuery({ data: null, error: { message: 'not allowed' } }));
+    await expect(updateDonationRequest('r1', { hospital_name: 'X' })).rejects.toThrow('not allowed');
+  });
+});
+
+describe('deleteDonationRequest', () => {
+  test('deletes the row by id', async () => {
+    const q = makeQuery({ data: null, error: null });
+    from.mockReturnValue(q);
+    await deleteDonationRequest('r1');
+    expect(from).toHaveBeenCalledWith('blood_donation_requests');
+    expect(q.delete).toHaveBeenCalled();
+    expect(q.eq).toHaveBeenCalledWith('id', 'r1');
+  });
+
+  test('throws on delete error', async () => {
+    from.mockReturnValue(makeQuery({ data: null, error: { message: 'forbidden' } }));
+    await expect(deleteDonationRequest('r1')).rejects.toThrow('forbidden');
   });
 });

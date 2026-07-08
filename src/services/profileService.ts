@@ -26,6 +26,7 @@ export type ProfileUpdate = {
   governorate?: string;
   city?: string;
   is_searchable?: boolean;
+  photo_url?: string;
 };
 
 export const updateProfile = async (userId: string, updates: ProfileUpdate): Promise<Profile> => {
@@ -47,6 +48,18 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
     .single();
   if (error) throw new Error(error.message);
   return data as Profile | null;
+};
+
+export const uploadAvatar = async (userId: string, uri: string): Promise<string> => {
+  const arrayBuffer = await fetch(uri).then((res) => res.arrayBuffer());
+  const ext = uri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('avatars').upload(path, arrayBuffer, {
+    contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+    upsert: true,
+  });
+  if (error) throw new Error(error.message);
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
 };
 
 export const searchDonors = async (

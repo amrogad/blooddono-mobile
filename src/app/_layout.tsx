@@ -47,7 +47,10 @@ function RootNavigator() {
         <Stack.Screen name="request/[id]" options={{ headerShown: true, title: 'Request' }} />
         <Stack.Screen name="map" options={{ headerShown: true, title: 'Map' }} />
         <Stack.Screen name="my-requests" options={{ headerShown: true, title: 'My requests' }} />
+        <Stack.Screen name="edit-request/[id]" options={{ headerShown: true, title: 'Edit request' }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Edit profile' }} />
+        <Stack.Screen name="funds" options={{ headerShown: false }} />
+        <Stack.Screen name="funds/payment" options={{ headerShown: true, title: 'Donate' }} />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="(auth)/login" />

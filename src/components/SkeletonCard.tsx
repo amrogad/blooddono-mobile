@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated, View, StyleSheet, Easing } from 'react-native';
 import { colors, radius, spacing } from '@/constants/theme';
 
 export function SkeletonCard() {
-  const shimmer = useRef(new Animated.Value(0)).current;
+  const [shimmer] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     const loop = Animated.loop(

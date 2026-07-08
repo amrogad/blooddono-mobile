@@ -36,6 +36,12 @@ module.exports = {
       ],
       '@react-native-community/datetimepicker',
       'expo-font',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Allow BloodDono to access your photos to set a profile picture.',
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,

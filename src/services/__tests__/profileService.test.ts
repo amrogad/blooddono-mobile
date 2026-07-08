@@ -1,12 +1,19 @@
-import { getProfile, updateProfile, searchDonors, savePushToken } from '@/services/profileService';
+import {
+  getProfile,
+  updateProfile,
+  searchDonors,
+  savePushToken,
+  uploadAvatar,
+} from '@/services/profileService';
 import { supabase } from '@/services/supabase';
 
 jest.mock('@/services/supabase', () => ({
-  supabase: { rpc: jest.fn(), from: jest.fn() },
+  supabase: { rpc: jest.fn(), from: jest.fn(), storage: { from: jest.fn() } },
 }));
 
 const rpc = supabase.rpc as jest.Mock;
 const from = supabase.from as jest.Mock;
+const storageFrom = supabase.storage.from as jest.Mock;
 
 type QueryMock = {
   select: jest.Mock;
@@ -80,6 +87,38 @@ describe('searchDonors', () => {
   test('throws on error', async () => {
     rpc.mockResolvedValue({ data: null, error: { message: 'rpc failed' } });
     await expect(searchDonors('O-', 'Cairo', null)).rejects.toThrow('rpc failed');
+  });
+});
+
+describe('uploadAvatar', () => {
+  const mockFetch = (buffer = new ArrayBuffer(8)) => {
+    globalThis.fetch = jest
+      .fn()
+      .mockResolvedValue({ arrayBuffer: () => Promise.resolve(buffer) }) as unknown as typeof fetch;
+  };
+
+  test('uploads the picked file to the avatars bucket and returns its public url', async () => {
+    mockFetch();
+    const upload = jest.fn(() => Promise.resolve({ error: null }));
+    const getPublicUrl = jest.fn(() => ({ data: { publicUrl: 'https://cdn/u1/pic.png' } }));
+    storageFrom.mockReturnValue({ upload, getPublicUrl });
+
+    await expect(uploadAvatar('u1', 'file:///tmp/pic.png')).resolves.toBe('https://cdn/u1/pic.png');
+    expect(storageFrom).toHaveBeenCalledWith('avatars');
+    expect(upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^u1\/\d+\.png$/),
+      expect.any(ArrayBuffer),
+      expect.objectContaining({ contentType: 'image/png', upsert: true }),
+    );
+  });
+
+  test('throws when the upload fails', async () => {
+    mockFetch();
+    storageFrom.mockReturnValue({
+      upload: jest.fn(() => Promise.resolve({ error: { message: 'too large' } })),
+      getPublicUrl: jest.fn(),
+    });
+    await expect(uploadAvatar('u1', 'file:///tmp/pic.png')).rejects.toThrow('too large');
   });
 });
 
