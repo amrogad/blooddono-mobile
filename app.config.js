@@ -10,10 +10,8 @@ module.exports = {
     android: {
       package: 'com.amrogad.blooddonomobile',
       adaptiveIcon: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#B01030',
         foregroundImage: './assets/images/android-icon-foreground.png',
-        backgroundImage: './assets/images/android-icon-background.png',
-        monochromeImage: './assets/images/android-icon-monochrome.png',
       },
       predictiveBackGestureEnabled: false,
     },
@@ -26,7 +24,7 @@ module.exports = {
       [
         'expo-splash-screen',
         {
-          backgroundColor: '#8B0000',
+          backgroundColor: '#C21E3F',
           android: {
             image: './assets/images/splash-icon.png',
             imageWidth: 96,

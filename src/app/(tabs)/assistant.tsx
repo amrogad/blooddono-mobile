@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { Feather } from '@expo/vector-icons';
+
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
 import { askAssistant, Message } from '@/services/assistantService';
@@ -133,7 +135,7 @@ export default function Assistant() {
             accessibilityRole="button"
             accessibilityLabel="Send message"
           >
-            <Text style={styles.sendButtonText}>↑</Text>
+            <Feather name="arrow-up" size={18} color={colors.white} />
           </Pressable>
         </View>
       </View>
@@ -167,13 +169,15 @@ const styles = StyleSheet.create({
   },
   aiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderBottomLeftRadius: radius.sm,
   },
   loadingBubble: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
   bubbleText: { ...type.body, lineHeight: 22 },
   userText: { color: colors.white },
-  aiText: { color: colors.text },
+  aiText: { color: colors.textBody },
   inputArea: {
     borderTopWidth: 1,
     borderTopColor: colors.border,

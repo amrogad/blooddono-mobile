@@ -1,19 +1,18 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 
 import { useAuth } from '@/providers/AuthProvider';
-import { DEMO_ACCOUNTS } from '@/constants/demoAccounts';
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { DEMO_ACCOUNTS, DemoAccount } from '@/constants/demoAccounts';
+import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 import { isEmail, friendlyAuthError } from '@/utils/errors';
+
+const ROLE_INFO: Record<DemoAccount['role'], { desc: string; icon: keyof typeof Feather.glyphMap }> = {
+  donor: { desc: 'Browse nearby requests and accept one', icon: 'droplet' },
+  volunteer: { desc: 'Post and coordinate requests for patients', icon: 'users' },
+  admin: { desc: 'Verify requests, manage users and funds', icon: 'shield' },
+};
+const DEMO_ORDER: DemoAccount['role'][] = ['donor', 'volunteer', 'admin'];
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -38,172 +37,147 @@ export default function Login() {
     }
   };
 
+  const demoAccounts = DEMO_ORDER.map((r) => DEMO_ACCOUNTS.find((a) => a.role === r)).filter(
+    (a): a is DemoAccount => !!a,
+  );
+
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.scroll}
       keyboardShouldPersistTaps="handled"
     >
-      <LinearGradient
-        colors={[colors.primaryDeep, colors.primary, colors.primaryLight]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.hero}
+      <View style={styles.brandRow}>
+        <View style={styles.mark} />
+        <Text style={styles.wordmark}>BloodDono</Text>
+      </View>
+      <Text style={styles.title}>Welcome back.</Text>
+
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="you@example.com"
+        placeholderTextColor={colors.textMuted}
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+
+      <Text style={styles.label}>Password</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="••••••••"
+        placeholderTextColor={colors.textMuted}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <Pressable
+        style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.9 }, submitting && { opacity: 0.6 }]}
+        onPress={() => handleSignIn(email, password)}
+        disabled={submitting}
+        accessibilityRole="button"
+        accessibilityLabel="Sign in"
       >
-        <View style={styles.drop} />
-        <Text style={styles.wordmark}>
-          Blood<Text style={styles.wordmarkAccent}>Dono</Text>
-        </Text>
-        <Text style={styles.tagline}>Every drop counts</Text>
-      </LinearGradient>
+        {submitting ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.primaryButtonText}>Sign in</Text>
+        )}
+      </Pressable>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Welcome back</Text>
-        <Text style={styles.cardSubtitle}>Sign in to keep saving lives</Text>
+      <View style={styles.divider}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>EXPLORING? TRY A DEMO ROLE</Text>
+        <View style={styles.dividerLine} />
+      </View>
 
-        <Text style={styles.label}>EMAIL</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="you@example.com"
-          placeholderTextColor="#B8ADA9"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <Text style={styles.label}>PASSWORD</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          placeholderTextColor="#B8ADA9"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.primaryButton,
-            pressed && { opacity: 0.9 },
-            submitting && { opacity: 0.6 },
-          ]}
-          onPress={() => handleSignIn(email, password)}
-          disabled={submitting}
-          accessibilityRole="button"
-          accessibilityLabel="Sign in"
-        >
-          {submitting ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={styles.primaryButtonText}>Sign in</Text>
-          )}
-        </Pressable>
-
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or try a demo</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <View style={styles.demoRow}>
-          {DEMO_ACCOUNTS.map((acc) => (
+      <View style={styles.roleList}>
+        {demoAccounts.map((acc) => {
+          const info = ROLE_INFO[acc.role];
+          const isDonor = acc.role === 'donor';
+          return (
             <Pressable
               key={acc.role}
-              style={({ pressed }) => [
-                styles.demoChip,
-                pressed && { backgroundColor: colors.primary, borderColor: colors.primary },
-              ]}
+              style={({ pressed }) => [styles.roleCard, pressed && { opacity: 0.85 }]}
               onPress={() => handleSignIn(acc.email, acc.password, true)}
               disabled={submitting}
               accessibilityRole="button"
-              accessibilityLabel={`Sign in as ${acc.label} demo account`}
+              accessibilityLabel={`${acc.label} demo account`}
             >
-              {({ pressed }) => (
-                <Text style={[styles.demoChipText, pressed && { color: colors.white }]}>
-                  {acc.label}
-                </Text>
-              )}
+              <View style={[styles.roleIcon, isDonor ? styles.roleIconDonor : styles.roleIconMuted]}>
+                <Feather name={info.icon} size={16} color={isDonor ? colors.primary : colors.textBody} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={styles.roleLabel}>{acc.label}</Text>
+                <Text style={styles.roleDesc}>{info.desc}</Text>
+              </View>
+              <Feather name="chevron-right" size={16} color={colors.textMuted} />
             </Pressable>
-          ))}
-        </View>
+          );
+        })}
+      </View>
+
+      <View style={styles.stayRow}>
+        <Feather name="lock" size={12} color={colors.textMuted} />
+        <Text style={styles.stayText}>You stay signed in on this device</Text>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, backgroundColor: colors.background },
-  hero: {
-    paddingTop: 96,
-    paddingBottom: 72,
-    paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    overflow: 'hidden',
-  },
-  drop: {
-    position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  wordmark: { fontFamily: fonts.extrabold, fontSize: 40, color: colors.white, letterSpacing: -1 },
-  wordmarkAccent: { color: '#FFD9D2' },
-  tagline: {
-    fontFamily: fonts.display,
-    fontSize: 20,
-    color: 'rgba(255,255,255,0.92)',
-    marginTop: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.white,
-    marginHorizontal: spacing.xl,
-    marginTop: -44,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    ...shadow.floating,
-  },
-  cardTitle: { ...type.h2, color: colors.text },
-  cardSubtitle: { ...type.small, color: colors.textMuted, marginBottom: spacing.md },
-  label: { ...type.label, color: colors.textMuted, marginTop: spacing.md, marginBottom: 6 },
+  scroll: { flexGrow: 1, paddingTop: 80, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  mark: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.primary },
+  wordmark: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.3 },
+  title: { fontFamily: fonts.displayBold, fontSize: 30, color: colors.ink, letterSpacing: -0.6, marginTop: spacing.xl },
+  label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink, marginTop: spacing.lg, marginBottom: 6 },
   input: {
+    height: 48,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 13,
+    borderColor: colors.borderStrong,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    justifyContent: 'center',
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
-    backgroundColor: '#FCFAF9',
+    color: colors.ink,
+    backgroundColor: colors.white,
   },
   error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.md },
   primaryButton: {
+    height: 52,
     backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 15,
+    borderRadius: radius.card,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: spacing.lg,
   },
-  primaryButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16, letterSpacing: 0.3 },
+  primaryButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.lg },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
-  dividerText: { ...type.small, color: colors.textMuted },
-  demoRow: { flexDirection: 'row', gap: spacing.sm },
-  demoChip: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: 11,
+  dividerText: { fontFamily: fonts.semibold, fontSize: 11, letterSpacing: 0.8, color: colors.textMuted },
+  roleList: { gap: spacing.sm },
+  roleCard: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 13,
+    padding: 12,
   },
-  demoChipText: { color: colors.primary, fontFamily: fonts.semibold, fontSize: 13 },
+  roleIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  roleIconDonor: { backgroundColor: colors.crimsonTint },
+  roleIconMuted: { backgroundColor: colors.surface },
+  roleLabel: { fontFamily: fonts.semibold, fontSize: 13.5, color: colors.ink },
+  roleDesc: { fontFamily: fonts.regular, fontSize: 11.5, color: colors.textMuted, marginTop: 1 },
+  stayRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: spacing.lg },
+  stayText: { fontFamily: fonts.regular, fontSize: 11.5, color: colors.textMuted },
 });

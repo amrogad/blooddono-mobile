@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
@@ -19,57 +20,59 @@ export default function Profile() {
     );
   }
 
+  const location = profile?.governorate
+    ? `${profile.city ? `${profile.city}, ` : ''}${profile.governorate}`
+    : '—';
+
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      <Avatar uri={profile?.photo_url} size={104} style={styles.avatar} />
-
-      <Text style={styles.name}>{profile?.display_name ?? 'Unnamed user'}</Text>
-      <Text style={styles.email}>{session?.user.email}</Text>
-
-      <View style={styles.rows}>
-        <Row label="Role" value={profile?.role ?? '—'} accent />
-        <Row label="Blood group" value={profile?.blood_group ?? '—'} />
-        <Row
-          label="Location"
-          value={
-            profile?.governorate
-              ? `${profile.city ?? ''}${profile.city ? ', ' : ''}${profile.governorate}`
-              : '—'
-          }
-        />
-        <Row label="Searchable" value={profile?.is_searchable ? 'Yes' : 'No'} />
+      <View style={styles.header}>
+        <Avatar uri={profile?.photo_url} size={62} />
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Text style={styles.name} numberOfLines={1}>
+            {profile?.display_name ?? 'Unnamed user'}
+          </Text>
+          <View style={styles.headerMeta}>
+            {profile?.blood_group ? (
+              <View style={styles.groupBadge}>
+                <Text style={styles.groupBadgeText}>{profile.blood_group}</Text>
+              </View>
+            ) : null}
+            {profile?.role ? <Text style={styles.role}>{profile.role}</Text> : null}
+          </View>
+        </View>
+        <Pressable
+          style={styles.editIcon}
+          onPress={() => router.push('/profile-edit')}
+          accessibilityRole="button"
+          accessibilityLabel="Edit profile"
+        >
+          <Feather name="edit-2" size={15} color={colors.textBody} />
+        </Pressable>
       </View>
 
-      <Pressable
-        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
-        onPress={() => router.push('/my-requests')}
-        accessibilityRole="button"
-        accessibilityLabel="View my requests"
-      >
-        <Text style={styles.actionText}>My requests</Text>
-      </Pressable>
+      <View style={styles.card}>
+        <InfoRow icon="mail" label="Email" value={session?.user.email ?? '—'} />
+        <InfoRow icon="map-pin" label="Location" value={location} divider />
+        <InfoRow
+          icon="search"
+          label="Visible in donor search"
+          value={profile?.is_searchable ? 'On' : 'Off'}
+          divider
+        />
+      </View>
 
-      <Pressable
-        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
-        onPress={() => router.push('/profile-edit')}
-        accessibilityRole="button"
-        accessibilityLabel="Edit profile"
-      >
-        <Text style={styles.actionText}>Edit profile</Text>
-      </Pressable>
-
-      <Pressable
-        style={({ pressed }) => [styles.action, pressed && { opacity: 0.9 }]}
-        onPress={() => router.push('/funds')}
-        accessibilityRole="button"
-        accessibilityLabel="Donate funds"
-      >
-        <Text style={styles.actionText}>Donate funds</Text>
-      </Pressable>
+      <View style={styles.card}>
+        <ActionRow icon="clock" label="My requests" onPress={() => router.push('/my-requests')} />
+        <ActionRow icon="edit-3" label="Edit profile" onPress={() => router.push('/profile-edit')} divider />
+        <ActionRow icon="heart" label="Community fund" onPress={() => router.push('/funds')} divider />
+      </View>
 
       <Pressable
         style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.85 }]}
         onPress={signOut}
+        accessibilityRole="button"
+        accessibilityLabel="Sign out"
       >
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
@@ -77,49 +80,93 @@ export default function Profile() {
   );
 }
 
-function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function InfoRow({
+  icon,
+  label,
+  value,
+  divider,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  value: string;
+  divider?: boolean;
+}) {
   return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, accent && { color: colors.accent }]}>{value}</Text>
+    <View style={[styles.infoRow, divider && styles.divider]}>
+      <Feather name={icon} size={16} color={colors.textMuted} />
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue} numberOfLines={1}>
+        {value}
+      </Text>
     </View>
   );
 }
 
+function ActionRow({
+  icon,
+  label,
+  onPress,
+  divider,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  onPress: () => void;
+  divider?: boolean;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.actionRow, divider && styles.divider, pressed && { opacity: 0.7 }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
+      <Feather name={icon} size={16} color={colors.textBody} />
+      <Text style={styles.actionLabel}>{label}</Text>
+      <Feather name="chevron-right" size={16} color={colors.textMuted} />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  container: { padding: spacing.xl, alignItems: 'center' },
-  avatar: { marginBottom: spacing.lg },
-  name: { ...type.h2, color: colors.text },
-  email: { ...type.body, color: colors.textMuted, marginBottom: spacing.lg },
-  rows: { alignSelf: 'stretch', marginBottom: spacing.xl },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  rowLabel: { ...type.body, color: colors.textMuted },
-  rowValue: { ...type.bodyBold, color: colors.text, textTransform: 'capitalize' },
-  action: {
-    alignSelf: 'stretch',
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  container: { padding: spacing.lg, paddingTop: 64, gap: spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  name: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },
+  headerMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 4 },
+  groupBadge: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 2.5 },
+  groupBadgeText: { fontFamily: fonts.displayBold, fontSize: 12, color: colors.white },
+  role: { ...type.small, color: colors.textMuted, textTransform: 'capitalize' },
+  editIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.control,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    justifyContent: 'center',
   },
-  actionText: { color: colors.text, fontFamily: fonts.semibold, fontSize: 15 },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    paddingHorizontal: spacing.md,
+  },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 14 },
+  infoLabel: { ...type.body, color: colors.textBody, flex: 1 },
+  infoValue: { ...type.bodyBold, color: colors.ink, maxWidth: '55%' },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 15 },
+  actionLabel: { ...type.body, color: colors.ink, flex: 1, fontFamily: fonts.medium },
+  divider: { borderTopWidth: 1, borderTopColor: colors.border },
   signOut: {
-    alignSelf: 'stretch',
-    backgroundColor: colors.black,
-    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.card,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: spacing.sm,
   },
-  signOutText: { color: colors.white, fontFamily: fonts.bold, fontSize: 15 },
+  signOutText: { color: colors.textBody, fontFamily: fonts.semibold, fontSize: 15 },
 });

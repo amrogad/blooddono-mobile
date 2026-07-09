@@ -1,57 +1,72 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 import { searchDonors, DonorMatch } from '@/services/profileService';
+import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
+import { BloodRoundel } from '@/components/BloodRoundel';
+import { BLOOD_GROUPS, compatibleDonorsFor } from '@/utils/bloodCompat';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-
 export default function FindDonors() {
+  const { session } = useAuth();
+  const { data: profile } = useProfile(session?.user.id);
+
   const [bloodGroup, setBloodGroup] = useState('');
   const [governorate, setGovernorate] = useState('');
   const [city, setCity] = useState('');
 
+  useEffect(() => {
+    if (profile?.governorate && !governorate) setGovernorate(profile.governorate);
+  }, [profile?.governorate, governorate]);
+
   const selectedGov = governorates.find((g) => g.name === governorate);
   const filteredCities = cities.filter((c) => c.governorate_id === selectedGov?.id);
+  const enabled = !!bloodGroup && !!governorate;
 
-  const search = useMutation<DonorMatch[], Error>({
-    mutationFn: () => searchDonors(bloodGroup, governorate, city || null),
+  const { data, isFetching, error } = useQuery({
+    queryKey: ['donors', bloodGroup, governorate, city],
+    queryFn: () => searchDonors(bloodGroup, governorate, city || null),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 
-  const canSearch = !!bloodGroup && !!governorate && !search.isPending;
+  const header = (
+    <View style={styles.header}>
+      <Text style={styles.title}>Find donors</Text>
+      <Text style={styles.subtitle}>Pick the patient&apos;s blood group — results update live</Text>
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Find compatible donors</Text>
-      <Text style={styles.help}>
-        Enter the patient&apos;s blood group. We&apos;ll match donors whose blood is safe to
-        donate to them.
-      </Text>
-
-      <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={bloodGroup}
-          onValueChange={setBloodGroup}
-          style={styles.picker}
-        >
-          <Picker.Item label="Patient blood group" value="" />
-          {BLOOD_GROUPS.map((g) => (
-            <Picker.Item key={g} label={g} value={g} />
-          ))}
-        </Picker>
+      <View style={styles.roundelRow}>
+        {BLOOD_GROUPS.map((g) => {
+          const on = bloodGroup === g;
+          return (
+            <Pressable
+              key={g}
+              onPress={() => setBloodGroup(on ? '' : g)}
+              style={[styles.rTile, on && styles.rTileOn]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+            >
+              <Text style={[styles.rTileText, on && styles.rTileTextOn]}>{g}</Text>
+            </Pressable>
+          );
+        })}
       </View>
+
+      {bloodGroup ? (
+        <View style={styles.strip}>
+          <BloodRoundel group={bloodGroup} size={30} variant="tint" />
+          <Text style={styles.stripText}>
+            Safe for a {bloodGroup} patient:{' '}
+            <Text style={styles.stripBold}>{compatibleDonorsFor(bloodGroup).join(', ')}</Text>
+          </Text>
+        </View>
+      ) : null}
 
       <View style={styles.pickerWrap}>
         <Picker
@@ -60,7 +75,6 @@ export default function FindDonors() {
             setGovernorate(v);
             setCity('');
           }}
-          style={styles.picker}
         >
           <Picker.Item label="Governorate" value="" />
           {governorates.map((g) => (
@@ -68,109 +82,107 @@ export default function FindDonors() {
           ))}
         </Picker>
       </View>
-
       <View style={styles.pickerWrap}>
-        <Picker
-          selectedValue={city}
-          onValueChange={setCity}
-          enabled={!!selectedGov}
-          style={styles.picker}
-        >
-          <Picker.Item label="City (optional)" value="" />
+        <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+          <Picker.Item label="Any city" value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
           ))}
         </Picker>
       </View>
+    </View>
+  );
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.searchButton,
-          !canSearch && { opacity: 0.5 },
-          pressed && { opacity: 0.9 },
-        ]}
-        onPress={() => search.mutate()}
-        disabled={!canSearch}
-      >
-        {search.isPending ? (
-          <ActivityIndicator color={colors.white} />
-        ) : (
-          <Text style={styles.searchButtonText}>Search</Text>
-        )}
-      </Pressable>
-
-      {search.error && <Text style={styles.error}>{search.error.message}</Text>}
-
-      {search.data && search.data.length === 0 && (
-        <Text style={styles.empty}>No matching donors right now.</Text>
-      )}
-
-      {search.data && search.data.length > 0 && (
-        <FlatList
-          data={search.data}
-          keyExtractor={(d) => d.id}
-          contentContainerStyle={styles.results}
-          renderItem={({ item }) => (
-            <View style={styles.donor}>
-              <Avatar uri={item.photo_url} size={44} />
-              <View style={styles.donorText}>
-                <Text style={styles.donorName}>{item.display_name ?? 'Anonymous'}</Text>
-                <Text style={styles.donorMeta}>
-                  {item.city}, {item.governorate}
-                </Text>
-              </View>
-              <View style={styles.groupPill}>
-                <Text style={styles.groupPillText}>{item.blood_group}</Text>
-              </View>
+  return (
+    <View style={styles.screen}>
+      <FlatList
+        data={enabled ? (data ?? []) : []}
+        keyExtractor={(d) => d.id}
+        ListHeaderComponent={header}
+        contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
+        renderItem={({ item }) => (
+          <View style={styles.donor}>
+            <Avatar uri={item.photo_url} size={44} />
+            <View style={styles.donorText}>
+              <Text style={styles.donorName} numberOfLines={1}>
+                {item.display_name ?? 'Anonymous'}
+              </Text>
+              <Text style={styles.donorMeta} numberOfLines={1}>
+                {item.city}, {item.governorate}
+              </Text>
             </View>
-          )}
-        />
-      )}
+            <BloodRoundel group={item.blood_group} size={38} variant="tint" />
+          </View>
+        )}
+        ListEmptyComponent={
+          <View style={styles.state}>
+            {!enabled ? (
+              <Text style={styles.stateText}>Pick a blood group and area to see matching donors.</Text>
+            ) : isFetching ? (
+              <ActivityIndicator color={colors.accent} />
+            ) : error ? (
+              <Text style={styles.stateText}>{(error as Error).message}</Text>
+            ) : (
+              <Text style={styles.stateText}>No matching donors in this area yet.</Text>
+            )}
+          </View>
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.xl, gap: spacing.md },
-  title: { ...type.h2, color: colors.text },
-  help: { ...type.body, color: colors.textMuted, marginBottom: spacing.sm },
+  screen: { flex: 1, backgroundColor: colors.background },
+  listContent: { paddingBottom: spacing.xl },
+  header: { paddingHorizontal: spacing.lg, paddingTop: 60, gap: spacing.sm },
+  title: { ...type.h1, color: colors.ink },
+  subtitle: { ...type.small, color: colors.textMuted },
+  roundelRow: { flexDirection: 'row', gap: 6, marginTop: spacing.sm },
+  rTile: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rTileOn: { backgroundColor: colors.primary },
+  rTileText: { fontFamily: fonts.displayBold, fontSize: 13, color: colors.textBody },
+  rTileTextOn: { color: colors.white },
+  strip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: colors.crimsonTint,
+  },
+  stripText: { flex: 1, fontFamily: fonts.regular, fontSize: 12, color: colors.textBody },
+  stripBold: { fontFamily: fonts.semibold, color: colors.ink },
   pickerWrap: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
+    borderColor: colors.borderStrong,
+    borderRadius: 13,
     overflow: 'hidden',
     backgroundColor: colors.white,
   },
-  picker: { fontFamily: fonts.regular },
-  searchButton: {
-    backgroundColor: colors.black,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  searchButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
-  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.sm },
-  empty: { textAlign: 'center', color: colors.textMuted, fontFamily: fonts.regular, marginTop: spacing.xl },
-  results: { paddingTop: spacing.md, gap: spacing.sm },
   donor: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.md,
+    borderRadius: radius.card,
     padding: spacing.md,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.sm,
     backgroundColor: colors.white,
   },
-  donorText: { flex: 1 },
-  donorName: { ...type.bodyBold, color: colors.text },
+  donorText: { flex: 1, minWidth: 0 },
+  donorName: { ...type.bodyBold, color: colors.ink },
   donorMeta: { ...type.small, color: colors.textMuted },
-  groupPill: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radius.pill,
-  },
-  groupPillText: { color: colors.white, fontFamily: fonts.bold, fontSize: 12 },
+  state: { alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  stateText: { ...type.body, color: colors.textMuted, textAlign: 'center' },
 });

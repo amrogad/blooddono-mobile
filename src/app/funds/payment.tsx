@@ -1,15 +1,6 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { createFund } from '@/services/fundService';
@@ -17,31 +8,32 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
 import { colors, spacing, radius, fonts, type } from '@/constants/theme';
 
+const PRESETS = [50, 100, 250, 500];
+
 export default function Payment() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
+  const { amount: preset } = useLocalSearchParams<{ amount?: string }>();
 
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(preset ?? '');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
   const [amountError, setAmountError] = useState('');
 
   const donate = useMutation({
-    mutationFn: () => {
-      const parsed = parseFloat(amount);
-      return createFund({
+    mutationFn: () =>
+      createFund({
         user_id: session!.user.id,
         name: profile?.display_name ?? session!.user.email ?? '',
         email: session!.user.email ?? '',
-        amount: parsed,
-      });
-    },
+        amount: parseFloat(amount),
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['funds'] });
-      Alert.alert('Thank you!', 'Your donation was received.', [
+      Alert.alert('Thank you', 'Your support was received.', [
         { text: 'OK', onPress: () => router.replace('/funds') },
       ]);
     },
@@ -60,68 +52,80 @@ export default function Payment() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      <Text style={styles.pageTitle}>Donation form</Text>
-      <Text style={styles.pageSubtitle}>Support the BloodDono community</Text>
+      <Text style={styles.pageTitle}>Give to the fund</Text>
+      <Text style={styles.pageSubtitle}>Your name and amount are listed publicly.</Text>
 
-      <Field label="Amount (EGP)">
-        <TextInput
-          style={styles.input}
-          placeholder="0.00"
-          placeholderTextColor="#aaa"
-          keyboardType="decimal-pad"
-          value={amount}
-          onChangeText={setAmount}
-        />
-        {amountError ? <Text style={styles.fieldError}>{amountError}</Text> : null}
-      </Field>
+      <Text style={styles.label}>Amount</Text>
+      <View style={styles.presetRow}>
+        {PRESETS.map((p) => {
+          const on = amount === String(p);
+          return (
+            <Pressable
+              key={p}
+              onPress={() => {
+                setAmount(String(p));
+                setAmountError('');
+              }}
+              style={[styles.preset, on && styles.presetOn]}
+            >
+              <Text style={[styles.presetText, on && styles.presetTextOn]}>EGP {p}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Other amount (EGP)"
+        placeholderTextColor={colors.textMuted}
+        keyboardType="decimal-pad"
+        value={amount}
+        onChangeText={(t) => {
+          setAmount(t);
+          setAmountError('');
+        }}
+      />
+      {amountError ? <Text style={styles.fieldError}>{amountError}</Text> : null}
 
-      <Field label="Card number">
-        <TextInput
-          style={styles.input}
-          placeholder="4242 4242 4242 4242"
-          placeholderTextColor="#aaa"
-          keyboardType="number-pad"
-          maxLength={19}
-          value={cardNumber}
-          onChangeText={setCardNumber}
-        />
-      </Field>
+      <Text style={styles.label}>Card number</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="4242 4242 4242 4242"
+        placeholderTextColor={colors.textMuted}
+        keyboardType="number-pad"
+        maxLength={19}
+        value={cardNumber}
+        onChangeText={setCardNumber}
+      />
 
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          <Field label="Expiry">
-            <TextInput
-              style={styles.input}
-              placeholder="MM / YY"
-              placeholderTextColor="#aaa"
-              maxLength={7}
-              value={expiry}
-              onChangeText={setExpiry}
-            />
-          </Field>
+          <Text style={styles.label}>Expiry</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="MM / YY"
+            placeholderTextColor={colors.textMuted}
+            maxLength={7}
+            value={expiry}
+            onChangeText={setExpiry}
+          />
         </View>
         <View style={{ flex: 1 }}>
-          <Field label="CVC">
-            <TextInput
-              style={styles.input}
-              placeholder="123"
-              placeholderTextColor="#aaa"
-              keyboardType="number-pad"
-              maxLength={3}
-              value={cvc}
-              onChangeText={setCvc}
-              secureTextEntry
-            />
-          </Field>
+          <Text style={styles.label}>CVC</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="123"
+            placeholderTextColor={colors.textMuted}
+            keyboardType="number-pad"
+            maxLength={3}
+            value={cvc}
+            onChangeText={setCvc}
+            secureTextEntry
+          />
         </View>
       </View>
 
       <Pressable
-        style={({ pressed }) => [
-          styles.submit,
-          pressed && { opacity: 0.9 },
-          donate.isPending && { opacity: 0.6 },
-        ]}
+        style={({ pressed }) => [styles.submit, pressed && { opacity: 0.9 }, donate.isPending && { opacity: 0.6 }]}
         onPress={handleSubmit}
         disabled={donate.isPending}
         accessibilityRole="button"
@@ -130,46 +134,53 @@ export default function Payment() {
         {donate.isPending ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Text style={styles.submitText}>Pay</Text>
+          <Text style={styles.submitText}>{amount ? `Give EGP ${amount}` : 'Give'}</Text>
         )}
       </Pressable>
     </ScrollView>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <View style={{ gap: 4 }}>
-      <Text style={styles.label}>{label}</Text>
-      {children}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { padding: spacing.xl, gap: spacing.md },
-  pageTitle: { ...type.h2, color: colors.text },
-  pageSubtitle: { ...type.body, color: colors.textMuted, marginBottom: spacing.sm },
-  label: { ...type.label, color: colors.textMuted, marginTop: spacing.xs },
+  container: { padding: spacing.lg, gap: spacing.sm },
+  pageTitle: { ...type.h2, color: colors.ink },
+  pageSubtitle: { ...type.small, color: colors.textMuted, marginBottom: spacing.sm },
+  label: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.ink, marginTop: spacing.md, marginBottom: 6 },
+  presetRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+  preset: {
+    flex: 1,
+    height: 42,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  presetOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  presetText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textBody },
+  presetTextOn: { color: colors.white },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    borderColor: colors.borderStrong,
+    borderRadius: 13,
+    paddingHorizontal: 15,
+    height: 48,
+    justifyContent: 'center',
     fontFamily: fonts.regular,
     fontSize: 15,
     backgroundColor: colors.white,
-    color: colors.text,
+    color: colors.ink,
   },
-  fieldError: { color: colors.error, fontFamily: fonts.medium, fontSize: 13 },
+  fieldError: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: 4 },
   row: { flexDirection: 'row', gap: spacing.md },
   submit: {
-    backgroundColor: colors.black,
-    borderRadius: radius.md,
-    paddingVertical: 14,
+    backgroundColor: colors.ink,
+    borderRadius: radius.card,
+    height: 52,
     alignItems: 'center',
-    marginTop: spacing.md,
+    justifyContent: 'center',
+    marginTop: spacing.lg,
   },
   submitText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
 });
