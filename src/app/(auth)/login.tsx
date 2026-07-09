@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   wordmark: { fontFamily: fonts.extrabold, fontSize: 40, color: colors.white, letterSpacing: -1 },
   wordmarkAccent: { color: '#FFD9D2' },
   tagline: {
-    fontFamily: fonts.script,
+    fontFamily: fonts.display,
     fontSize: 20,
     color: 'rgba(255,255,255,0.92)',
     marginTop: spacing.md,

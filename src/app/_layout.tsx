@@ -3,13 +3,15 @@ import { View, ActivityIndicator } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   useFonts,
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  Inter_800ExtraBold,
-} from '@expo-google-fonts/inter';
-import { PlaywriteAUSA_400Regular } from '@expo-google-fonts/playwrite-au-sa';
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  InstrumentSans_700Bold,
+} from '@expo-google-fonts/instrument-sans';
+import {
+  BricolageGrotesque_600SemiBold,
+  BricolageGrotesque_700Bold,
+} from '@expo-google-fonts/bricolage-grotesque';
 
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -61,12 +63,12 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const [fontsReady] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    PlaywriteAUSA_400Regular,
+    InstrumentSans_400Regular,
+    InstrumentSans_500Medium,
+    InstrumentSans_600SemiBold,
+    InstrumentSans_700Bold,
+    BricolageGrotesque_600SemiBold,
+    BricolageGrotesque_700Bold,
   });
 
   if (!fontsReady) {
