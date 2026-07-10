@@ -6,11 +6,14 @@ import { Feather } from '@expo/vector-icons';
 import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
 import { mapHtml, MapPoint } from '@/utils/mapHtml';
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 export default function FullscreenMap() {
   const { lat, lng, label } = useLocalSearchParams<{ lat: string; lng: string; label: string }>();
   const { coords: me } = useLocation();
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const hospital: MapPoint = { latitude: parseFloat(lat), longitude: parseFloat(lng) };
   const distance = me ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude) : null;
@@ -53,7 +56,7 @@ export default function FullscreenMap() {
           accessibilityRole="button"
           accessibilityLabel="Get directions in Google Maps"
         >
-          <Feather name="corner-up-right" size={16} color={colors.white} />
+          <Feather name="corner-up-right" size={16} color={colors.onPrimary} />
           <Text style={styles.directionsText}>Get directions</Text>
         </Pressable>
       </View>
@@ -61,7 +64,8 @@ export default function FullscreenMap() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   map: { flex: 1 },
   sheet: {
@@ -99,5 +103,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  directionsText: { color: colors.white, fontFamily: fonts.bold, fontSize: 15 },
+  directionsText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 15 },
 });

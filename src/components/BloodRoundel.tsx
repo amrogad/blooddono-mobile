@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 
 type Variant = 'solid' | 'tint' | 'muted';
 
@@ -12,8 +13,9 @@ export function BloodRoundel({
   size?: number;
   variant?: Variant;
 }) {
+  const { colors } = useTheme();
   const bg = variant === 'solid' ? colors.primary : variant === 'tint' ? colors.crimsonTint : colors.surface;
-  const fg = variant === 'solid' ? colors.white : variant === 'tint' ? colors.primary : colors.textBody;
+  const fg = variant === 'solid' ? colors.onPrimary : variant === 'tint' ? colors.primary : colors.textBody;
   return (
     <View
       style={[

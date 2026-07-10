@@ -1,4 +1,4 @@
-import { DefaultTheme, ThemeProvider, Stack } from 'expo-router';
+import { DefaultTheme, ThemeProvider as NavThemeProvider, Stack } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -14,50 +14,65 @@ import {
 } from '@expo-google-fonts/bricolage-grotesque';
 
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { colors, fonts } from '@/constants/theme';
+import { fonts } from '@/constants/theme';
 
 const queryClient = new QueryClient();
 
-const navTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.accent,
-    background: colors.background,
-    card: colors.background,
-    text: colors.text,
-    border: colors.border,
-  },
-};
-
 function RootNavigator() {
+  const { colors, scheme } = useTheme();
   const { session, loading } = useAuth();
   usePushNotifications(session?.user.id);
-  if (loading) return null;
+
+  const navTheme = {
+    ...DefaultTheme,
+    dark: scheme === 'dark',
+    colors: {
+      ...DefaultTheme.colors,
+      primary: colors.accent,
+      background: colors.background,
+      card: colors.background,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.accent,
+    },
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.accent} />
+      </View>
+    );
+  }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        headerTitleStyle: { fontFamily: fonts.semibold },
-        headerTintColor: colors.text,
-      }}
-    >
-      <Stack.Protected guard={!!session}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="request/[id]" options={{ headerShown: true, title: 'Request' }} />
-        <Stack.Screen name="map" options={{ headerShown: true, title: 'Map' }} />
-        <Stack.Screen name="my-requests" options={{ headerShown: true, title: 'My requests' }} />
-        <Stack.Screen name="edit-request/[id]" options={{ headerShown: true, title: 'Edit request' }} />
-        <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Edit profile' }} />
-        <Stack.Screen name="funds" options={{ headerShown: false }} />
-        <Stack.Screen name="funds/payment" options={{ headerShown: true, title: 'Donate' }} />
-      </Stack.Protected>
-      <Stack.Protected guard={!session}>
-        <Stack.Screen name="(auth)/login" />
-      </Stack.Protected>
-    </Stack>
+    <NavThemeProvider value={navTheme}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          headerStyle: { backgroundColor: colors.background },
+          headerTitleStyle: { fontFamily: fonts.semibold, color: colors.text },
+          headerTintColor: colors.text,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
+        <Stack.Protected guard={!!session}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="request/[id]" options={{ headerShown: true, title: 'Request' }} />
+          <Stack.Screen name="map" options={{ headerShown: true, title: 'Map' }} />
+          <Stack.Screen name="my-requests" options={{ headerShown: true, title: 'My requests' }} />
+          <Stack.Screen name="edit-request/[id]" options={{ headerShown: true, title: 'Edit request' }} />
+          <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Edit profile' }} />
+          <Stack.Screen name="funds" options={{ headerShown: false }} />
+          <Stack.Screen name="funds/payment" options={{ headerShown: true, title: 'Donate' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!session}>
+          <Stack.Screen name="(auth)/login" />
+        </Stack.Protected>
+      </Stack>
+    </NavThemeProvider>
   );
 }
 
@@ -73,19 +88,19 @@ export default function RootLayout() {
 
   if (!fontsReady) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={colors.accent} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FAF7F3' }}>
+        <ActivityIndicator color="#C21E3F" />
       </View>
     );
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider value={navTheme}>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
           <RootNavigator />
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

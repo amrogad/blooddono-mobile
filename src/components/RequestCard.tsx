@@ -1,7 +1,9 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { BloodRoundel } from '@/components/BloodRoundel';
 import { UrgencyPill } from '@/components/Pills';
 import { getUrgency, formatNeededBy } from '@/utils/urgency';
@@ -15,6 +17,7 @@ type Props = {
 };
 
 export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   const urgency = getUrgency(item.donation_date, item.donation_time);
   const critical = urgency.level === 'critical' || urgency.level === 'pastdue';
   const variant = critical ? 'solid' : urgency.level === 'urgent' ? 'tint' : 'muted';
@@ -65,38 +68,39 @@ export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.card,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    ...shadow.card,
-  },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  info: { flex: 1, minWidth: 0 },
-  name: { ...type.title, color: colors.ink },
-  meta: { ...type.small, color: colors.textMuted, marginTop: 1 },
-  needed: { fontFamily: fonts.semibold, fontSize: 12.5, marginTop: 11 },
-  actions: { flexDirection: 'row', gap: 7, marginTop: 11 },
-  donate: {
-    flex: 1,
-    height: 42,
-    borderRadius: radius.control,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  donateText: { color: colors.white, fontFamily: fonts.bold, fontSize: 13 },
-  chevron: {
-    width: 42,
-    height: 42,
-    borderRadius: radius.control,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pressed: { opacity: 0.85 },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderRadius: radius.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      ...shadow.card,
+    },
+    topRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+    info: { flex: 1, minWidth: 0 },
+    name: { ...type.title, color: colors.ink },
+    meta: { ...type.small, color: colors.textMuted, marginTop: 1 },
+    needed: { fontFamily: fonts.semibold, fontSize: 12.5, marginTop: 11 },
+    actions: { flexDirection: 'row', gap: 7, marginTop: 11 },
+    donate: {
+      flex: 1,
+      height: 42,
+      borderRadius: radius.control,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    donateText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 13 },
+    chevron: {
+      width: 42,
+      height: 42,
+      borderRadius: radius.control,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pressed: { opacity: 0.85 },
+  });

@@ -1,16 +1,20 @@
-import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles, useTheme } from '@/providers/ThemeProvider';
 
 export default function Profile() {
   const router = useRouter();
   const { session, signOut } = useAuth();
   const { data: profile, isLoading } = useProfile(session?.user.id);
+  const { colors, styles } = useThemedStyles(makeStyles);
+  const { scheme, toggle } = useTheme();
 
   if (isLoading) {
     return (
@@ -68,6 +72,19 @@ export default function Profile() {
         <ActionRow icon="heart" label="Community fund" onPress={() => router.push('/funds')} divider />
       </View>
 
+      <View style={styles.card}>
+        <View style={styles.toggleRow}>
+          <Feather name="moon" size={16} color={colors.textBody} />
+          <Text style={styles.toggleLabel}>Dark mode</Text>
+          <Switch
+            value={scheme === 'dark'}
+            onValueChange={toggle}
+            trackColor={{ false: colors.borderStrong, true: colors.primary }}
+            accessibilityLabel="Toggle dark mode"
+          />
+        </View>
+      </View>
+
       <Pressable
         style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.85 }]}
         onPress={signOut}
@@ -91,6 +108,7 @@ function InfoRow({
   value: string;
   divider?: boolean;
 }) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   return (
     <View style={[styles.infoRow, divider && styles.divider]}>
       <Feather name={icon} size={16} color={colors.textMuted} />
@@ -113,6 +131,7 @@ function ActionRow({
   onPress: () => void;
   divider?: boolean;
 }) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   return (
     <Pressable
       style={({ pressed }) => [styles.actionRow, divider && styles.divider, pressed && { opacity: 0.7 }]}
@@ -127,14 +146,15 @@ function ActionRow({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   container: { padding: spacing.lg, paddingTop: 64, gap: spacing.md },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   name: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },
   headerMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 4 },
   groupBadge: { backgroundColor: colors.primary, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 2.5 },
-  groupBadgeText: { fontFamily: fonts.displayBold, fontSize: 12, color: colors.white },
+  groupBadgeText: { fontFamily: fonts.displayBold, fontSize: 12, color: colors.onPrimary },
   role: { ...type.small, color: colors.textMuted, textTransform: 'capitalize' },
   editIcon: {
     width: 36,
@@ -158,6 +178,8 @@ const styles = StyleSheet.create({
   infoValue: { ...type.bodyBold, color: colors.ink, maxWidth: '55%' },
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 15 },
   actionLabel: { ...type.body, color: colors.ink, flex: 1, fontFamily: fonts.medium },
+  toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12 },
+  toggleLabel: { ...type.body, color: colors.ink, flex: 1, fontFamily: fonts.medium },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   signOut: {
     backgroundColor: colors.white,

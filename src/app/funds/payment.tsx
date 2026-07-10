@@ -6,7 +6,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createFund } from '@/services/fundService';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 const PRESETS = [50, 100, 250, 500];
 
@@ -16,6 +18,7 @@ export default function Payment() {
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
   const { amount: preset } = useLocalSearchParams<{ amount?: string }>();
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const [amount, setAmount] = useState(preset ?? '');
   const [cardNumber, setCardNumber] = useState('');
@@ -132,7 +135,7 @@ export default function Payment() {
         accessibilityLabel="Submit donation"
       >
         {donate.isPending ? (
-          <ActivityIndicator color={colors.white} />
+          <ActivityIndicator color={colors.onInk} />
         ) : (
           <Text style={styles.submitText}>{amount ? `Give EGP ${amount}` : 'Give'}</Text>
         )}
@@ -141,7 +144,8 @@ export default function Payment() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: { padding: spacing.lg, gap: spacing.sm },
   pageTitle: { ...type.h2, color: colors.ink },
   pageSubtitle: { ...type.small, color: colors.textMuted, marginBottom: spacing.sm },
@@ -159,7 +163,7 @@ const styles = StyleSheet.create({
   },
   presetOn: { backgroundColor: colors.ink, borderColor: colors.ink },
   presetText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textBody },
-  presetTextOn: { color: colors.white },
+  presetTextOn: { color: colors.onInk },
   input: {
     borderWidth: 1,
     borderColor: colors.borderStrong,
@@ -182,5 +186,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.lg,
   },
-  submitText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  submitText: { color: colors.onInk, fontFamily: fonts.bold, fontSize: 16 },
 });

@@ -5,7 +5,9 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 
 import { getFunds, Fund } from '@/services/fundService';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -14,6 +16,7 @@ function initials(name: string) {
 }
 
 const FundRow = memo(function FundRow({ item }: { item: Fund }) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   const label = (item.name ?? '').trim() || 'Anonymous';
   const badge = initials(item.name ?? '');
   return (
@@ -40,6 +43,7 @@ const FundRow = memo(function FundRow({ item }: { item: Fund }) {
 
 export default function Funds() {
   const router = useRouter();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['funds'],
     queryFn: getFunds,
@@ -132,7 +136,8 @@ export default function Funds() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   listContent: { paddingBottom: spacing.xl },
   headerWrap: { paddingHorizontal: spacing.lg },
@@ -148,13 +153,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   topTitle: { ...type.h3, fontFamily: fonts.display, color: colors.ink },
-  hero: { backgroundColor: colors.ink, borderRadius: radius.lg, padding: spacing.xl },
+  hero: { backgroundColor: '#211D1E', borderRadius: radius.lg, padding: spacing.xl },
   heroLabel: { fontFamily: fonts.semibold, fontSize: 11, letterSpacing: 1, color: '#9C938E' },
   heroAmount: { fontFamily: fonts.displayBold, fontSize: 34, color: '#FBF8F4', letterSpacing: -0.6, marginTop: 4 },
   heroCopy: { fontFamily: fonts.regular, fontSize: 13, lineHeight: 20, color: '#C9C0BB', marginTop: spacing.sm },
   heroButtons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   giveBtn: { flex: 1, height: 44, borderRadius: radius.md, backgroundColor: '#FBF8F4', alignItems: 'center', justifyContent: 'center' },
-  giveBtnText: { fontFamily: fonts.bold, fontSize: 14, color: colors.ink },
+  giveBtnText: { fontFamily: fonts.bold, fontSize: 14, color: '#211D1E' },
   otherBtn: {
     height: 44,
     paddingHorizontal: spacing.lg,

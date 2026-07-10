@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { DEMO_ACCOUNTS, DemoAccount } from '@/constants/demoAccounts';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { isEmail, friendlyAuthError } from '@/utils/errors';
+import brandMark from '@/assets/images/brand-mark.png';
 
 const ROLE_INFO: Record<DemoAccount['role'], { desc: string; icon: keyof typeof Feather.glyphMap }> = {
   donor: { desc: 'Browse nearby requests and accept one', icon: 'droplet' },
@@ -16,6 +19,7 @@ const DEMO_ORDER: DemoAccount['role'][] = ['donor', 'volunteer', 'admin'];
 
 export default function Login() {
   const { signIn } = useAuth();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +52,7 @@ export default function Login() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.brandRow}>
-        <View style={styles.mark} />
+        <Image source={brandMark} style={styles.mark} />
         <Text style={styles.wordmark}>BloodDono</Text>
       </View>
       <Text style={styles.title}>Welcome back.</Text>
@@ -84,7 +88,7 @@ export default function Login() {
         accessibilityLabel="Sign in"
       >
         {submitting ? (
-          <ActivityIndicator color={colors.white} />
+          <ActivityIndicator color={colors.onPrimary} />
         ) : (
           <Text style={styles.primaryButtonText}>Sign in</Text>
         )}
@@ -130,10 +134,11 @@ export default function Login() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   scroll: { flexGrow: 1, paddingTop: 80, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  mark: { width: 30, height: 30, borderRadius: 9, backgroundColor: colors.primary },
+  mark: { width: 30, height: 30, borderRadius: 9 },
   wordmark: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.3 },
   title: { fontFamily: fonts.displayBold, fontSize: 30, color: colors.ink, letterSpacing: -0.6, marginTop: spacing.xl },
   label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink, marginTop: spacing.lg, marginBottom: 6 },
@@ -158,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: spacing.lg,
   },
-  primaryButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  primaryButtonText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.lg },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerText: { fontFamily: fonts.semibold, fontSize: 11, letterSpacing: 0.8, color: colors.textMuted },

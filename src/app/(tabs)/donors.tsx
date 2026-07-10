@@ -11,11 +11,14 @@ import { BloodRoundel } from '@/components/BloodRoundel';
 import { BLOOD_GROUPS, compatibleDonorsFor } from '@/utils/bloodCompat';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 export default function FindDonors() {
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const [bloodGroup, setBloodGroup] = useState('');
   const [governorate, setGovernorate] = useState('');
@@ -133,7 +136,8 @@ export default function FindDonors() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   listContent: { paddingBottom: spacing.xl },
   header: { paddingHorizontal: spacing.lg, paddingTop: 60, gap: spacing.sm },
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
   },
   rTileOn: { backgroundColor: colors.primary },
   rTileText: { fontFamily: fonts.displayBold, fontSize: 13, color: colors.textBody },
-  rTileTextOn: { color: colors.white },
+  rTileTextOn: { color: colors.onPrimary },
   strip: {
     flexDirection: 'row',
     alignItems: 'center',

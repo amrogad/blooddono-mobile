@@ -10,7 +10,9 @@ import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
 import { mapHtml } from '@/utils/mapHtml';
 import { getUrgency, formatNeededBy } from '@/utils/urgency';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { BloodRoundel } from '@/components/BloodRoundel';
 import { UrgencyPill, StatusPill } from '@/components/Pills';
 
@@ -25,6 +27,7 @@ export default function RequestDetail() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { coords: me } = useLocation();
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
@@ -186,7 +189,7 @@ export default function RequestDetail() {
             accessibilityLabel="I can donate"
           >
             {accept.isPending ? (
-              <ActivityIndicator color={colors.white} />
+              <ActivityIndicator color={colors.onPrimary} />
             ) : (
               <Text style={styles.donateText}>I can donate</Text>
             )}
@@ -228,6 +231,7 @@ function Row({
   children: React.ReactNode;
   divider?: boolean;
 }) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   return (
     <View style={[styles.row, divider && styles.rowDivider]}>
       <Feather name={icon} size={16} color={colors.textMuted} style={styles.rowIcon} />
@@ -236,7 +240,8 @@ function Row({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   container: { padding: spacing.lg, gap: spacing.md },
   hero: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
@@ -273,7 +278,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: radius.pill,
   },
-  expandHintText: { color: colors.white, fontFamily: fonts.semibold, fontSize: 11 },
+  expandHintText: { color: colors.onPrimary, fontFamily: fonts.semibold, fontSize: 11 },
   mapPlaceholder: { backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', gap: 8 },
   mapPlaceholderText: { ...type.body, color: colors.textMuted },
   card: {
@@ -298,7 +303,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  donateText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  donateText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 },
   secondary: {
     flex: 1,
     height: 52,

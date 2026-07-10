@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, radius } from '@/constants/theme';
+import { fonts, radius } from '@/constants/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 import type { UrgencyLevel } from '@/utils/urgency';
 import type { DonationStatus } from '@/services/donationService';
 
@@ -25,22 +26,23 @@ function Pill({
 }
 
 export function UrgencyPill({ level }: { level: UrgencyLevel }) {
+  const { colors } = useTheme();
   if (level === 'critical' || level === 'pastdue') {
-    return <Pill bg={colors.primary} fg={colors.white} dot label={level === 'pastdue' ? 'OVERDUE' : 'CRITICAL'} />;
+    return <Pill bg={colors.primary} fg={colors.onPrimary} dot label={level === 'pastdue' ? 'OVERDUE' : 'CRITICAL'} />;
   }
   if (level === 'urgent') return <Pill bg={colors.warningTint} fg={colors.warning} label="URGENT" />;
   return <Pill bg={colors.surface} fg={colors.textMuted} label="PLANNED" />;
 }
 
-const STATUS: Record<DonationStatus, { bg: string; fg: string; label: string; strike?: boolean }> = {
-  pending: { bg: colors.warningTint, fg: colors.warning, label: 'Searching donors' },
-  inprogress: { bg: colors.infoTint, fg: colors.info, label: 'Donor matched' },
-  done: { bg: colors.successTint, fg: colors.success, label: 'Completed' },
-  canceled: { bg: colors.surface, fg: colors.textMuted, label: 'Cancelled', strike: true },
-};
-
 export function StatusPill({ status }: { status: DonationStatus }) {
-  const s = STATUS[status];
+  const { colors } = useTheme();
+  const map: Record<DonationStatus, { bg: string; fg: string; label: string; strike?: boolean }> = {
+    pending: { bg: colors.warningTint, fg: colors.warning, label: 'Searching donors' },
+    inprogress: { bg: colors.infoTint, fg: colors.info, label: 'Donor matched' },
+    done: { bg: colors.successTint, fg: colors.success, label: 'Completed' },
+    canceled: { bg: colors.surface, fg: colors.textMuted, label: 'Cancelled', strike: true },
+  };
+  const s = map[status];
   return <Pill bg={s.bg} fg={s.fg} label={s.label} strike={s.strike} />;
 }
 

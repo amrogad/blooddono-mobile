@@ -1,4 +1,4 @@
-export const colors = {
+export const lightColors = {
   // Crimson — the one accent. Blood, primary action, critical urgency.
   primary: '#C21E3F',
   primaryDeep: '#8F1230',
@@ -7,10 +7,11 @@ export const colors = {
   accentHover: '#8F1230',
   crimsonTint: '#FBEDF0',
 
-  // Warm neutrals — never clinical white.
+  // Warm neutrals.
   ink: '#211D1E',
   black: '#211D1E',
   white: '#ffffff',
+  card: '#ffffff',
   text: '#211D1E',
   textBody: '#57504E',
   textMuted: '#8A8184',
@@ -19,7 +20,11 @@ export const colors = {
   border: 'rgba(33,20,22,0.09)',
   borderStrong: 'rgba(33,20,22,0.14)',
 
-  // Semantic — status/urgency only, never decoration.
+  // Text that sits on top of a filled surface.
+  onPrimary: '#ffffff',
+  onInk: '#FFF8F4',
+
+  // Semantic — status/urgency only.
   success: '#1E7F5C',
   successTint: '#E8F4EE',
   warning: '#8F5A08',
@@ -28,6 +33,46 @@ export const colors = {
   infoTint: '#E9EFFC',
   error: '#C21E3F',
 };
+
+export type ThemeColors = typeof lightColors;
+
+export const darkColors: ThemeColors = {
+  // Crimson lifted slightly for contrast on dark surfaces.
+  primary: '#E0344F',
+  primaryDeep: '#B81F3B',
+  primaryLight: '#F26B83',
+  accent: '#E0344F',
+  accentHover: '#F26B83',
+  crimsonTint: '#3A2028',
+
+  // Warm dark neutrals — not cold gray.
+  ink: '#F4EEE9',
+  black: '#F4EEE9',
+  white: '#211B1D',
+  card: '#211B1D',
+  text: '#F4EEE9',
+  textBody: '#C4BAB6',
+  textMuted: '#9A8E8A',
+  background: '#161113',
+  surface: '#2A2325',
+  border: 'rgba(255,248,244,0.10)',
+  borderStrong: 'rgba(255,248,244,0.20)',
+
+  onPrimary: '#ffffff',
+  onInk: '#171214',
+
+  success: '#57C79B',
+  successTint: '#16362B',
+  warning: '#E0A94A',
+  warningTint: '#372C14',
+  info: '#7AA0F5',
+  infoTint: '#1E2C4C',
+  error: '#E0344F',
+};
+
+// Default palette. Screens read the live palette from useTheme(); this static
+// export is the light fallback used by theme presets below.
+export const colors = lightColors;
 
 export const spacing = {
   xs: 4,
@@ -62,25 +107,18 @@ export const fonts = {
 
 export const shadow = {
   card: {
-    shadowColor: '#211416',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
   },
   floating: {
-    shadowColor: '#211416',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.14,
+    shadowOpacity: 0.16,
     shadowRadius: 28,
     elevation: 8,
-  },
-  crimson: {
-    shadowColor: '#9C0E2E',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 6,
   },
 };
 

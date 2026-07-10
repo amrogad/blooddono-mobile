@@ -21,7 +21,9 @@ import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -30,6 +32,7 @@ export default function ProfileEdit() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const { data: profile, isLoading } = useProfile(session?.user.id);
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [bloodGroup, setBloodGroup] = useState(profile?.blood_group ?? '');
@@ -91,7 +94,11 @@ export default function ProfileEdit() {
   }
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Edit profile' }} />
 
       <View style={styles.avatarSection}>
@@ -101,18 +108,23 @@ export default function ProfileEdit() {
         </Pressable>
       </View>
 
-      <Text style={styles.label}>Display name</Text>
+      <Text style={styles.fieldLabel}>Display name</Text>
       <TextInput
         style={styles.input}
         value={displayName}
         onChangeText={setDisplayName}
         placeholder="Your name"
-        placeholderTextColor="#aaa"
+        placeholderTextColor={colors.textMuted}
       />
 
-      <Text style={styles.label}>Blood group</Text>
+      <Text style={styles.fieldLabel}>Blood group</Text>
       <View style={styles.pickerWrap}>
-        <Picker selectedValue={bloodGroup} onValueChange={setBloodGroup}>
+        <Picker
+          selectedValue={bloodGroup}
+          onValueChange={setBloodGroup}
+          dropdownIconColor={colors.textMuted}
+          style={{ color: colors.ink }}
+        >
           <Picker.Item label="Select blood group" value="" />
           {BLOOD_GROUPS.map((g) => (
             <Picker.Item key={g} label={g} value={g} />
@@ -120,7 +132,7 @@ export default function ProfileEdit() {
         </Picker>
       </View>
 
-      <Text style={styles.label}>Governorate</Text>
+      <Text style={styles.fieldLabel}>Governorate</Text>
       <View style={styles.pickerWrap}>
         <Picker
           selectedValue={governorate}
@@ -128,6 +140,8 @@ export default function ProfileEdit() {
             setGovernorate(v);
             setCity('');
           }}
+          dropdownIconColor={colors.textMuted}
+          style={{ color: colors.ink }}
         >
           <Picker.Item label="Select governorate" value="" />
           {governorates.map((g) => (
@@ -136,9 +150,15 @@ export default function ProfileEdit() {
         </Picker>
       </View>
 
-      <Text style={styles.label}>City</Text>
+      <Text style={styles.fieldLabel}>City</Text>
       <View style={styles.pickerWrap}>
-        <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+        <Picker
+          selectedValue={city}
+          onValueChange={setCity}
+          enabled={!!selectedGov}
+          dropdownIconColor={colors.textMuted}
+          style={{ color: colors.ink }}
+        >
           <Picker.Item label="Select city" value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
@@ -154,7 +174,7 @@ export default function ProfileEdit() {
         <Switch
           value={searchable}
           onValueChange={setSearchable}
-          trackColor={{ true: colors.accent }}
+          trackColor={{ false: colors.borderStrong, true: colors.primary }}
         />
       </View>
 
@@ -168,7 +188,7 @@ export default function ProfileEdit() {
         accessibilityLabel="Save profile"
       >
         {saving ? (
-          <ActivityIndicator color={colors.white} />
+          <ActivityIndicator color={colors.onPrimary} />
         ) : (
           <Text style={styles.saveText}>Save</Text>
         )}
@@ -177,44 +197,55 @@ export default function ProfileEdit() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  container: { padding: spacing.xl, gap: spacing.sm },
-  avatarSection: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
-  changePhoto: { ...type.bodyBold, color: colors.primary },
-  label: { ...type.label, color: colors.textMuted, marginTop: spacing.sm },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    backgroundColor: colors.white,
-  },
-  pickerWrap: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    backgroundColor: colors.white,
-  },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.md,
-    gap: spacing.md,
-  },
-  switchLabel: { ...type.bodyBold, color: colors.text },
-  switchHint: { ...type.small, color: colors.textMuted },
-  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.sm },
-  save: {
-    backgroundColor: colors.black,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-  },
-  saveText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+    screen: { backgroundColor: colors.background },
+    container: { padding: spacing.xl, gap: spacing.sm },
+    avatarSection: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
+    changePhoto: { ...type.bodyBold, color: colors.primary },
+    fieldLabel: {
+      fontFamily: fonts.semibold,
+      fontSize: 12.5,
+      color: colors.ink,
+      marginTop: spacing.md,
+      marginBottom: 6,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      paddingHorizontal: 15,
+      height: 48,
+      justifyContent: 'center',
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      backgroundColor: colors.card,
+      color: colors.ink,
+    },
+    pickerWrap: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+    },
+    switchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.lg,
+      gap: spacing.md,
+    },
+    switchLabel: { ...type.bodyBold, color: colors.ink },
+    switchHint: { ...type.small, color: colors.textMuted },
+    error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.sm },
+    save: {
+      height: 52,
+      borderRadius: radius.card,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.lg,
+    },
+    saveText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 },
+  });

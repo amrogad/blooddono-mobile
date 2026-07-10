@@ -15,7 +15,9 @@ import { useAuth } from '@/providers/AuthProvider';
 import { BloodRoundel } from '@/components/BloodRoundel';
 import { StatusPill } from '@/components/Pills';
 import { formatNeededBy } from '@/utils/urgency';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 const FILTERS: { label: string; value: 'all' | DonationStatus }[] = [
   { label: 'All', value: 'all' },
@@ -29,6 +31,7 @@ export default function MyRequests() {
   const { session } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const [filter, setFilter] = useState<'all' | DonationStatus>('all');
 
   const { data, isLoading, error } = useQuery({
@@ -154,6 +157,7 @@ function MyRequestCard({
   onCancel: () => void;
   onDelete: () => void;
 }) {
+  const { colors, styles } = useThemedStyles(makeStyles);
   const active = item.donation_status === 'pending' || item.donation_status === 'inprogress';
   return (
     <View style={styles.card}>
@@ -192,7 +196,7 @@ function MyRequestCard({
               accessibilityRole="button"
               accessibilityLabel="Mark fulfilled"
             >
-              <Feather name="check" size={15} color={colors.white} />
+              <Feather name="check" size={15} color={colors.onInk} />
               <Text style={styles.fulfillText}>Mark fulfilled</Text>
             </Pressable>
           </View>
@@ -219,7 +223,8 @@ function MyRequestCard({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   center: {
     flex: 1,
@@ -243,7 +248,7 @@ const styles = StyleSheet.create({
   },
   chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
   chipText: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.textBody },
-  chipTextActive: { color: colors.white },
+  chipTextActive: { color: colors.onInk },
   filterEmpty: { ...type.body, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl },
   list: { padding: spacing.lg, gap: spacing.md },
   card: {
@@ -280,7 +285,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 7,
   },
-  fulfillText: { color: colors.white, fontFamily: fonts.bold, fontSize: 13 },
+  fulfillText: { color: colors.onInk, fontFamily: fonts.bold, fontSize: 13 },
   link: { alignItems: 'center', paddingVertical: spacing.md, marginTop: 2 },
   cancelLink: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 12.5 },
   deleteLink: { color: colors.error, fontFamily: fonts.semibold, fontSize: 12.5 },

@@ -20,7 +20,9 @@ import {
 } from '@/services/donationService';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { friendlyRequestError } from '@/utils/errors';
 import { validateNewRequest } from '@/utils/validation';
 
@@ -42,6 +44,7 @@ const parseTime = (t: string) => {
 
 export default function EditRequest() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
     queryFn: () => getRequestDetails(id!),
@@ -61,7 +64,7 @@ export default function EditRequest() {
     return (
       <View style={styles.center}>
         <Stack.Screen options={{ title: 'Edit request' }} />
-        <Text style={type.body}>Request not found.</Text>
+        <Text style={styles.bodyText}>Request not found.</Text>
       </View>
     );
   }
@@ -72,6 +75,7 @@ export default function EditRequest() {
 function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const [recipientName, setRecipientName] = useState(initial.recipient_name);
   const [governorate, setGovernorate] = useState(initial.recipient_governorate);
@@ -126,7 +130,11 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
   };
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Stack.Screen options={{ title: 'Edit request' }} />
       <Text style={styles.pageTitle}>Edit request</Text>
       <Text style={styles.pageSubtitle}>Update the details donors will see</Text>
@@ -135,7 +143,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         <TextInput
           style={styles.input}
           placeholder="Full name"
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.textMuted}
           value={recipientName}
           onChangeText={setRecipientName}
         />
@@ -149,6 +157,8 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
               setGovernorate(v);
               setCity('');
             }}
+            dropdownIconColor={colors.textMuted}
+            style={{ color: colors.ink }}
           >
             <Picker.Item label="Select governorate" value="" />
             {governorates.map((g) => (
@@ -160,7 +170,13 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
 
       <Field label="City">
         <View style={styles.pickerWrap}>
-          <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+          <Picker
+            selectedValue={city}
+            onValueChange={setCity}
+            enabled={!!selectedGov}
+            dropdownIconColor={colors.textMuted}
+            style={{ color: colors.ink }}
+          >
             <Picker.Item label="Select city" value="" />
             {filteredCities.map((c) => (
               <Picker.Item key={c.id} label={c.name} value={c.name} />
@@ -173,7 +189,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         <TextInput
           style={styles.input}
           placeholder="Hospital name"
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.textMuted}
           value={hospitalName}
           onChangeText={setHospitalName}
         />
@@ -183,7 +199,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         <TextInput
           style={styles.input}
           placeholder="Street, area"
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.textMuted}
           value={fullAddress}
           onChangeText={setFullAddress}
         />
@@ -191,7 +207,12 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
 
       <Field label="Blood group">
         <View style={styles.pickerWrap}>
-          <Picker selectedValue={bloodGroup} onValueChange={setBloodGroup}>
+          <Picker
+            selectedValue={bloodGroup}
+            onValueChange={setBloodGroup}
+            dropdownIconColor={colors.textMuted}
+            style={{ color: colors.ink }}
+          >
             <Picker.Item label="Select blood group" value="" />
             {BLOOD_GROUPS.map((g) => (
               <Picker.Item key={g} label={g} value={g} />
@@ -236,7 +257,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         <TextInput
           style={[styles.input, styles.multiline]}
           placeholder="Anything donors should know…"
-          placeholderTextColor="#aaa"
+          placeholderTextColor={colors.textMuted}
           value={message}
           onChangeText={setMessage}
           multiline
@@ -257,7 +278,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         accessibilityLabel="Save changes"
       >
         {saving ? (
-          <ActivityIndicator color={colors.white} />
+          <ActivityIndicator color={colors.onPrimary} />
         ) : (
           <Text style={styles.submitText}>Save changes</Text>
         )}
@@ -267,47 +288,54 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const { styles } = useThemedStyles(makeStyles);
   return (
-    <View style={{ gap: 4 }}>
-      <Text style={styles.label}>{label}</Text>
+    <View style={styles.field}>
+      <Text style={styles.fieldLabel}>{label}</Text>
       {children}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  container: { padding: spacing.xl, gap: spacing.md },
-  pageTitle: { ...type.h2, color: colors.text },
-  pageSubtitle: { ...type.body, color: colors.textMuted, marginBottom: spacing.sm },
-  label: { ...type.label, color: colors.textMuted, marginTop: spacing.xs },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    backgroundColor: colors.white,
-    color: colors.text,
-  },
-  inputText: { fontFamily: fonts.regular, fontSize: 15, color: colors.text },
-  multiline: { height: 90, textAlignVertical: 'top' },
-  pickerWrap: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    backgroundColor: colors.white,
-  },
-  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13 },
-  submit: {
-    backgroundColor: colors.black,
-    borderRadius: radius.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  submitText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+    bodyText: { ...type.body, color: colors.ink },
+    screen: { backgroundColor: colors.background },
+    container: { padding: spacing.xl, gap: spacing.md },
+    pageTitle: { ...type.h2, color: colors.ink },
+    pageSubtitle: { ...type.small, color: colors.textMuted, marginBottom: spacing.sm },
+    field: { gap: 6 },
+    fieldLabel: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.ink },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      paddingHorizontal: 15,
+      height: 48,
+      justifyContent: 'center',
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      backgroundColor: colors.card,
+      color: colors.ink,
+    },
+    inputText: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
+    multiline: { height: 96, paddingVertical: 12, textAlignVertical: 'top' },
+    pickerWrap: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+    },
+    error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13 },
+    submit: {
+      height: 52,
+      borderRadius: radius.card,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.md,
+    },
+    submitText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 },
+  });

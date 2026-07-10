@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Animated, View, StyleSheet, Easing } from 'react-native';
-import { colors, radius, spacing } from '@/constants/theme';
+
+import { radius, spacing } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 export function SkeletonCard() {
+  const { styles } = useThemedStyles(makeStyles);
   const [shimmer] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
@@ -34,23 +38,19 @@ export function SkeletonCard() {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  pill: { width: 56, height: 26, borderRadius: radius.pill, backgroundColor: '#EDEDED' },
-  badge: { width: 90, height: 20, borderRadius: radius.pill, backgroundColor: '#EDEDED' },
-  line: { height: 14, borderRadius: 4, backgroundColor: '#EDEDED' },
-  divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.card,
+      padding: spacing.lg,
+      gap: 4,
+    },
+    row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+    pill: { width: 56, height: 26, borderRadius: radius.pill, backgroundColor: colors.surface },
+    badge: { width: 90, height: 20, borderRadius: radius.pill, backgroundColor: colors.surface },
+    line: { height: 14, borderRadius: 4, backgroundColor: colors.surface },
+    divider: { height: 1, backgroundColor: colors.border, marginVertical: spacing.sm },
+  });

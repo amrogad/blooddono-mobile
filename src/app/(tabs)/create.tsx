@@ -11,7 +11,9 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
 import governorates from '@/data/governorates.json';
 import cities from '@/data/cities.json';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { friendlyRequestError } from '@/utils/errors';
 import { validateNewRequest } from '@/utils/validation';
 import { BLOOD_GROUPS, compatibleDonorsFor } from '@/utils/bloodCompat';
@@ -27,6 +29,7 @@ const fmtTime = (d: Date) => d.toTimeString().slice(0, 5);
 export default function Create() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
 
@@ -117,7 +120,7 @@ export default function Create() {
             <Feather name="chevron-left" size={20} color={colors.ink} />
           </Pressable>
         ) : (
-          <View style={styles.iconBtn} />
+          <View style={{ width: 36 }} />
         )}
         <Text style={styles.headerTitle}>New request</Text>
         <Text style={styles.headerStep}>
@@ -201,6 +204,8 @@ export default function Create() {
                   setGovernorate(v);
                   setCity('');
                 }}
+                dropdownIconColor={colors.textMuted}
+                style={{ color: colors.ink }}
               >
                 <Picker.Item label="Select governorate" value="" />
                 {governorates.map((g) => (
@@ -211,7 +216,13 @@ export default function Create() {
 
             <Text style={styles.fieldLabel}>City</Text>
             <View style={styles.pickerWrap}>
-              <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+              <Picker
+                selectedValue={city}
+                onValueChange={setCity}
+                enabled={!!selectedGov}
+                dropdownIconColor={colors.textMuted}
+                style={{ color: colors.ink }}
+              >
                 <Picker.Item label="Select city" value="" />
                 {filteredCities.map((c) => (
                   <Picker.Item key={c.id} label={c.name} value={c.name} />
@@ -307,11 +318,11 @@ export default function Create() {
           accessibilityLabel={step < STEPS ? 'Continue' : 'Post request'}
         >
           {submitting ? (
-            <ActivityIndicator color={colors.white} />
+            <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <>
               <Text style={styles.continueText}>{step < STEPS ? 'Continue' : 'Post request'}</Text>
-              {step < STEPS ? <Feather name="arrow-right" size={16} color={colors.white} /> : null}
+              {step < STEPS ? <Feather name="arrow-right" size={16} color={colors.onPrimary} /> : null}
             </>
           )}
         </Pressable>
@@ -320,114 +331,115 @@ export default function Create() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: 58,
-    paddingBottom: spacing.sm,
-  },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.control,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: { ...type.title, color: colors.ink },
-  headerStep: { ...type.small, color: colors.textMuted, fontFamily: fonts.medium, width: 36, textAlign: 'right' },
-  progress: { flexDirection: 'row', gap: 5, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  progressSeg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.surface },
-  progressSegOn: { backgroundColor: colors.primary },
-  body: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
-  stepTitle: { ...type.h2, color: colors.ink },
-  stepSub: { ...type.small, color: colors.textMuted, marginBottom: spacing.md },
-  fieldLabel: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.ink, marginTop: spacing.md, marginBottom: 6 },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 13,
-    paddingHorizontal: 15,
-    height: 48,
-    justifyContent: 'center',
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    backgroundColor: colors.white,
-    color: colors.ink,
-  },
-  inputText: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
-  multiline: { height: 96, paddingVertical: 12, textAlignVertical: 'top' },
-  pickerWrap: {
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    borderRadius: 13,
-    overflow: 'hidden',
-    backgroundColor: colors.white,
-  },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  whoChip: {
-    height: 38,
-    paddingHorizontal: 15,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-  },
-  whoChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
-  whoChipText: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.textBody },
-  whoChipTextOn: { color: colors.white },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: {
-    flexGrow: 1,
-    flexBasis: '22%',
-    minHeight: 58,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tileOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  tileText: { fontFamily: fonts.displayBold, fontSize: 17, color: colors.textBody },
-  tileTextOn: { color: colors.white },
-  hint: {
-    flexDirection: 'row',
-    gap: 8,
-    padding: 12,
-    marginTop: spacing.md,
-    borderRadius: 12,
-    backgroundColor: colors.crimsonTint,
-    borderWidth: 1,
-    borderColor: 'rgba(194,30,63,0.14)',
-  },
-  hintText: { flex: 1, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.textBody },
-  hintBold: { fontFamily: fonts.semibold, color: colors.ink },
-  dateRow: { flexDirection: 'row', gap: spacing.md },
-  error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.md },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  continue: {
-    height: 50,
-    borderRadius: radius.card,
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  continueText: { color: colors.white, fontFamily: fonts.bold, fontSize: 15 },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingTop: 58,
+      paddingBottom: spacing.sm,
+    },
+    iconBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: radius.control,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: { ...type.title, color: colors.ink },
+    headerStep: { ...type.small, color: colors.textMuted, fontFamily: fonts.medium, width: 36, textAlign: 'right' },
+    progress: { flexDirection: 'row', gap: 5, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+    progressSeg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.surface },
+    progressSegOn: { backgroundColor: colors.primary },
+    body: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm },
+    stepTitle: { ...type.h2, color: colors.ink },
+    stepSub: { ...type.small, color: colors.textMuted, marginBottom: spacing.md },
+    fieldLabel: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.ink, marginTop: spacing.md, marginBottom: 6 },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      paddingHorizontal: 15,
+      height: 48,
+      justifyContent: 'center',
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      backgroundColor: colors.card,
+      color: colors.ink,
+    },
+    inputText: { fontFamily: fonts.regular, fontSize: 15, color: colors.ink },
+    multiline: { height: 96, paddingVertical: 12, textAlignVertical: 'top' },
+    pickerWrap: {
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      borderRadius: 13,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+    },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+    whoChip: {
+      height: 38,
+      paddingHorizontal: 15,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      backgroundColor: colors.card,
+      justifyContent: 'center',
+    },
+    whoChipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+    whoChipText: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.textBody },
+    whoChipTextOn: { color: colors.onInk },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    tile: {
+      flexGrow: 1,
+      flexBasis: '22%',
+      minHeight: 58,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tileOn: { backgroundColor: colors.primary, borderColor: colors.primary },
+    tileText: { fontFamily: fonts.displayBold, fontSize: 17, color: colors.textBody },
+    tileTextOn: { color: colors.onPrimary },
+    hint: {
+      flexDirection: 'row',
+      gap: 8,
+      padding: 12,
+      marginTop: spacing.md,
+      borderRadius: 12,
+      backgroundColor: colors.crimsonTint,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+    },
+    hintText: { flex: 1, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17, color: colors.textBody },
+    hintBold: { fontFamily: fonts.semibold, color: colors.ink },
+    dateRow: { flexDirection: 'row', gap: spacing.md },
+    error: { color: colors.error, fontFamily: fonts.medium, fontSize: 13, marginTop: spacing.md },
+    footer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    continue: {
+      height: 50,
+      borderRadius: radius.card,
+      backgroundColor: colors.primary,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    continueText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 15 },
+  });

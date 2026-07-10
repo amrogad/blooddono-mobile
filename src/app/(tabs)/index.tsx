@@ -10,7 +10,9 @@ import { useProfile } from '@/hooks/useProfile';
 import { sortByProximity } from '@/utils/proximity';
 import { getUrgency, requestDateTime, type SectionKey } from '@/utils/urgency';
 import { canDonate } from '@/utils/bloodCompat';
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 import { BrandHeader } from '@/components/BrandHeader';
 import { RequestCard } from '@/components/RequestCard';
 import { SkeletonCard } from '@/components/SkeletonCard';
@@ -22,6 +24,7 @@ const isCritical = (r: PendingRequest) => {
 
 export default function Requests() {
   const router = useRouter();
+  const { colors, styles } = useThemedStyles(makeStyles);
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
@@ -162,57 +165,58 @@ export default function Requests() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
-  centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, paddingTop: spacing.xxl, gap: spacing.sm },
-  emptyTitle: { ...type.h3, color: colors.text },
-  emptyBody: { ...type.body, color: colors.textMuted, textAlign: 'center' },
-  retryButton: {
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: 10,
-    backgroundColor: colors.primary,
-    borderRadius: radius.control,
-  },
-  retryText: { color: colors.white, fontFamily: fonts.bold, fontSize: 14 },
-  skeletonList: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.md },
-  listContent: { paddingBottom: spacing.xl },
-  filters: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
-  chip: {
-    height: 34,
-    paddingHorizontal: 14,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-  },
-  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
-  chipText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
-  chipTextActive: { color: colors.white },
-  cityChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    height: 34,
-    paddingHorizontal: 12,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.borderStrong,
-    backgroundColor: colors.white,
-  },
-  cityChipText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  sectionDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
-  sectionTitle: { fontFamily: fonts.bold, fontSize: 10.5, letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase' },
-  sectionTitleAccent: { color: colors.primary },
-  sectionMeta: { color: colors.primary },
-  itemWrap: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.background },
+    centered: { alignItems: 'center', justifyContent: 'center', padding: spacing.xl, paddingTop: spacing.xxl, gap: spacing.sm },
+    emptyTitle: { ...type.h3, color: colors.text },
+    emptyBody: { ...type.body, color: colors.textMuted, textAlign: 'center' },
+    retryButton: {
+      marginTop: spacing.md,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: 10,
+      backgroundColor: colors.primary,
+      borderRadius: radius.control,
+    },
+    retryText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 14 },
+    skeletonList: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg, gap: spacing.md },
+    listContent: { paddingBottom: spacing.xl },
+    filters: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingBottom: spacing.md },
+    chip: {
+      height: 34,
+      paddingHorizontal: 14,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      backgroundColor: colors.card,
+      justifyContent: 'center',
+    },
+    chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+    chipText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
+    chipTextActive: { color: colors.onInk },
+    cityChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      height: 34,
+      paddingHorizontal: 12,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.borderStrong,
+      backgroundColor: colors.card,
+    },
+    cityChipText: { fontFamily: fonts.semibold, fontSize: 12, color: colors.ink },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    sectionDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary },
+    sectionTitle: { fontFamily: fonts.bold, fontSize: 10.5, letterSpacing: 1, color: colors.textMuted, textTransform: 'uppercase' },
+    sectionTitleAccent: { color: colors.primary },
+    sectionMeta: { color: colors.primary },
+    itemWrap: { paddingHorizontal: spacing.lg, marginBottom: spacing.md },
+  });

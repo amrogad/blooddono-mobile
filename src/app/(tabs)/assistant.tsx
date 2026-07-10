@@ -16,8 +16,9 @@ import { Feather } from '@expo/vector-icons';
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
 import { askAssistant, Message } from '@/services/assistantService';
-import { BrandHeader } from '@/components/BrandHeader';
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
+import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
 
 const CHIPS = [
   'I got a tattoo 2 weeks ago, can I donate?',
@@ -33,6 +34,7 @@ export default function Assistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const { colors, styles } = useThemedStyles(makeStyles);
 
   const send = useCallback(
     async (text: string) => {
@@ -77,7 +79,15 @@ export default function Assistant() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <BrandHeader title="Eligibility assistant" subtitle="Ask anything about donating" />
+      <View style={styles.header}>
+        <View style={styles.headerIcon}>
+          <Feather name="message-circle" size={18} color={colors.onInk} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>Eligibility assistant</Text>
+          <Text style={styles.headerSub}>Answers in seconds · not medical advice</Text>
+        </View>
+      </View>
 
       <FlatList
         ref={listRef}
@@ -135,7 +145,7 @@ export default function Assistant() {
             accessibilityRole="button"
             accessibilityLabel="Send message"
           >
-            <Feather name="arrow-up" size={18} color={colors.white} />
+            <Feather name="arrow-up" size={18} color={colors.onPrimary} />
           </Pressable>
         </View>
       </View>
@@ -143,8 +153,27 @@ export default function Assistant() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingTop: 60,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.control,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },
+  headerSub: { ...type.small, color: colors.textMuted, marginTop: 1 },
   listContent: { padding: spacing.lg, gap: spacing.md, flexGrow: 1 },
   chips: { gap: spacing.sm, paddingTop: spacing.xl },
   chip: {
@@ -176,7 +205,7 @@ const styles = StyleSheet.create({
   },
   loadingBubble: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
   bubbleText: { ...type.body, lineHeight: 22 },
-  userText: { color: colors.white },
+  userText: { color: colors.onPrimary },
   aiText: { color: colors.textBody },
   inputArea: {
     borderTopWidth: 1,
