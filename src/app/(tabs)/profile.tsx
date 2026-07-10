@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
@@ -8,6 +9,7 @@ import { Avatar } from '@/components/Avatar';
 import { spacing, radius, fonts, type } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
 import { useThemedStyles, useTheme } from '@/providers/ThemeProvider';
+import { updateProfile, type Profile } from '@/services/profileService';
 
 export default function Profile() {
   const router = useRouter();
@@ -15,6 +17,25 @@ export default function Profile() {
   const { data: profile, isLoading } = useProfile(session?.user.id);
   const { colors, styles } = useThemedStyles(makeStyles);
   const { scheme, toggle } = useTheme();
+  const queryClient = useQueryClient();
+
+  const { mutate: toggleSearchable } = useMutation({
+    mutationFn: (value: boolean) => updateProfile(session!.user.id, { is_searchable: value }),
+    onMutate: async (value) => {
+      await queryClient.cancelQueries({ queryKey: ['profile', session?.user.id] });
+      const prev = queryClient.getQueryData<Profile>(['profile', session?.user.id]);
+      queryClient.setQueryData<Profile>(['profile', session?.user.id], (old) =>
+        old ? { ...old, is_searchable: value } : old,
+      );
+      return { prev };
+    },
+    onError: (_err, _value, ctx) => {
+      queryClient.setQueryData(['profile', session?.user.id], ctx?.prev);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', session?.user.id] });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -58,12 +79,6 @@ export default function Profile() {
       <View style={styles.card}>
         <InfoRow icon="mail" label="Email" value={session?.user.email ?? '—'} />
         <InfoRow icon="map-pin" label="Location" value={location} divider />
-        <InfoRow
-          icon="search"
-          label="Visible in donor search"
-          value={profile?.is_searchable ? 'On' : 'Off'}
-          divider
-        />
       </View>
 
       <View style={styles.card}>
@@ -74,12 +89,24 @@ export default function Profile() {
 
       <View style={styles.card}>
         <View style={styles.toggleRow}>
+          <Feather name="search" size={16} color={colors.textBody} />
+          <Text style={styles.toggleLabel}>Visible in donor search</Text>
+          <Switch
+            value={profile?.is_searchable ?? false}
+            onValueChange={toggleSearchable}
+            trackColor={{ false: colors.borderStrong, true: colors.primary }}
+            thumbColor={colors.onPrimary}
+            accessibilityLabel="Toggle donor search visibility"
+          />
+        </View>
+        <View style={[styles.toggleRow, styles.divider]}>
           <Feather name="moon" size={16} color={colors.textBody} />
           <Text style={styles.toggleLabel}>Dark mode</Text>
           <Switch
             value={scheme === 'dark'}
             onValueChange={toggle}
             trackColor={{ false: colors.borderStrong, true: colors.primary }}
+            thumbColor={colors.onPrimary}
             accessibilityLabel="Toggle dark mode"
           />
         </View>
