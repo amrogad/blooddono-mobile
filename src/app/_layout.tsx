@@ -12,15 +12,25 @@ import {
   BricolageGrotesque_600SemiBold,
   BricolageGrotesque_700Bold,
 } from '@expo-google-fonts/bricolage-grotesque';
+import {
+  Cairo_400Regular,
+  Cairo_500Medium,
+  Cairo_600SemiBold,
+  Cairo_700Bold,
+  Cairo_800ExtraBold,
+} from '@expo-google-fonts/cairo';
+import { useTranslation } from 'react-i18next';
 
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
+import { LocaleProvider } from '@/providers/LocaleProvider';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { fonts } from '@/constants/theme';
 
 const queryClient = new QueryClient();
 
 function RootNavigator() {
+  const { t } = useTranslation();
   const { colors, scheme } = useTheme();
   const { session, loading } = useAuth();
   usePushNotifications(session?.user.id);
@@ -60,13 +70,13 @@ function RootNavigator() {
       >
         <Stack.Protected guard={!!session}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="request/[id]" options={{ headerShown: true, title: 'Request' }} />
-          <Stack.Screen name="map" options={{ headerShown: true, title: 'Map' }} />
-          <Stack.Screen name="my-requests" options={{ headerShown: true, title: 'My requests' }} />
-          <Stack.Screen name="edit-request/[id]" options={{ headerShown: true, title: 'Edit request' }} />
-          <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Edit profile' }} />
+          <Stack.Screen name="request/[id]" options={{ headerShown: true, title: t('nav.request') }} />
+          <Stack.Screen name="map" options={{ headerShown: true, title: t('nav.map') }} />
+          <Stack.Screen name="my-requests" options={{ headerShown: true, title: t('nav.myRequests') }} />
+          <Stack.Screen name="edit-request/[id]" options={{ headerShown: true, title: t('nav.editRequest') }} />
+          <Stack.Screen name="profile-edit" options={{ headerShown: true, title: t('nav.editProfile') }} />
           <Stack.Screen name="funds" options={{ headerShown: false }} />
-          <Stack.Screen name="funds/payment" options={{ headerShown: true, title: 'Donate' }} />
+          <Stack.Screen name="funds/payment" options={{ headerShown: true, title: t('nav.donate') }} />
         </Stack.Protected>
         <Stack.Protected guard={!session}>
           <Stack.Screen name="(auth)/login" />
@@ -84,6 +94,11 @@ export default function RootLayout() {
     InstrumentSans_700Bold,
     BricolageGrotesque_600SemiBold,
     BricolageGrotesque_700Bold,
+    Cairo_400Regular,
+    Cairo_500Medium,
+    Cairo_600SemiBold,
+    Cairo_700Bold,
+    Cairo_800ExtraBold,
   });
 
   if (!fontsReady) {
@@ -96,11 +111,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </QueryClientProvider>
+      <LocaleProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </QueryClientProvider>
+      </LocaleProvider>
     </ThemeProvider>
   );
 }

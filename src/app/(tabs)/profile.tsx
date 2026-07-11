@@ -2,8 +2,10 @@ import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView, Switc
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/providers/AuthProvider';
+import { useLocale } from '@/providers/LocaleProvider';
 import { useProfile } from '@/hooks/useProfile';
 import { Avatar } from '@/components/Avatar';
 import { spacing, radius, fonts, type } from '@/constants/theme';
@@ -17,6 +19,8 @@ export default function Profile() {
   const { data: profile, isLoading } = useProfile(session?.user.id);
   const { colors, styles } = useThemedStyles(makeStyles);
   const { scheme, toggle } = useTheme();
+  const { t } = useTranslation();
+  const { locale, setLocale } = useLocale();
   const queryClient = useQueryClient();
 
   const { mutate: toggleSearchable } = useMutation({
@@ -55,7 +59,7 @@ export default function Profile() {
         <Avatar uri={profile?.photo_url} size={62} />
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={styles.name} numberOfLines={1}>
-            {profile?.display_name ?? 'Unnamed user'}
+            {profile?.display_name ?? t('profile.unnamed')}
           </Text>
           <View style={styles.headerMeta}>
             {profile?.blood_group ? (
@@ -70,45 +74,65 @@ export default function Profile() {
           style={styles.editIcon}
           onPress={() => router.push('/profile-edit')}
           accessibilityRole="button"
-          accessibilityLabel="Edit profile"
+          accessibilityLabel={t('profile.editProfile')}
         >
           <Feather name="edit-2" size={15} color={colors.textBody} />
         </Pressable>
       </View>
 
       <View style={styles.card}>
-        <InfoRow icon="mail" label="Email" value={session?.user.email ?? '—'} />
-        <InfoRow icon="map-pin" label="Location" value={location} divider />
+        <InfoRow icon="mail" label={t('profile.email')} value={session?.user.email ?? '—'} />
+        <InfoRow icon="map-pin" label={t('profile.location')} value={location} divider />
       </View>
 
       <View style={styles.card}>
-        <ActionRow icon="clock" label="My requests" onPress={() => router.push('/my-requests')} />
-        <ActionRow icon="edit-3" label="Edit profile" onPress={() => router.push('/profile-edit')} divider />
-        <ActionRow icon="heart" label="Community fund" onPress={() => router.push('/funds')} divider />
+        <ActionRow icon="clock" label={t('profile.myRequests')} onPress={() => router.push('/my-requests')} />
+        <ActionRow icon="edit-3" label={t('profile.editProfile')} onPress={() => router.push('/profile-edit')} divider />
+        <ActionRow icon="heart" label={t('profile.communityFund')} onPress={() => router.push('/funds')} divider />
       </View>
 
       <View style={styles.card}>
         <View style={styles.toggleRow}>
           <Feather name="search" size={16} color={colors.textBody} />
-          <Text style={styles.toggleLabel}>Visible in donor search</Text>
+          <Text style={styles.toggleLabel}>{t('profile.visibleInSearch')}</Text>
           <Switch
             value={profile?.is_searchable ?? false}
             onValueChange={toggleSearchable}
             trackColor={{ false: colors.borderStrong, true: colors.primary }}
             thumbColor={colors.onPrimary}
-            accessibilityLabel="Toggle donor search visibility"
+            accessibilityLabel={t('profile.toggleSearchA11y')}
           />
         </View>
         <View style={[styles.toggleRow, styles.divider]}>
           <Feather name="moon" size={16} color={colors.textBody} />
-          <Text style={styles.toggleLabel}>Dark mode</Text>
+          <Text style={styles.toggleLabel}>{t('profile.darkMode')}</Text>
           <Switch
             value={scheme === 'dark'}
             onValueChange={toggle}
             trackColor={{ false: colors.borderStrong, true: colors.primary }}
             thumbColor={colors.onPrimary}
-            accessibilityLabel="Toggle dark mode"
+            accessibilityLabel={t('profile.toggleDarkA11y')}
           />
+        </View>
+        <View style={[styles.toggleRow, styles.divider]}>
+          <Feather name="globe" size={16} color={colors.textBody} />
+          <Text style={styles.toggleLabel}>{t('profile.language')}</Text>
+          <View style={styles.langSwitch}>
+            <Pressable
+              onPress={() => setLocale('en')}
+              style={[styles.langOption, locale === 'en' && styles.langOptionActive]}
+              accessibilityLabel="English"
+            >
+              <Text style={[styles.langText, locale === 'en' && styles.langTextActive]}>EN</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setLocale('ar')}
+              style={[styles.langOption, locale === 'ar' && styles.langOptionActive]}
+              accessibilityLabel="العربية"
+            >
+              <Text style={[styles.langText, locale === 'ar' && styles.langTextActive]}>ع</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -116,9 +140,9 @@ export default function Profile() {
         style={({ pressed }) => [styles.signOut, pressed && { opacity: 0.85 }]}
         onPress={signOut}
         accessibilityRole="button"
-        accessibilityLabel="Sign out"
+        accessibilityLabel={t('profile.signOut')}
       >
-        <Text style={styles.signOutText}>Sign out</Text>
+        <Text style={styles.signOutText}>{t('profile.signOut')}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -207,6 +231,11 @@ const makeStyles = (colors: ThemeColors) =>
   actionLabel: { ...type.body, color: colors.ink, flex: 1, fontFamily: fonts.medium },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 12 },
   toggleLabel: { ...type.body, color: colors.ink, flex: 1, fontFamily: fonts.medium },
+  langSwitch: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.pill, padding: 2 },
+  langOption: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: radius.pill },
+  langOptionActive: { backgroundColor: colors.primary },
+  langText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textMuted },
+  langTextActive: { color: colors.onPrimary },
   divider: { borderTopWidth: 1, borderTopColor: colors.border },
   signOut: {
     backgroundColor: colors.white,

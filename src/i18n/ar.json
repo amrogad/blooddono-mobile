@@ -1,0 +1,37 @@
+{
+  "common": {
+    "appName": "BloodDono",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "retry": "إعادة المحاولة",
+    "loading": "جارٍ التحميل…",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "confirm": "تأكيد",
+    "somethingWrong": "حدث خطأ ما.",
+    "restartTitle": "يلزم إعادة التشغيل",
+    "restartBody": "من فضلك أغلق التطبيق وأعد فتحه لتطبيق تغيير اللغة."
+  },
+  "nav": {
+    "request": "طلب",
+    "map": "الخريطة",
+    "myRequests": "طلباتي",
+    "editRequest": "تعديل الطلب",
+    "editProfile": "تعديل الملف الشخصي",
+    "donate": "تبرّع"
+  },
+  "profile": {
+    "unnamed": "مستخدم بدون اسم",
+    "email": "البريد الإلكتروني",
+    "location": "الموقع",
+    "myRequests": "طلباتي",
+    "editProfile": "تعديل الملف الشخصي",
+    "communityFund": "صندوق التبرعات",
+    "visibleInSearch": "ظاهر في بحث المتبرعين",
+    "darkMode": "الوضع الليلي",
+    "language": "اللغة",
+    "signOut": "تسجيل الخروج",
+    "toggleSearchA11y": "تبديل ظهورك في بحث المتبرعين",
+    "toggleDarkA11y": "تبديل الوضع الليلي"
+  }
+}

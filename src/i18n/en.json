@@ -1,0 +1,37 @@
+{
+  "common": {
+    "appName": "BloodDono",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "somethingWrong": "Something went wrong.",
+    "restartTitle": "Restart required",
+    "restartBody": "Please close and reopen the app to apply the language change."
+  },
+  "nav": {
+    "request": "Request",
+    "map": "Map",
+    "myRequests": "My requests",
+    "editRequest": "Edit request",
+    "editProfile": "Edit profile",
+    "donate": "Donate"
+  },
+  "profile": {
+    "unnamed": "Unnamed user",
+    "email": "Email",
+    "location": "Location",
+    "myRequests": "My requests",
+    "editProfile": "Edit profile",
+    "communityFund": "Community fund",
+    "visibleInSearch": "Visible in donor search",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "signOut": "Sign out",
+    "toggleSearchA11y": "Toggle donor search visibility",
+    "toggleDarkA11y": "Toggle dark mode"
+  }
+}

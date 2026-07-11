@@ -1,3 +1,5 @@
+import { I18nManager } from 'react-native';
+
 export const lightColors = {
   // Crimson — the one accent. Blood, primary action, critical urgency.
   primary: '#C21E3F',
@@ -93,17 +95,28 @@ export const radius = {
   pill: 999,
 };
 
-export const fonts = {
-  // Instrument Sans — the workhorse.
-  regular: 'InstrumentSans_400Regular',
-  medium: 'InstrumentSans_500Medium',
-  semibold: 'InstrumentSans_600SemiBold',
-  bold: 'InstrumentSans_700Bold',
-  extrabold: 'InstrumentSans_700Bold',
-  // Bricolage Grotesque — the voice: headings and blood-type letters.
-  display: 'BricolageGrotesque_600SemiBold',
-  displayBold: 'BricolageGrotesque_700Bold',
-};
+// Arabic (RTL) ships Cairo for everything; Latin locales keep the Instrument +
+// Bricolage pairing. isRTL is set natively before JS boots and persists across
+// restarts, so this resolves once, correctly, for the whole session.
+export const fonts = I18nManager.isRTL
+  ? {
+      regular: 'Cairo_400Regular',
+      medium: 'Cairo_500Medium',
+      semibold: 'Cairo_600SemiBold',
+      bold: 'Cairo_700Bold',
+      extrabold: 'Cairo_800ExtraBold',
+      display: 'Cairo_700Bold',
+      displayBold: 'Cairo_800ExtraBold',
+    }
+  : {
+      regular: 'InstrumentSans_400Regular',
+      medium: 'InstrumentSans_500Medium',
+      semibold: 'InstrumentSans_600SemiBold',
+      bold: 'InstrumentSans_700Bold',
+      extrabold: 'InstrumentSans_700Bold',
+      display: 'BricolageGrotesque_600SemiBold',
+      displayBold: 'BricolageGrotesque_700Bold',
+    };
 
 export const shadow = {
   card: {
