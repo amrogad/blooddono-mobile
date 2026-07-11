@@ -141,6 +141,50 @@
       "ماذا آكل قبل التبرع؟"
     ]
   },
+  "myRequests": {
+    "updateFailed": "فشل التحديث",
+    "deleteFailed": "فشل الحذف",
+    "cancelTitle": "إلغاء الطلب؟",
+    "cancelBody": "هل تريد إيقاف البحث عن متبرعين لـ {{name}}؟",
+    "keepIt": "الاحتفاظ به",
+    "cancelConfirm": "إلغاء الطلب",
+    "deleteTitle": "حذف الطلب؟",
+    "deleteBody": "سيُحذف هذا الطلب نهائيًا.",
+    "errorBody": "تعذّر تحميل طلباتك.",
+    "emptyTitle": "لا توجد طلبات بعد",
+    "emptyBody": "ستظهر الطلبات التي تنشرها هنا مع حالتها.",
+    "filterEmpty": "لا توجد طلبات بهذه الحالة.",
+    "filter": { "all": "الكل", "pending": "قيد الانتظار", "inprogress": "قيد التنفيذ", "done": "مكتمل", "canceled": "ملغى" },
+    "viewA11y": "عرض طلب {{name}}",
+    "cardMeta": "{{city}}، {{gov}} · {{when}}",
+    "editDetails": "تعديل التفاصيل",
+    "markFulfilled": "تمّ التنفيذ",
+    "cancelRequest": "إلغاء الطلب",
+    "deleteA11y": "حذف الطلب"
+  },
+  "editRequest": {
+    "title": "تعديل الطلب",
+    "subtitle": "حدّث التفاصيل التي سيراها المتبرعون",
+    "notFound": "الطلب غير موجود.",
+    "recipientName": "اسم المريض",
+    "bloodGroup": "فصيلة الدم",
+    "selectBloodGroup": "اختر فصيلة الدم",
+    "hospitalPlaceholder": "اسم المستشفى",
+    "addressPlaceholder": "الشارع، المنطقة",
+    "save": "حفظ التغييرات"
+  },
+  "profileEdit": {
+    "permTitle": "الإذن مطلوب",
+    "permBody": "اسمح بالوصول إلى الصور لتغيير صورتك.",
+    "changePhoto": "تغيير الصورة",
+    "displayName": "الاسم المعروض",
+    "namePlaceholder": "اسمك",
+    "bloodGroup": "فصيلة الدم",
+    "selectBloodGroup": "اختر فصيلة الدم",
+    "searchable": "قابل للبحث من الآخرين",
+    "searchableHint": "دع الآخرين يجدونك في بحث المتبرعين",
+    "saveA11y": "حفظ الملف الشخصي"
+  },
   "profile": {
     "unnamed": "مستخدم بدون اسم",
     "email": "البريد الإلكتروني",

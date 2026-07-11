@@ -12,6 +12,7 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import {
   getRequestDetails,
@@ -45,6 +46,7 @@ const parseTime = (t: string) => {
 export default function EditRequest() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
     queryFn: () => getRequestDetails(id!),
@@ -54,7 +56,7 @@ export default function EditRequest() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'Edit request' }} />
+        <Stack.Screen options={{ title: t('nav.editRequest') }} />
         <ActivityIndicator color={colors.accent} />
       </View>
     );
@@ -63,8 +65,8 @@ export default function EditRequest() {
   if (error || !data) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'Edit request' }} />
-        <Text style={styles.bodyText}>Request not found.</Text>
+        <Stack.Screen options={{ title: t('nav.editRequest') }} />
+        <Text style={styles.bodyText}>{t('editRequest.notFound')}</Text>
       </View>
     );
   }
@@ -76,6 +78,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const [recipientName, setRecipientName] = useState(initial.recipient_name);
   const [governorate, setGovernorate] = useState(initial.recipient_governorate);
@@ -135,21 +138,21 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Stack.Screen options={{ title: 'Edit request' }} />
-      <Text style={styles.pageTitle}>Edit request</Text>
-      <Text style={styles.pageSubtitle}>Update the details donors will see</Text>
+      <Stack.Screen options={{ title: t('nav.editRequest') }} />
+      <Text style={styles.pageTitle}>{t('editRequest.title')}</Text>
+      <Text style={styles.pageSubtitle}>{t('editRequest.subtitle')}</Text>
 
-      <Field label="Recipient name">
+      <Field label={t('editRequest.recipientName')}>
         <TextInput
           style={styles.input}
-          placeholder="Full name"
+          placeholder={t('create.fullNamePlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={recipientName}
           onChangeText={setRecipientName}
         />
       </Field>
 
-      <Field label="Governorate">
+      <Field label={t('create.governorate')}>
         <View style={styles.pickerWrap}>
           <Picker
             selectedValue={governorate}
@@ -160,7 +163,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
             dropdownIconColor={colors.textMuted}
             style={{ color: colors.ink }}
           >
-            <Picker.Item label="Select governorate" value="" />
+            <Picker.Item label={t('create.selectGovernorate')} value="" />
             {governorates.map((g) => (
               <Picker.Item key={g.id} label={g.name} value={g.name} />
             ))}
@@ -168,7 +171,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         </View>
       </Field>
 
-      <Field label="City">
+      <Field label={t('create.city')}>
         <View style={styles.pickerWrap}>
           <Picker
             selectedValue={city}
@@ -177,7 +180,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
             dropdownIconColor={colors.textMuted}
             style={{ color: colors.ink }}
           >
-            <Picker.Item label="Select city" value="" />
+            <Picker.Item label={t('create.selectCity')} value="" />
             {filteredCities.map((c) => (
               <Picker.Item key={c.id} label={c.name} value={c.name} />
             ))}
@@ -185,27 +188,27 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         </View>
       </Field>
 
-      <Field label="Hospital">
+      <Field label={t('create.hospital')}>
         <TextInput
           style={styles.input}
-          placeholder="Hospital name"
+          placeholder={t('editRequest.hospitalPlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={hospitalName}
           onChangeText={setHospitalName}
         />
       </Field>
 
-      <Field label="Full address">
+      <Field label={t('create.fullAddress')}>
         <TextInput
           style={styles.input}
-          placeholder="Street, area"
+          placeholder={t('editRequest.addressPlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={fullAddress}
           onChangeText={setFullAddress}
         />
       </Field>
 
-      <Field label="Blood group">
+      <Field label={t('editRequest.bloodGroup')}>
         <View style={styles.pickerWrap}>
           <Picker
             selectedValue={bloodGroup}
@@ -213,7 +216,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
             dropdownIconColor={colors.textMuted}
             style={{ color: colors.ink }}
           >
-            <Picker.Item label="Select blood group" value="" />
+            <Picker.Item label={t('editRequest.selectBloodGroup')} value="" />
             {BLOOD_GROUPS.map((g) => (
               <Picker.Item key={g} label={g} value={g} />
             ))}
@@ -221,7 +224,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         </View>
       </Field>
 
-      <Field label="Date">
+      <Field label={t('create.date')}>
         <Pressable style={styles.input} onPress={() => setShowDate(true)}>
           <Text style={styles.inputText}>{fmtDate(date)}</Text>
         </Pressable>
@@ -237,7 +240,7 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         />
       )}
 
-      <Field label="Time">
+      <Field label={t('create.time')}>
         <Pressable style={styles.input} onPress={() => setShowTime(true)}>
           <Text style={styles.inputText}>{fmtTime(time)}</Text>
         </Pressable>
@@ -253,10 +256,10 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         />
       )}
 
-      <Field label="Message">
+      <Field label={t('create.message')}>
         <TextInput
           style={[styles.input, styles.multiline]}
-          placeholder="Anything donors should know…"
+          placeholder={t('create.messagePlaceholder')}
           placeholderTextColor={colors.textMuted}
           value={message}
           onChangeText={setMessage}
@@ -275,12 +278,12 @@ function EditForm({ id, initial }: { id: string; initial: RequestDetails }) {
         onPress={handleSave}
         disabled={saving}
         accessibilityRole="button"
-        accessibilityLabel="Save changes"
+        accessibilityLabel={t('editRequest.save')}
       >
         {saving ? (
           <ActivityIndicator color={colors.onPrimary} />
         ) : (
-          <Text style={styles.submitText}>Save changes</Text>
+          <Text style={styles.submitText}>{t('editRequest.save')}</Text>
         )}
       </Pressable>
     </ScrollView>

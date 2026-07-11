@@ -141,6 +141,50 @@
       "What should I eat before donating?"
     ]
   },
+  "myRequests": {
+    "updateFailed": "Update failed",
+    "deleteFailed": "Delete failed",
+    "cancelTitle": "Cancel request?",
+    "cancelBody": "Stop looking for donors for {{name}}?",
+    "keepIt": "Keep it",
+    "cancelConfirm": "Cancel request",
+    "deleteTitle": "Delete request?",
+    "deleteBody": "This request will be permanently removed.",
+    "errorBody": "Couldn't load your requests.",
+    "emptyTitle": "No requests yet",
+    "emptyBody": "Requests you post will show up here with their status.",
+    "filterEmpty": "No requests with this status.",
+    "filter": { "all": "All", "pending": "Pending", "inprogress": "In progress", "done": "Done", "canceled": "Canceled" },
+    "viewA11y": "View request for {{name}}",
+    "cardMeta": "{{city}}, {{gov}} · {{when}}",
+    "editDetails": "Edit details",
+    "markFulfilled": "Mark fulfilled",
+    "cancelRequest": "Cancel request",
+    "deleteA11y": "Delete request"
+  },
+  "editRequest": {
+    "title": "Edit request",
+    "subtitle": "Update the details donors will see",
+    "notFound": "Request not found.",
+    "recipientName": "Recipient name",
+    "bloodGroup": "Blood group",
+    "selectBloodGroup": "Select blood group",
+    "hospitalPlaceholder": "Hospital name",
+    "addressPlaceholder": "Street, area",
+    "save": "Save changes"
+  },
+  "profileEdit": {
+    "permTitle": "Permission needed",
+    "permBody": "Allow photo access to change your avatar.",
+    "changePhoto": "Change photo",
+    "displayName": "Display name",
+    "namePlaceholder": "Your name",
+    "bloodGroup": "Blood group",
+    "selectBloodGroup": "Select blood group",
+    "searchable": "Searchable by others",
+    "searchableHint": "Let people find you in donor search",
+    "saveA11y": "Save profile"
+  },
   "profile": {
     "unnamed": "Unnamed user",
     "email": "Email",

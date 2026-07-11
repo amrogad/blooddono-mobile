@@ -3,6 +3,7 @@ import { View, Text, FlatList, ScrollView, ActivityIndicator, StyleSheet, Pressa
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import {
   getMyRequests,
@@ -19,19 +20,14 @@ import { spacing, radius, fonts, type } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
 import { useThemedStyles } from '@/providers/ThemeProvider';
 
-const FILTERS: { label: string; value: 'all' | DonationStatus }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'In progress', value: 'inprogress' },
-  { label: 'Done', value: 'done' },
-  { label: 'Canceled', value: 'canceled' },
-];
+const FILTERS: ('all' | DonationStatus)[] = ['all', 'pending', 'inprogress', 'done', 'canceled'];
 
 export default function MyRequests() {
   const { session } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | DonationStatus>('all');
 
   const { data, isLoading, error } = useQuery({
@@ -46,31 +42,31 @@ export default function MyRequests() {
     mutationFn: ({ id, status }: { id: string; status: DonationStatus }) =>
       updateDonationRequest(id, { donation_status: status }),
     onSuccess: invalidate,
-    onError: (e: Error) => Alert.alert('Update failed', e.message),
+    onError: (e: Error) => Alert.alert(t('myRequests.updateFailed'), e.message),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteDonationRequest(id),
     onSuccess: invalidate,
-    onError: (e: Error) => Alert.alert('Delete failed', e.message),
+    onError: (e: Error) => Alert.alert(t('myRequests.deleteFailed'), e.message),
   });
 
   const confirmCancel = (item: MyRequest) =>
-    Alert.alert('Cancel request?', `Stop looking for donors for ${item.recipient_name}?`, [
-      { text: 'Keep it', style: 'cancel' },
-      { text: 'Cancel request', style: 'destructive', onPress: () => setStatus.mutate({ id: item.id, status: 'canceled' }) },
+    Alert.alert(t('myRequests.cancelTitle'), t('myRequests.cancelBody', { name: item.recipient_name }), [
+      { text: t('myRequests.keepIt'), style: 'cancel' },
+      { text: t('myRequests.cancelConfirm'), style: 'destructive', onPress: () => setStatus.mutate({ id: item.id, status: 'canceled' }) },
     ]);
 
   const confirmDelete = (item: MyRequest) =>
-    Alert.alert('Delete request?', 'This request will be permanently removed.', [
-      { text: 'Keep it', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => remove.mutate(item.id) },
+    Alert.alert(t('myRequests.deleteTitle'), t('myRequests.deleteBody'), [
+      { text: t('myRequests.keepIt'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: () => remove.mutate(item.id) },
     ]);
 
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
         <ActivityIndicator color={colors.accent} />
       </View>
     );
@@ -79,8 +75,8 @@ export default function MyRequests() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
-        <Text style={type.body}>Couldn&apos;t load your requests.</Text>
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
+        <Text style={type.body}>{t('myRequests.errorBody')}</Text>
       </View>
     );
   }
@@ -88,9 +84,9 @@ export default function MyRequests() {
   if (!data || data.length === 0) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
-        <Text style={styles.emptyTitle}>No requests yet</Text>
-        <Text style={styles.emptyBody}>Requests you post will show up here with their status.</Text>
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
+        <Text style={styles.emptyTitle}>{t('myRequests.emptyTitle')}</Text>
+        <Text style={styles.emptyBody}>{t('myRequests.emptyBody')}</Text>
       </View>
     );
   }
@@ -100,19 +96,19 @@ export default function MyRequests() {
 
   return (
     <View style={styles.screen}>
-      <Stack.Screen options={{ title: 'My requests' }} />
+      <Stack.Screen options={{ title: t('nav.myRequests') }} />
 
       <View style={styles.filterBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {FILTERS.map((f) => {
-            const active = filter === f.value;
+            const active = filter === f;
             return (
               <Pressable
-                key={f.value}
-                onPress={() => setFilter(f.value)}
+                key={f}
+                onPress={() => setFilter(f)}
                 style={[styles.chip, active && styles.chipActive]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{f.label}</Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{t(`myRequests.filter.${f}`)}</Text>
               </Pressable>
             );
           })}
@@ -123,7 +119,7 @@ export default function MyRequests() {
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.filterEmpty}>No requests with this status.</Text>}
+        ListEmptyComponent={<Text style={styles.filterEmpty}>{t('myRequests.filterEmpty')}</Text>}
         renderItem={({ item }) => (
           <MyRequestCard
             item={item}
@@ -158,10 +154,11 @@ function MyRequestCard({
   onDelete: () => void;
 }) {
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const active = item.donation_status === 'pending' || item.donation_status === 'inprogress';
   return (
     <View style={styles.card}>
-      <Pressable onPress={onView} accessibilityRole="button" accessibilityLabel={`View request for ${item.recipient_name}`}>
+      <Pressable onPress={onView} accessibilityRole="button" accessibilityLabel={t('myRequests.viewA11y', { name: item.recipient_name })}>
         <View style={styles.topRow}>
           <BloodRoundel group={item.blood_group} size={46} variant="tint" />
           <View style={{ flex: 1, minWidth: 0 }}>
@@ -169,7 +166,11 @@ function MyRequestCard({
               {item.recipient_name}
             </Text>
             <Text style={styles.meta} numberOfLines={1}>
-              {item.recipient_city}, {item.recipient_governorate} · {formatNeededBy(item.donation_date, item.donation_time)}
+              {t('myRequests.cardMeta', {
+                city: item.recipient_city,
+                gov: item.recipient_governorate,
+                when: formatNeededBy(item.donation_date, item.donation_time),
+              })}
             </Text>
           </View>
           <StatusPill status={item.donation_status} />
@@ -184,24 +185,24 @@ function MyRequestCard({
               onPress={onEdit}
               disabled={busy}
               accessibilityRole="button"
-              accessibilityLabel="Edit details"
+              accessibilityLabel={t('myRequests.editDetails')}
             >
               <Feather name="edit-3" size={14} color={colors.ink} />
-              <Text style={styles.outlineText}>Edit details</Text>
+              <Text style={styles.outlineText}>{t('myRequests.editDetails')}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [styles.fulfill, pressed && { opacity: 0.9 }, busy && { opacity: 0.5 }]}
               onPress={onFulfill}
               disabled={busy}
               accessibilityRole="button"
-              accessibilityLabel="Mark fulfilled"
+              accessibilityLabel={t('myRequests.markFulfilled')}
             >
               <Feather name="check" size={15} color={colors.onInk} />
-              <Text style={styles.fulfillText}>Mark fulfilled</Text>
+              <Text style={styles.fulfillText}>{t('myRequests.markFulfilled')}</Text>
             </Pressable>
           </View>
-          <Pressable style={styles.link} onPress={onCancel} disabled={busy} accessibilityRole="button" accessibilityLabel="Cancel request">
-            <Text style={styles.cancelLink}>Cancel request</Text>
+          <Pressable style={styles.link} onPress={onCancel} disabled={busy} accessibilityRole="button" accessibilityLabel={t('myRequests.cancelRequest')}>
+            <Text style={styles.cancelLink}>{t('myRequests.cancelRequest')}</Text>
           </Pressable>
         </>
       ) : (
@@ -210,12 +211,12 @@ function MyRequestCard({
             style={({ pressed }) => [styles.outlineBtn, styles.viewFull, pressed && { opacity: 0.9 }]}
             onPress={onView}
             accessibilityRole="button"
-            accessibilityLabel="View details"
+            accessibilityLabel={t('card.viewDetails')}
           >
-            <Text style={styles.outlineText}>View details</Text>
+            <Text style={styles.outlineText}>{t('card.viewDetails')}</Text>
           </Pressable>
-          <Pressable style={styles.link} onPress={onDelete} disabled={busy} accessibilityRole="button" accessibilityLabel="Delete request">
-            <Text style={styles.deleteLink}>Delete</Text>
+          <Pressable style={styles.link} onPress={onDelete} disabled={busy} accessibilityRole="button" accessibilityLabel={t('myRequests.deleteA11y')}>
+            <Text style={styles.deleteLink}>{t('common.delete')}</Text>
           </Pressable>
         </>
       )}

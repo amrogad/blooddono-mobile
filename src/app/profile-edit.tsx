@@ -14,6 +14,7 @@ import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { updateProfile, uploadAvatar } from '@/services/profileService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -33,6 +34,7 @@ export default function ProfileEdit() {
   const { session } = useAuth();
   const { data: profile, isLoading } = useProfile(session?.user.id);
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [bloodGroup, setBloodGroup] = useState(profile?.blood_group ?? '');
@@ -49,7 +51,7 @@ export default function ProfileEdit() {
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert('Permission needed', 'Allow photo access to change your avatar.');
+      Alert.alert(t('profileEdit.permTitle'), t('profileEdit.permBody'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -87,7 +89,7 @@ export default function ProfileEdit() {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'Edit profile' }} />
+        <Stack.Screen options={{ title: t('nav.editProfile') }} />
         <ActivityIndicator color={colors.accent} />
       </View>
     );
@@ -99,25 +101,25 @@ export default function ProfileEdit() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      <Stack.Screen options={{ title: 'Edit profile' }} />
+      <Stack.Screen options={{ title: t('nav.editProfile') }} />
 
       <View style={styles.avatarSection}>
         <Avatar uri={photoUri ?? profile?.photo_url} size={96} />
         <Pressable onPress={pickImage} hitSlop={8}>
-          <Text style={styles.changePhoto}>Change photo</Text>
+          <Text style={styles.changePhoto}>{t('profileEdit.changePhoto')}</Text>
         </Pressable>
       </View>
 
-      <Text style={styles.fieldLabel}>Display name</Text>
+      <Text style={styles.fieldLabel}>{t('profileEdit.displayName')}</Text>
       <TextInput
         style={styles.input}
         value={displayName}
         onChangeText={setDisplayName}
-        placeholder="Your name"
+        placeholder={t('profileEdit.namePlaceholder')}
         placeholderTextColor={colors.textMuted}
       />
 
-      <Text style={styles.fieldLabel}>Blood group</Text>
+      <Text style={styles.fieldLabel}>{t('profileEdit.bloodGroup')}</Text>
       <View style={styles.pickerWrap}>
         <Picker
           selectedValue={bloodGroup}
@@ -125,14 +127,14 @@ export default function ProfileEdit() {
           dropdownIconColor={colors.textMuted}
           style={{ color: colors.ink }}
         >
-          <Picker.Item label="Select blood group" value="" />
+          <Picker.Item label={t('profileEdit.selectBloodGroup')} value="" />
           {BLOOD_GROUPS.map((g) => (
             <Picker.Item key={g} label={g} value={g} />
           ))}
         </Picker>
       </View>
 
-      <Text style={styles.fieldLabel}>Governorate</Text>
+      <Text style={styles.fieldLabel}>{t('create.governorate')}</Text>
       <View style={styles.pickerWrap}>
         <Picker
           selectedValue={governorate}
@@ -143,14 +145,14 @@ export default function ProfileEdit() {
           dropdownIconColor={colors.textMuted}
           style={{ color: colors.ink }}
         >
-          <Picker.Item label="Select governorate" value="" />
+          <Picker.Item label={t('create.selectGovernorate')} value="" />
           {governorates.map((g) => (
             <Picker.Item key={g.id} label={g.name} value={g.name} />
           ))}
         </Picker>
       </View>
 
-      <Text style={styles.fieldLabel}>City</Text>
+      <Text style={styles.fieldLabel}>{t('create.city')}</Text>
       <View style={styles.pickerWrap}>
         <Picker
           selectedValue={city}
@@ -159,7 +161,7 @@ export default function ProfileEdit() {
           dropdownIconColor={colors.textMuted}
           style={{ color: colors.ink }}
         >
-          <Picker.Item label="Select city" value="" />
+          <Picker.Item label={t('create.selectCity')} value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
           ))}
@@ -168,8 +170,8 @@ export default function ProfileEdit() {
 
       <View style={styles.switchRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.switchLabel}>Searchable by others</Text>
-          <Text style={styles.switchHint}>Let people find you in donor search</Text>
+          <Text style={styles.switchLabel}>{t('profileEdit.searchable')}</Text>
+          <Text style={styles.switchHint}>{t('profileEdit.searchableHint')}</Text>
         </View>
         <Switch
           value={searchable}
@@ -185,12 +187,12 @@ export default function ProfileEdit() {
         onPress={handleSave}
         disabled={saving}
         accessibilityRole="button"
-        accessibilityLabel="Save profile"
+        accessibilityLabel={t('profileEdit.saveA11y')}
       >
         {saving ? (
           <ActivityIndicator color={colors.onPrimary} />
         ) : (
-          <Text style={styles.saveText}>Save</Text>
+          <Text style={styles.saveText}>{t('common.save')}</Text>
         )}
       </Pressable>
     </ScrollView>
