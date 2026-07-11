@@ -2,12 +2,12 @@
 
 A React Native app for connecting blood donors with nearby donation requests. Donors browse requests sorted by proximity, post their own, and search for compatible donors by blood group and location. Each request shows a live hospital map with the distance from wherever the donor is standing.
 
-The [web version](https://blooddono-two.vercel.app/) shares the same Supabase backend — same data, different experience.
+There's also a [web version](https://blooddono-two.vercel.app/) on the same Supabase backend, so the data lines up across both.
 
 ## Highlights
 
 - 🔔 Push notifications for new compatible requests in your governorate
-- 📍 Location-aware request sorting — nearby requests rise to the top automatically
+- 📍 Location-aware sorting, so nearby requests rise to the top automatically
 - 🩸 Blood compatibility matching, not exact-type matching (O- donors see A+, B+, AB+ requests)
 - 🗺️ Interactive hospital maps with live distance, built on Leaflet + OpenStreetMap (no API key needed)
 - 🤖 AI eligibility assistant powered by Groq (Llama 3.1), personalized to your blood group and city
@@ -16,25 +16,11 @@ The [web version](https://blooddono-two.vercel.app/) shares the same Supabase ba
 
 ## Download
 
-Build an APK with EAS (no local Android SDK needed):
-
-```bash
-npm install -g eas-cli
-eas build -p android --profile preview
-```
-
-Or build locally after cloning and setting up `.env`:
-
-```bash
-npx expo prebuild --clean
-cd android && ./gradlew assembleRelease
-```
-
-The `.apk` ends up in `android/app/build/outputs/apk/release/`.
+[**Download APK (v1.0.0)**](https://github.com/amrogad/blooddono-mobile/releases/download/v1.0.0/app-release.apk). Sideload on any Android device (enable "Install unknown apps" in settings).
 
 ## Demo accounts
 
-The login screen has one-tap demo logins — no signup needed:
+The login screen has one-tap demo logins, no signup needed:
 
 | Role | Email | Password |
 |---|---|---|
@@ -47,27 +33,27 @@ The login screen has one-tap demo logins — no signup needed:
 Under 3 minutes to see the core loop:
 
 1. Log in with the Donor demo account.
-2. Browse the requests feed — your O+ matches are filtered by default, sorted nearest first.
+2. Browse the requests feed. Your O+ matches are filtered by default and sorted nearest first.
 3. Open a request to see the hospital on the map and the kilometer distance from you.
 4. Switch to the Create tab and post a new request (3-step wizard).
 5. Go to Find Donors, pick a blood group and governorate, and see compatible donors.
-6. Open the Assistant tab and ask "I had surgery last month, can I donate?" — it replies in whichever language the app is in.
+6. Open the Assistant tab and ask "I had surgery last month, can I donate?" It replies in whichever language the app is set to.
 7. Switch to the Volunteer or Admin demo account to see the coordinator and admin views.
 
 ## Features
 
 - Browse pending requests sorted by proximity to the donor's governorate and city, with "near you" badges and urgency sections (Critical, Urgent, Planned)
-- Blood compatibility matching — searching for A+ donors also surfaces O+ and O- donors who can safely donate
+- Blood compatibility matching, so searching for A+ donors also surfaces O+ and O- donors who can safely donate
 - Post a request in 3 steps: patient details, hospital location, blood group and date
 - Interactive Leaflet map on each request showing the hospital pin, the donor's live position, and the straight-line distance between them
 - Accept a request as a donor, which moves it from pending to in-progress
 - Find compatible donors by patient blood group and location
-- AI eligibility assistant for questions like "I take blood pressure medication, am I eligible?" — answers are personalized to your blood group and city, and the assistant replies in the active language
+- AI eligibility assistant for questions like "I take blood pressure medication, am I eligible?" Answers use your blood group and city, and it replies in the active language
 - Push notifications when a new request needs a compatible blood type in your governorate
-- Arabic and English with automatic RTL layout mirroring — switch without leaving the app
+- Arabic and English with automatic RTL layout mirroring, switchable without leaving the app
 - Dark and light themes, persisted with AsyncStorage
 - Real profile with blood group, role badge, and location
-- Persistent sessions — stay signed in across restarts
+- Persistent sessions, so you stay signed in across restarts
 
 ## Screenshots
 
@@ -119,16 +105,16 @@ Groq (Llama 3.1) · Expo push notifications
 - expo-router (file-based navigation, route groups for auth/tabs)
 - TanStack Query (server state, caching, background refetch, skeleton loaders)
 - React Context (auth session, theme, locale)
-- Leaflet in a WebView with OpenStreetMap tiles — no maps API key required
+- Leaflet in a WebView with OpenStreetMap tiles (no maps API key required)
 - expo-location for live position
 - Nominatim (OpenStreetMap) for hospital geocoding
 - react-i18next for Arabic/English with I18nManager RTL integration
 - @expo-google-fonts/cairo + @expo-google-fonts/bricolage-grotesque
 
 ### Backend
-- [Supabase](https://supabase.com/) — hosted auth, PostgreSQL, RPCs, storage
-- Supabase Edge Functions (Deno) — push notification fan-out and eligibility assistant
-- [Groq](https://groq.com/) (Llama 3.1 8B Instant) — AI assistant, called server-side, free tier
+- [Supabase](https://supabase.com/) for hosted auth, PostgreSQL, RPCs, and storage
+- Supabase Edge Functions (Deno) for push notification fan-out and the eligibility assistant
+- [Groq](https://groq.com/) (Llama 3.1 8B Instant) for the assistant, called server-side on the free tier
 - Expo push notifications
 
 ## Testing
@@ -147,7 +133,7 @@ npm test -- --runInBand
 
 ## Why I built this
 
-Blood shortages are a real logistic problem — patients need specific types, donors are willing, but there's no fast way to connect them. BloodDono is that connection, built as a full-stack portfolio project to show what a real app looks like end-to-end: live maps, push notifications, an AI feature, and a bilingual RTL interface.
+Blood shortages are a logistics problem: patients need specific types, donors are willing, but there's no fast way to connect the two. BloodDono is that connection. I wanted to build something real end to end instead of a toy demo, so it has live maps, push notifications, an AI feature, and a bilingual RTL interface.
 
 ## Getting started
 
@@ -171,7 +157,7 @@ Start Metro:
 npx expo start
 ```
 
-Press `a` for Android or scan the QR code in Expo Go. No maps API key required — Leaflet uses OpenStreetMap tiles.
+Press `a` for Android or scan the QR code in Expo Go. No maps API key needed, since Leaflet uses OpenStreetMap tiles.
 
 ## Project structure
 
