@@ -28,6 +28,11 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     AsyncStorage.getItem(STORAGE_KEY).then(async (stored) => {
       const next: Locale = stored === 'ar' ? 'ar' : 'en';
       if (next !== i18n.language) await i18n.changeLanguage(next);
+      const shouldRTL = next === 'ar';
+      if (I18nManager.isRTL !== shouldRTL) {
+        I18nManager.allowRTL(shouldRTL);
+        I18nManager.forceRTL(shouldRTL);
+      }
       setLocaleState(next);
       setReady(true);
     });
@@ -41,10 +46,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     if (I18nManager.isRTL !== shouldRTL) {
       I18nManager.allowRTL(shouldRTL);
       I18nManager.forceRTL(shouldRTL);
-      Alert.alert(
-        i18n.t('common.restartTitle', { lng: next }),
-        i18n.t('common.restartBody', { lng: next }),
-      );
+      // AR→EN (shouldRTL=false): forceRTL takes effect live on Android — no restart needed.
+      // EN→AR (shouldRTL=true): native views don't re-render mid-session — restart required.
+      if (shouldRTL) {
+        Alert.alert(
+          i18n.t('common.restartTitle', { lng: next }),
+          i18n.t('common.restartBody', { lng: next }),
+        );
+      }
     }
   }, []);
 

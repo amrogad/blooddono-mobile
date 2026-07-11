@@ -136,7 +136,7 @@
   },
   "assistant": {
     "title": "Eligibility assistant",
-    "subtitle": "Answers in seconds · not medical advice",
+    "subtitle": "Answers in seconds",
     "disclaimer": "Informational only — not medical advice",
     "inputPlaceholder": "Ask a question...",
     "sendA11y": "Send message",
