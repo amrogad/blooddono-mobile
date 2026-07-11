@@ -138,10 +138,10 @@ export default function Login() {
 
 const makeStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-  scroll: { flexGrow: 1, paddingTop: 80, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9 },
-  mark: { width: 30, height: 30, borderRadius: 9 },
-  wordmark: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.3 },
+  scroll: { flexGrow: 1, paddingTop: 64, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
+  brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 4 },
+  mark: { width: 40, height: 40, borderRadius: 12 },
+  wordmark: { fontFamily: fonts.display, fontSize: 22, color: colors.ink, letterSpacing: -0.4 },
   title: { fontFamily: fonts.displayBold, fontSize: 30, color: colors.ink, letterSpacing: -0.6, marginTop: spacing.xl },
   label: { fontFamily: fonts.semibold, fontSize: 13, color: colors.ink, marginTop: spacing.lg, marginBottom: 6 },
   input: {

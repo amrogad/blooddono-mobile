@@ -26,9 +26,9 @@ const makeStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.lg,
       backgroundColor: colors.background,
     },
-    brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md },
-    mark: { width: 24, height: 24, borderRadius: 7 },
-    wordmark: { fontFamily: fonts.display, fontSize: 17, color: colors.ink, letterSpacing: -0.3 },
+    brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: spacing.md },
+    mark: { width: 30, height: 30, borderRadius: 9 },
+    wordmark: { fontFamily: fonts.display, fontSize: 19, color: colors.ink, letterSpacing: -0.3 },
     title: { ...type.h1, color: colors.ink },
     subtitle: { ...type.small, color: colors.textMuted, marginTop: 3 },
   });
