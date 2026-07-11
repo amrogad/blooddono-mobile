@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
@@ -19,13 +20,6 @@ import { askAssistant, Message } from '@/services/assistantService';
 import { useThemedStyles } from '@/providers/ThemeProvider';
 import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
-
-const CHIPS = [
-  'I got a tattoo 2 weeks ago, can I donate?',
-  'I take blood pressure meds, am I eligible?',
-  'How long after a cold can I donate?',
-  'What should I eat before donating?',
-];
 
 export default function Assistant() {
   const { session } = useAuth();
@@ -35,14 +29,17 @@ export default function Assistant() {
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList>(null);
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
+  const chips = t('assistant.chips', { returnObjects: true }) as string[];
 
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
 
+      const errText = t('assistant.error');
       const userMsg: Message = { role: 'user', text: trimmed };
-      const validHistory = messages.filter((m) => m.text !== 'Something went wrong. Try again.');
+      const validHistory = messages.filter((m) => m.text !== errText);
       const next = [...validHistory, userMsg];
       setMessages(next);
       setInput('');
@@ -52,15 +49,12 @@ export default function Assistant() {
         const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '');
         setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
       } catch {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', text: 'Something went wrong. Try again.' },
-        ]);
+        setMessages((prev) => [...prev, { role: 'assistant', text: errText }]);
       } finally {
         setLoading(false);
       }
     },
-    [messages, loading, profile],
+    [messages, loading, profile, t],
   );
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -84,8 +78,8 @@ export default function Assistant() {
           <Feather name="message-circle" size={18} color={colors.onInk} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Eligibility assistant</Text>
-          <Text style={styles.headerSub}>Answers in seconds · not medical advice</Text>
+          <Text style={styles.headerTitle}>{t('assistant.title')}</Text>
+          <Text style={styles.headerSub}>{t('assistant.subtitle')}</Text>
         </View>
       </View>
 
@@ -97,7 +91,7 @@ export default function Assistant() {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={
           <View style={styles.chips}>
-            {CHIPS.map((chip) => (
+            {chips.map((chip) => (
               <Pressable
                 key={chip}
                 style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
@@ -121,13 +115,13 @@ export default function Assistant() {
       />
 
       <View style={styles.inputArea}>
-        <Text style={styles.disclaimer}>Informational only — not medical advice</Text>
+        <Text style={styles.disclaimer}>{t('assistant.disclaimer')}</Text>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Ask a question..."
+            placeholder={t('assistant.inputPlaceholder')}
             placeholderTextColor={colors.textMuted}
             returnKeyType="send"
             onSubmitEditing={() => send(input)}
@@ -143,7 +137,7 @@ export default function Assistant() {
             onPress={() => send(input)}
             disabled={!input.trim() || loading}
             accessibilityRole="button"
-            accessibilityLabel="Send message"
+            accessibilityLabel={t('assistant.sendA11y')}
           >
             <Feather name="arrow-up" size={18} color={colors.onPrimary} />
           </Pressable>

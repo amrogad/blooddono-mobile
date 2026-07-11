@@ -117,6 +117,30 @@
     "message": "Message",
     "messagePlaceholder": "Anything donors should know…"
   },
+  "donors": {
+    "title": "Find donors",
+    "subtitle": "Pick the patient's blood group — results update live",
+    "safeFor": "Safe for a {{group}} patient: {{donors}}",
+    "governorate": "Governorate",
+    "anyCity": "Any city",
+    "anonymous": "Anonymous",
+    "emptyPrompt": "Pick a blood group and area to see matching donors.",
+    "emptyResults": "No matching donors in this area yet."
+  },
+  "assistant": {
+    "title": "Eligibility assistant",
+    "subtitle": "Answers in seconds · not medical advice",
+    "disclaimer": "Informational only — not medical advice",
+    "inputPlaceholder": "Ask a question...",
+    "sendA11y": "Send message",
+    "error": "Something went wrong. Try again.",
+    "chips": [
+      "I got a tattoo 2 weeks ago, can I donate?",
+      "I take blood pressure meds, am I eligible?",
+      "How long after a cold can I donate?",
+      "What should I eat before donating?"
+    ]
+  },
   "profile": {
     "unnamed": "Unnamed user",
     "email": "Email",

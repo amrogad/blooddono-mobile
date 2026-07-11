@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { searchDonors, DonorMatch } from '@/services/profileService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -19,6 +20,7 @@ export default function FindDonors() {
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const [bloodGroup, setBloodGroup] = useState('');
   const [governorate, setGovernorate] = useState('');
@@ -41,8 +43,8 @@ export default function FindDonors() {
 
   const header = (
     <View style={styles.header}>
-      <Text style={styles.title}>Find donors</Text>
-      <Text style={styles.subtitle}>Pick the patient&apos;s blood group — results update live</Text>
+      <Text style={styles.title}>{t('donors.title')}</Text>
+      <Text style={styles.subtitle}>{t('donors.subtitle')}</Text>
 
       <View style={styles.roundelRow}>
         {BLOOD_GROUPS.map((g) => {
@@ -65,8 +67,7 @@ export default function FindDonors() {
         <View style={styles.strip}>
           <BloodRoundel group={bloodGroup} size={30} variant="tint" />
           <Text style={styles.stripText}>
-            Safe for a {bloodGroup} patient:{' '}
-            <Text style={styles.stripBold}>{compatibleDonorsFor(bloodGroup).join(', ')}</Text>
+            {t('donors.safeFor', { group: bloodGroup, donors: compatibleDonorsFor(bloodGroup).join(', ') })}
           </Text>
         </View>
       ) : null}
@@ -79,7 +80,7 @@ export default function FindDonors() {
             setCity('');
           }}
         >
-          <Picker.Item label="Governorate" value="" />
+          <Picker.Item label={t('donors.governorate')} value="" />
           {governorates.map((g) => (
             <Picker.Item key={g.id} label={g.name} value={g.name} />
           ))}
@@ -87,7 +88,7 @@ export default function FindDonors() {
       </View>
       <View style={styles.pickerWrap}>
         <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
-          <Picker.Item label="Any city" value="" />
+          <Picker.Item label={t('donors.anyCity')} value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
           ))}
@@ -109,10 +110,10 @@ export default function FindDonors() {
             <Avatar uri={item.photo_url} size={44} />
             <View style={styles.donorText}>
               <Text style={styles.donorName} numberOfLines={1}>
-                {item.display_name ?? 'Anonymous'}
+                {item.display_name ?? t('donors.anonymous')}
               </Text>
               <Text style={styles.donorMeta} numberOfLines={1}>
-                {item.city}, {item.governorate}
+                {t('card.cityGov', { city: item.city, gov: item.governorate })}
               </Text>
             </View>
             <BloodRoundel group={item.blood_group} size={38} variant="tint" />
@@ -121,13 +122,13 @@ export default function FindDonors() {
         ListEmptyComponent={
           <View style={styles.state}>
             {!enabled ? (
-              <Text style={styles.stateText}>Pick a blood group and area to see matching donors.</Text>
+              <Text style={styles.stateText}>{t('donors.emptyPrompt')}</Text>
             ) : isFetching ? (
               <ActivityIndicator color={colors.accent} />
             ) : error ? (
               <Text style={styles.stateText}>{(error as Error).message}</Text>
             ) : (
-              <Text style={styles.stateText}>No matching donors in this area yet.</Text>
+              <Text style={styles.stateText}>{t('donors.emptyResults')}</Text>
             )}
           </View>
         }
