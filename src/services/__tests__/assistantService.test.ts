@@ -16,7 +16,16 @@ describe('askAssistant', () => {
     const result = await askAssistant(messages, 'O+', 'Cairo');
     expect(result).toBe('Yes, you can donate.');
     expect(mockInvoke).toHaveBeenCalledWith('ask-assistant', {
-      body: { messages, bloodGroup: 'O+', city: 'Cairo' },
+      body: { messages, bloodGroup: 'O+', city: 'Cairo', locale: 'en' },
+    });
+  });
+
+  it('forwards the active locale to the edge function', async () => {
+    mockInvoke.mockResolvedValueOnce({ data: { reply: 'نعم، يمكنك التبرع.' }, error: null });
+    const messages: Message[] = [{ role: 'user', text: 'هل يمكنني التبرع؟' }];
+    await askAssistant(messages, 'O+', 'Cairo', 'ar');
+    expect(mockInvoke).toHaveBeenCalledWith('ask-assistant', {
+      body: { messages, bloodGroup: 'O+', city: 'Cairo', locale: 'ar' },
     });
   });
 

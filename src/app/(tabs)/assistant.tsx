@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
+import { useLocale } from '@/providers/LocaleProvider';
 import { askAssistant, Message } from '@/services/assistantService';
 import { useThemedStyles } from '@/providers/ThemeProvider';
 import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
@@ -30,6 +31,7 @@ export default function Assistant() {
   const listRef = useRef<FlatList>(null);
   const { colors, styles } = useThemedStyles(makeStyles);
   const { t } = useTranslation();
+  const { locale } = useLocale();
   const chips = t('assistant.chips', { returnObjects: true }) as string[];
 
   const send = useCallback(
@@ -46,7 +48,7 @@ export default function Assistant() {
       setLoading(true);
 
       try {
-        const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '');
+        const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '', locale);
         setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', text: errText }]);
@@ -54,7 +56,7 @@ export default function Assistant() {
         setLoading(false);
       }
     },
-    [messages, loading, profile, t],
+    [messages, loading, profile, t, locale],
   );
 
   const renderMessage = ({ item }: { item: Message }) => {
