@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, ActivityIndicator, I18nManager } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -59,7 +59,7 @@ export default function Funds() {
     <View style={styles.headerWrap}>
       <View style={styles.topBar}>
         <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('funds.back')}>
-          <Feather name="chevron-left" size={20} color={colors.ink} />
+          <Feather name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'} size={20} color={colors.ink} />
         </Pressable>
         <Text style={styles.topTitle}>{t('funds.title')}</Text>
       </View>

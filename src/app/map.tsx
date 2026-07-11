@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, Linking } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Linking, I18nManager } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { Feather } from '@expo/vector-icons';
@@ -58,7 +58,7 @@ export default function FullscreenMap() {
           accessibilityRole="button"
           accessibilityLabel={t('map.directionsA11y')}
         >
-          <Feather name="corner-up-right" size={16} color={colors.onPrimary} />
+          <Feather name={I18nManager.isRTL ? 'corner-up-left' : 'corner-up-right'} size={16} color={colors.onPrimary} />
           <Text style={styles.directionsText}>{t('map.getDirections')}</Text>
         </Pressable>
       </View>

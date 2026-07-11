@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet, I18nManager } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
@@ -119,7 +119,7 @@ export default function Create() {
       <View style={styles.header}>
         {step > 1 ? (
           <Pressable style={styles.iconBtn} onPress={goBack} accessibilityRole="button" accessibilityLabel={t('create.back')}>
-            <Feather name="chevron-left" size={20} color={colors.ink} />
+            <Feather name={I18nManager.isRTL ? 'chevron-right' : 'chevron-left'} size={20} color={colors.ink} />
           </Pressable>
         ) : (
           <View style={{ width: 36 }} />
@@ -320,7 +320,7 @@ export default function Create() {
           ) : (
             <>
               <Text style={styles.continueText}>{step < STEPS ? t('create.continue') : t('create.post')}</Text>
-              {step < STEPS ? <Feather name="arrow-right" size={16} color={colors.onPrimary} /> : null}
+              {step < STEPS ? <Feather name={I18nManager.isRTL ? 'arrow-left' : 'arrow-right'} size={16} color={colors.onPrimary} /> : null}
             </>
           )}
         </Pressable>
@@ -351,7 +351,7 @@ const makeStyles = (colors: ThemeColors) =>
       justifyContent: 'center',
     },
     headerTitle: { ...type.title, color: colors.ink },
-    headerStep: { ...type.small, color: colors.textMuted, fontFamily: fonts.medium, width: 36, textAlign: 'right' },
+    headerStep: { ...type.small, color: colors.textMuted, fontFamily: fonts.medium, width: 36, textAlign: I18nManager.isRTL ? 'left' : 'right' },
     progress: { flexDirection: 'row', gap: 5, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
     progressSeg: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.surface },
     progressSegOn: { backgroundColor: colors.primary },

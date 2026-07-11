@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView, Switch } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet, ScrollView, Switch, I18nManager } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -192,7 +192,7 @@ function ActionRow({
     >
       <Feather name={icon} size={16} color={colors.textBody} />
       <Text style={styles.actionLabel}>{label}</Text>
-      <Feather name="chevron-right" size={16} color={colors.textMuted} />
+      <Feather name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={16} color={colors.textMuted} />
     </Pressable>
   );
 }

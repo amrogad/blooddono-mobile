@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator, Image, I18nManager } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -122,7 +122,7 @@ export default function Login() {
                 <Text style={styles.roleLabel}>{t(`auth.role.${acc.role}`)}</Text>
                 <Text style={styles.roleDesc}>{t(`auth.roleDesc.${acc.role}`)}</Text>
               </View>
-              <Feather name="chevron-right" size={16} color={colors.textMuted} />
+              <Feather name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={16} color={colors.textMuted} />
             </Pressable>
           );
         })}

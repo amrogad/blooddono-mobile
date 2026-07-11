@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, StyleSheet, Alert, I18nManager } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { WebView } from 'react-native-webview';
@@ -202,7 +202,7 @@ export default function RequestDetail() {
               accessibilityRole="button"
               accessibilityLabel={t('detail.directions')}
             >
-              <Feather name="corner-up-right" size={16} color={colors.ink} />
+              <Feather name={I18nManager.isRTL ? 'corner-up-left' : 'corner-up-right'} size={16} color={colors.ink} />
               <Text style={styles.secondaryText}>{t('detail.directions')}</Text>
             </Pressable>
           ) : null}
@@ -250,7 +250,7 @@ const makeStyles = (colors: ThemeColors) =>
   distanceChip: {
     position: 'absolute',
     top: spacing.sm,
-    left: spacing.sm,
+    start: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
@@ -268,7 +268,7 @@ const makeStyles = (colors: ThemeColors) =>
   expandHint: {
     position: 'absolute',
     bottom: spacing.sm,
-    right: spacing.sm,
+    end: spacing.sm,
     backgroundColor: 'rgba(33,20,22,0.72)',
     paddingHorizontal: spacing.md,
     paddingVertical: 4,

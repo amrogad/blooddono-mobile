@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, I18nManager } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -64,7 +64,7 @@ export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
           accessibilityRole="button"
           accessibilityLabel={t('card.viewDetails')}
         >
-          <Feather name="chevron-right" size={18} color={colors.textBody} />
+          <Feather name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={18} color={colors.textBody} />
         </Pressable>
       </View>
     </View>
