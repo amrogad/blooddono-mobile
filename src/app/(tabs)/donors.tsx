@@ -79,6 +79,8 @@ export default function FindDonors() {
             setGovernorate(v);
             setCity('');
           }}
+          style={styles.picker}
+          dropdownIconColor={colors.ink}
         >
           <Picker.Item label={t('donors.governorate')} value="" />
           {governorates.map((g) => (
@@ -87,7 +89,13 @@ export default function FindDonors() {
         </Picker>
       </View>
       <View style={styles.pickerWrap}>
-        <Picker selectedValue={city} onValueChange={setCity} enabled={!!selectedGov}>
+        <Picker
+          selectedValue={city}
+          onValueChange={setCity}
+          enabled={!!selectedGov}
+          style={styles.picker}
+          dropdownIconColor={colors.ink}
+        >
           <Picker.Item label={t('donors.anyCity')} value="" />
           {filteredCities.map((c) => (
             <Picker.Item key={c.id} label={c.name} value={c.name} />
@@ -171,6 +179,10 @@ const makeStyles = (colors: ThemeColors) =>
     borderColor: colors.borderStrong,
     borderRadius: 13,
     overflow: 'hidden',
+    backgroundColor: colors.white,
+  },
+  picker: {
+    color: colors.ink,
     backgroundColor: colors.white,
   },
   donor: {
