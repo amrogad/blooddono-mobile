@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { createDonationRequest } from '@/services/donationService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -19,7 +20,7 @@ import { validateNewRequest } from '@/utils/validation';
 import { BLOOD_GROUPS, compatibleDonorsFor } from '@/utils/bloodCompat';
 import { formatNeededBy } from '@/utils/urgency';
 
-const WHO_FOR = ['Me', 'Family', 'Someone else'];
+const WHO_FOR = ['me', 'family', 'other'] as const;
 const STEPS = 3;
 
 const fmtDate = (d: Date) =>
@@ -30,6 +31,7 @@ export default function Create() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
 
@@ -54,7 +56,7 @@ export default function Create() {
 
   const selectWhoFor = (w: string) => {
     setWhoFor(w);
-    if (w === 'Me') setRecipientName(profile?.display_name ?? '');
+    if (w === 'me') setRecipientName(profile?.display_name ?? '');
   };
 
   const canNext =
@@ -116,16 +118,14 @@ export default function Create() {
     <View style={styles.screen}>
       <View style={styles.header}>
         {step > 1 ? (
-          <Pressable style={styles.iconBtn} onPress={goBack} accessibilityRole="button" accessibilityLabel="Back">
+          <Pressable style={styles.iconBtn} onPress={goBack} accessibilityRole="button" accessibilityLabel={t('create.back')}>
             <Feather name="chevron-left" size={20} color={colors.ink} />
           </Pressable>
         ) : (
           <View style={{ width: 36 }} />
         )}
-        <Text style={styles.headerTitle}>New request</Text>
-        <Text style={styles.headerStep}>
-          {step} of {STEPS}
-        </Text>
+        <Text style={styles.headerTitle}>{t('create.headerTitle')}</Text>
+        <Text style={styles.headerStep}>{t('create.stepOf', { step, total: STEPS })}</Text>
       </View>
       <View style={styles.progress}>
         {[1, 2, 3].map((i) => (
@@ -136,10 +136,10 @@ export default function Create() {
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {step === 1 && (
           <>
-            <Text style={styles.stepTitle}>Who needs blood?</Text>
-            <Text style={styles.stepSub}>Only their first name is shown publicly.</Text>
+            <Text style={styles.stepTitle}>{t('create.step1Title')}</Text>
+            <Text style={styles.stepSub}>{t('create.step1Sub')}</Text>
 
-            <Text style={styles.fieldLabel}>This request is for…</Text>
+            <Text style={styles.fieldLabel}>{t('create.whoForLabel')}</Text>
             <View style={styles.chipRow}>
               {WHO_FOR.map((w) => (
                 <Pressable
@@ -147,21 +147,21 @@ export default function Create() {
                   onPress={() => selectWhoFor(w)}
                   style={[styles.whoChip, whoFor === w && styles.whoChipOn]}
                 >
-                  <Text style={[styles.whoChipText, whoFor === w && styles.whoChipTextOn]}>{w}</Text>
+                  <Text style={[styles.whoChipText, whoFor === w && styles.whoChipTextOn]}>{t(`create.whoFor.${w}`)}</Text>
                 </Pressable>
               ))}
             </View>
 
-            <Text style={styles.fieldLabel}>Patient&apos;s name</Text>
+            <Text style={styles.fieldLabel}>{t('create.patientName')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Full name"
+              placeholder={t('create.fullNamePlaceholder')}
               placeholderTextColor={colors.textMuted}
               value={recipientName}
               onChangeText={setRecipientName}
             />
 
-            <Text style={styles.fieldLabel}>Blood type needed</Text>
+            <Text style={styles.fieldLabel}>{t('create.bloodTypeLabel')}</Text>
             <View style={styles.grid}>
               {BLOOD_GROUPS.map((g) => {
                 const on = bloodGroup === g;
@@ -182,9 +182,7 @@ export default function Create() {
               <View style={styles.hint}>
                 <Feather name="info" size={14} color={colors.primary} style={{ marginTop: 1 }} />
                 <Text style={styles.hintText}>
-                  {bloodGroup} patients can receive from{' '}
-                  <Text style={styles.hintBold}>{compatibleDonorsFor(bloodGroup).join(', ')}</Text> — we&apos;ll
-                  alert them.
+                  {t('create.compatHint', { group: bloodGroup, donors: compatibleDonorsFor(bloodGroup).join(', ') })}
                 </Text>
               </View>
             ) : null}
@@ -193,10 +191,10 @@ export default function Create() {
 
         {step === 2 && (
           <>
-            <Text style={styles.stepTitle}>Where&apos;s the hospital?</Text>
-            <Text style={styles.stepSub}>Donors nearby are alerted first.</Text>
+            <Text style={styles.stepTitle}>{t('create.step2Title')}</Text>
+            <Text style={styles.stepSub}>{t('create.step2Sub')}</Text>
 
-            <Text style={styles.fieldLabel}>Governorate</Text>
+            <Text style={styles.fieldLabel}>{t('create.governorate')}</Text>
             <View style={styles.pickerWrap}>
               <Picker
                 selectedValue={governorate}
@@ -207,14 +205,14 @@ export default function Create() {
                 dropdownIconColor={colors.textMuted}
                 style={{ color: colors.ink }}
               >
-                <Picker.Item label="Select governorate" value="" />
+                <Picker.Item label={t('create.selectGovernorate')} value="" />
                 {governorates.map((g) => (
                   <Picker.Item key={g.id} label={g.name} value={g.name} />
                 ))}
               </Picker>
             </View>
 
-            <Text style={styles.fieldLabel}>City</Text>
+            <Text style={styles.fieldLabel}>{t('create.city')}</Text>
             <View style={styles.pickerWrap}>
               <Picker
                 selectedValue={city}
@@ -223,26 +221,26 @@ export default function Create() {
                 dropdownIconColor={colors.textMuted}
                 style={{ color: colors.ink }}
               >
-                <Picker.Item label="Select city" value="" />
+                <Picker.Item label={t('create.selectCity')} value="" />
                 {filteredCities.map((c) => (
                   <Picker.Item key={c.id} label={c.name} value={c.name} />
                 ))}
               </Picker>
             </View>
 
-            <Text style={styles.fieldLabel}>Hospital</Text>
+            <Text style={styles.fieldLabel}>{t('create.hospital')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g. Kasr El Aini"
+              placeholder={t('create.hospitalPlaceholder')}
               placeholderTextColor={colors.textMuted}
               value={hospitalName}
               onChangeText={setHospitalName}
             />
 
-            <Text style={styles.fieldLabel}>Full address</Text>
+            <Text style={styles.fieldLabel}>{t('create.fullAddress')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="Street, area, building"
+              placeholder={t('create.addressPlaceholder')}
               placeholderTextColor={colors.textMuted}
               value={fullAddress}
               onChangeText={setFullAddress}
@@ -252,18 +250,18 @@ export default function Create() {
 
         {step === 3 && (
           <>
-            <Text style={styles.stepTitle}>When and why?</Text>
-            <Text style={styles.stepSub}>A short, honest note gets more responses.</Text>
+            <Text style={styles.stepTitle}>{t('create.step3Title')}</Text>
+            <Text style={styles.stepSub}>{t('create.step3Sub')}</Text>
 
             <View style={styles.dateRow}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Date</Text>
+                <Text style={styles.fieldLabel}>{t('create.date')}</Text>
                 <Pressable style={styles.input} onPress={() => setShowDate(true)}>
                   <Text style={styles.inputText}>{formatNeededBy(fmtDate(date), fmtTime(time)).split(',')[0]}</Text>
                 </Pressable>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Time</Text>
+                <Text style={styles.fieldLabel}>{t('create.time')}</Text>
                 <Pressable style={styles.input} onPress={() => setShowTime(true)}>
                   <Text style={styles.inputText}>{fmtTime(time)}</Text>
                 </Pressable>
@@ -290,10 +288,10 @@ export default function Create() {
               />
             )}
 
-            <Text style={styles.fieldLabel}>Message</Text>
+            <Text style={styles.fieldLabel}>{t('create.message')}</Text>
             <TextInput
               style={[styles.input, styles.multiline]}
-              placeholder="Anything donors should know…"
+              placeholder={t('create.messagePlaceholder')}
               placeholderTextColor={colors.textMuted}
               value={message}
               onChangeText={setMessage}
@@ -315,13 +313,13 @@ export default function Create() {
           onPress={goNext}
           disabled={!canNext || submitting}
           accessibilityRole="button"
-          accessibilityLabel={step < STEPS ? 'Continue' : 'Post request'}
+          accessibilityLabel={step < STEPS ? t('create.continue') : t('create.post')}
         >
           {submitting ? (
             <ActivityIndicator color={colors.onPrimary} />
           ) : (
             <>
-              <Text style={styles.continueText}>{step < STEPS ? 'Continue' : 'Post request'}</Text>
+              <Text style={styles.continueText}>{step < STEPS ? t('create.continue') : t('create.post')}</Text>
               {step < STEPS ? <Feather name="arrow-right" size={16} color={colors.onPrimary} /> : null}
             </>
           )}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/providers/AuthProvider';
 import { DEMO_ACCOUNTS, DemoAccount } from '@/constants/demoAccounts';
@@ -10,16 +11,17 @@ import { useThemedStyles } from '@/providers/ThemeProvider';
 import { isEmail, friendlyAuthError } from '@/utils/errors';
 import brandMark from '@/assets/images/brand-mark.png';
 
-const ROLE_INFO: Record<DemoAccount['role'], { desc: string; icon: keyof typeof Feather.glyphMap }> = {
-  donor: { desc: 'Browse nearby requests and accept one', icon: 'droplet' },
-  volunteer: { desc: 'Post and coordinate requests for patients', icon: 'users' },
-  admin: { desc: 'Verify requests, manage users and funds', icon: 'shield' },
+const ROLE_ICON: Record<DemoAccount['role'], keyof typeof Feather.glyphMap> = {
+  donor: 'droplet',
+  volunteer: 'users',
+  admin: 'shield',
 };
 const DEMO_ORDER: DemoAccount['role'][] = ['donor', 'volunteer', 'admin'];
 
 export default function Login() {
   const { signIn } = useAuth();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +30,8 @@ export default function Login() {
   const handleSignIn = async (e: string, p: string, skipValidate = false) => {
     setError(null);
     if (!skipValidate) {
-      if (!isEmail(e)) return setError('Please enter a valid email.');
-      if (p.length < 6) return setError('Password must be at least 6 characters.');
+      if (!isEmail(e)) return setError(t('auth.invalidEmail'));
+      if (p.length < 6) return setError(t('auth.shortPassword'));
     }
     setSubmitting(true);
     try {
@@ -55,9 +57,9 @@ export default function Login() {
         <Image source={brandMark} style={styles.mark} />
         <Text style={styles.wordmark}>BloodDono</Text>
       </View>
-      <Text style={styles.title}>Welcome back.</Text>
+      <Text style={styles.title}>{t('auth.welcome')}</Text>
 
-      <Text style={styles.label}>Email</Text>
+      <Text style={styles.label}>{t('auth.email')}</Text>
       <TextInput
         style={styles.input}
         placeholder="you@example.com"
@@ -68,7 +70,7 @@ export default function Login() {
         keyboardType="email-address"
       />
 
-      <Text style={styles.label}>Password</Text>
+      <Text style={styles.label}>{t('auth.password')}</Text>
       <TextInput
         style={styles.input}
         placeholder="••••••••"
@@ -85,24 +87,24 @@ export default function Login() {
         onPress={() => handleSignIn(email, password)}
         disabled={submitting}
         accessibilityRole="button"
-        accessibilityLabel="Sign in"
+        accessibilityLabel={t('auth.signIn')}
       >
         {submitting ? (
           <ActivityIndicator color={colors.onPrimary} />
         ) : (
-          <Text style={styles.primaryButtonText}>Sign in</Text>
+          <Text style={styles.primaryButtonText}>{t('auth.signIn')}</Text>
         )}
       </Pressable>
 
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>EXPLORING? TRY A DEMO ROLE</Text>
+        <Text style={styles.dividerText}>{t('auth.demoDivider')}</Text>
         <View style={styles.dividerLine} />
       </View>
 
       <View style={styles.roleList}>
         {demoAccounts.map((acc) => {
-          const info = ROLE_INFO[acc.role];
+          const icon = ROLE_ICON[acc.role];
           const isDonor = acc.role === 'donor';
           return (
             <Pressable
@@ -111,14 +113,14 @@ export default function Login() {
               onPress={() => handleSignIn(acc.email, acc.password, true)}
               disabled={submitting}
               accessibilityRole="button"
-              accessibilityLabel={`${acc.label} demo account`}
+              accessibilityLabel={t('auth.demoA11y', { label: t(`auth.role.${acc.role}`) })}
             >
               <View style={[styles.roleIcon, isDonor ? styles.roleIconDonor : styles.roleIconMuted]}>
-                <Feather name={info.icon} size={16} color={isDonor ? colors.primary : colors.textBody} />
+                <Feather name={icon} size={16} color={isDonor ? colors.primary : colors.textBody} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.roleLabel}>{acc.label}</Text>
-                <Text style={styles.roleDesc}>{info.desc}</Text>
+                <Text style={styles.roleLabel}>{t(`auth.role.${acc.role}`)}</Text>
+                <Text style={styles.roleDesc}>{t(`auth.roleDesc.${acc.role}`)}</Text>
               </View>
               <Feather name="chevron-right" size={16} color={colors.textMuted} />
             </Pressable>
@@ -128,7 +130,7 @@ export default function Login() {
 
       <View style={styles.stayRow}>
         <Feather name="lock" size={12} color={colors.textMuted} />
-        <Text style={styles.stayText}>You stay signed in on this device</Text>
+        <Text style={styles.stayText}>{t('auth.staySignedIn')}</Text>
       </View>
     </ScrollView>
   );
