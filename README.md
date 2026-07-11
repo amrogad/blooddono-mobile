@@ -14,6 +14,24 @@ The [web version](https://blooddono-two.vercel.app/) shares the same Supabase ba
 - 🌐 Full Arabic + English support with RTL layout that mirrors automatically on switch
 - 🌙 Dark and light mode, persisted across sessions
 
+## Download
+
+Build an APK with EAS (no local Android SDK needed):
+
+```bash
+npm install -g eas-cli
+eas build -p android --profile preview
+```
+
+Or build locally after cloning and setting up the `.env`:
+
+```bash
+npx expo prebuild --clean
+cd android && ./gradlew assembleRelease
+```
+
+The `.apk` ends up in `android/app/build/outputs/apk/release/`.
+
 ## Demo accounts
 
 The login screen has one-tap demo logins — no signup needed:
@@ -53,25 +71,25 @@ Under 3 minutes to see the core loop:
 
 ## Screenshots
 
-| EN · Light | AR · Dark |
+| EN · Light | EN · Dark |
 |---|---|
-| ![Requests feed in English light mode](screenshots/requests.png) | ![Requests feed in Arabic dark mode RTL](screenshots/requests-ar.png) |
+| ![Requests feed — English light mode](screenshots/requests.png) | ![Requests feed — English dark mode](screenshots/requests-dark.png) |
+
+| AR · Light · RTL | AI assistant · AR · Dark |
+|---|---|
+| ![Requests feed — Arabic light mode RTL](screenshots/requests-ar.png) | ![Eligibility assistant in Arabic dark mode](screenshots/assistant-ar.png) |
 
 | Request detail | Fullscreen map |
 |---|---|
 | ![Request detail with hospital map](screenshots/request-detail.png) | ![Fullscreen map with blood-drop pin](screenshots/map.png) |
 
-| AI assistant · EN | AI assistant · AR |
+| AI assistant · EN | Find donors |
 |---|---|
-| ![Eligibility assistant in English](screenshots/assistant.png) | ![Eligibility assistant in Arabic](screenshots/assistant-ar.png) |
+| ![Eligibility assistant in English](screenshots/assistant.png) | ![Compatible donor search](screenshots/donors.png) |
 
-| Find donors | Profile |
+| Login | Profile |
 |---|---|
-| ![Compatible donor search](screenshots/donors.png) | ![Profile with dark mode and language toggles](screenshots/profile.png) |
-
-| Login |  |
-|---|---|
-| ![Login screen with demo roles in Arabic](screenshots/login.png) | |
+| ![Login screen with one-tap demo roles](screenshots/login.png) | ![Profile with dark mode and language toggles](screenshots/profile.png) |
 
 ## Architecture
 
