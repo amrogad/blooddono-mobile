@@ -23,7 +23,7 @@ npm install -g eas-cli
 eas build -p android --profile preview
 ```
 
-Or build locally after cloning and setting up the `.env`:
+Or build locally after cloning and setting up `.env`:
 
 ```bash
 npx expo prebuild --clean
@@ -71,25 +71,25 @@ Under 3 minutes to see the core loop:
 
 ## Screenshots
 
-| EN · Light | EN · Dark |
+| EN · Light | AR · Dark |
 |---|---|
-| ![Requests feed — English light mode](screenshots/requests.png) | ![Requests feed — English dark mode](screenshots/requests-dark.png) |
-
-| AR · Light · RTL | AI assistant · AR · Dark |
-|---|---|
-| ![Requests feed — Arabic light mode RTL](screenshots/requests-ar.png) | ![Eligibility assistant in Arabic dark mode](screenshots/assistant-ar.png) |
+| <img src="screenshots/requests.png" alt="Requests feed in English light mode" width="390" /> | <img src="screenshots/requests-ar.png" alt="Requests feed in Arabic dark mode RTL" width="390" /> |
 
 | Request detail | Fullscreen map |
 |---|---|
-| ![Request detail with hospital map](screenshots/request-detail.png) | ![Fullscreen map with blood-drop pin](screenshots/map.png) |
+| <img src="screenshots/request-detail.png" alt="Request detail with hospital map" width="390" /> | <img src="screenshots/map.png" alt="Fullscreen map with blood-drop pin" width="390" /> |
 
-| AI assistant · EN | Find donors |
+| AI assistant · EN | AI assistant · AR |
 |---|---|
-| ![Eligibility assistant in English](screenshots/assistant.png) | ![Compatible donor search](screenshots/donors.png) |
+| <img src="screenshots/assistant.png" alt="Eligibility assistant in English" width="390" /> | <img src="screenshots/assistant-ar.png" alt="Eligibility assistant in Arabic" width="390" /> |
 
-| Login | Profile |
+| Find donors | Profile |
 |---|---|
-| ![Login screen with one-tap demo roles](screenshots/login.png) | ![Profile with dark mode and language toggles](screenshots/profile.png) |
+| <img src="screenshots/donors.png" alt="Compatible donor search" width="390" /> | <img src="screenshots/profile.png" alt="Profile with dark mode and language toggles" width="390" /> |
+
+| Login | |
+|---|---|
+| <img src="screenshots/login.png" alt="Login screen with demo roles in Arabic" width="390" /> |
 
 ## Architecture
 
