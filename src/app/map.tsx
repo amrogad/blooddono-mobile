@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, Linking } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
@@ -14,6 +15,7 @@ export default function FullscreenMap() {
   const { lat, lng, label } = useLocalSearchParams<{ lat: string; lng: string; label: string }>();
   const { coords: me } = useLocation();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const hospital: MapPoint = { latitude: parseFloat(lat), longitude: parseFloat(lng) };
   const distance = me ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude) : null;
@@ -26,13 +28,13 @@ export default function FullscreenMap() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: label ?? 'Map', headerShown: true }} />
+      <Stack.Screen options={{ title: label ?? t('nav.map'), headerShown: true }} />
 
       <WebView
         key={me ? 'route' : 'hospital'}
         style={styles.map}
         originWhitelist={['*']}
-        source={{ html: mapHtml(hospital, me, label ?? 'Location') }}
+        source={{ html: mapHtml(hospital, me, label ?? t('map.location')) }}
       />
 
       <View style={styles.sheet}>
@@ -43,10 +45,10 @@ export default function FullscreenMap() {
           </View>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.sheetTitle} numberOfLines={1}>
-              {label ?? 'Location'}
+              {label ?? t('map.location')}
             </Text>
             <Text style={styles.sheetMeta}>
-              {distance != null ? `${distance.toFixed(1)} km away · straight-line distance` : 'Tap directions for the route'}
+              {distance != null ? t('map.kmAway', { km: distance.toFixed(1) }) : t('map.tapDirections')}
             </Text>
           </View>
         </View>
@@ -54,10 +56,10 @@ export default function FullscreenMap() {
           style={({ pressed }) => [styles.directions, pressed && { opacity: 0.9 }]}
           onPress={openInGoogleMaps}
           accessibilityRole="button"
-          accessibilityLabel="Get directions in Google Maps"
+          accessibilityLabel={t('map.directionsA11y')}
         >
           <Feather name="corner-up-right" size={16} color={colors.onPrimary} />
-          <Text style={styles.directionsText}>Get directions</Text>
+          <Text style={styles.directionsText}>{t('map.getDirections')}</Text>
         </Pressable>
       </View>
     </View>

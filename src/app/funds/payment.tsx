@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { createFund } from '@/services/fundService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -19,6 +20,7 @@ export default function Payment() {
   const { data: profile } = useProfile(session?.user.id);
   const { amount: preset } = useLocalSearchParams<{ amount?: string }>();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const [amount, setAmount] = useState(preset ?? '');
   const [cardNumber, setCardNumber] = useState('');
@@ -36,17 +38,17 @@ export default function Payment() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['funds'] });
-      Alert.alert('Thank you', 'Your support was received.', [
-        { text: 'OK', onPress: () => router.replace('/funds') },
+      Alert.alert(t('payment.thankTitle'), t('payment.thankBody'), [
+        { text: t('payment.ok'), onPress: () => router.replace('/funds') },
       ]);
     },
-    onError: (e: Error) => Alert.alert('Payment failed', e.message),
+    onError: (e: Error) => Alert.alert(t('payment.failed'), e.message),
   });
 
   const handleSubmit = () => {
     const parsed = parseFloat(amount);
     if (isNaN(parsed) || parsed <= 0) {
-      setAmountError('Enter a valid amount');
+      setAmountError(t('payment.invalidAmount'));
       return;
     }
     setAmountError('');
@@ -55,10 +57,10 @@ export default function Payment() {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
-      <Text style={styles.pageTitle}>Give to the fund</Text>
-      <Text style={styles.pageSubtitle}>Your name and amount are listed publicly.</Text>
+      <Text style={styles.pageTitle}>{t('payment.title')}</Text>
+      <Text style={styles.pageSubtitle}>{t('payment.subtitle')}</Text>
 
-      <Text style={styles.label}>Amount</Text>
+      <Text style={styles.label}>{t('payment.amount')}</Text>
       <View style={styles.presetRow}>
         {PRESETS.map((p) => {
           const on = amount === String(p);
@@ -78,7 +80,7 @@ export default function Payment() {
       </View>
       <TextInput
         style={styles.input}
-        placeholder="Other amount (EGP)"
+        placeholder={t('payment.otherPlaceholder')}
         placeholderTextColor={colors.textMuted}
         keyboardType="decimal-pad"
         value={amount}
@@ -89,7 +91,7 @@ export default function Payment() {
       />
       {amountError ? <Text style={styles.fieldError}>{amountError}</Text> : null}
 
-      <Text style={styles.label}>Card number</Text>
+      <Text style={styles.label}>{t('payment.cardNumber')}</Text>
       <TextInput
         style={styles.input}
         placeholder="4242 4242 4242 4242"
@@ -102,7 +104,7 @@ export default function Payment() {
 
       <View style={styles.row}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.label}>Expiry</Text>
+          <Text style={styles.label}>{t('payment.expiry')}</Text>
           <TextInput
             style={styles.input}
             placeholder="MM / YY"
@@ -113,7 +115,7 @@ export default function Payment() {
           />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.label}>CVC</Text>
+          <Text style={styles.label}>{t('payment.cvc')}</Text>
           <TextInput
             style={styles.input}
             placeholder="123"
@@ -132,12 +134,12 @@ export default function Payment() {
         onPress={handleSubmit}
         disabled={donate.isPending}
         accessibilityRole="button"
-        accessibilityLabel="Submit donation"
+        accessibilityLabel={t('payment.submitA11y')}
       >
         {donate.isPending ? (
           <ActivityIndicator color={colors.onInk} />
         ) : (
-          <Text style={styles.submitText}>{amount ? `Give EGP ${amount}` : 'Give'}</Text>
+          <Text style={styles.submitText}>{amount ? t('payment.giveAmount', { amount }) : t('payment.give')}</Text>
         )}
       </Pressable>
     </ScrollView>

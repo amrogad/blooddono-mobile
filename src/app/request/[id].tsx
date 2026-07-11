@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { WebView } from 'react-native-webview';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { acceptRequest, getRequestDetails } from '@/services/donationService';
 import { geocodeHospital } from '@/services/geocodeService';
@@ -16,18 +17,13 @@ import { useThemedStyles } from '@/providers/ThemeProvider';
 import { BloodRoundel } from '@/components/BloodRoundel';
 import { UrgencyPill, StatusPill } from '@/components/Pills';
 
-const CLOSED_LABEL: Record<string, string> = {
-  inprogress: 'has a donor matched',
-  done: 'has been completed',
-  canceled: 'was cancelled',
-};
-
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { coords: me } = useLocation();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['request', id],
@@ -61,10 +57,10 @@ export default function RequestDetail() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
       await queryClient.invalidateQueries({ queryKey: ['request', id] });
-      Alert.alert('Thank you', 'The family has been notified that you can donate.');
+      Alert.alert(t('detail.acceptedTitle'), t('detail.acceptedBody'));
       router.replace('/');
     },
-    onError: (e: Error) => Alert.alert('Could not accept', e.message),
+    onError: (e: Error) => Alert.alert(t('detail.acceptFailed'), e.message),
   });
 
   if (isLoading) {
@@ -78,7 +74,7 @@ export default function RequestDetail() {
   if (error || !data) {
     return (
       <View style={styles.center}>
-        <Text style={type.body}>Request not found.</Text>
+        <Text style={type.body}>{t('detail.notFound')}</Text>
       </View>
     );
   }
@@ -90,9 +86,9 @@ export default function RequestDetail() {
     hospital && me ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude) : null;
 
   const confirmAccept = () =>
-    Alert.alert('Confirm donation', `Let ${data.recipient_name}'s family know you can donate?`, [
-      { text: 'Not now', style: 'cancel' },
-      { text: 'I can donate', onPress: () => accept.mutate() },
+    Alert.alert(t('detail.confirmTitle'), t('detail.confirmBody', { name: data.recipient_name }), [
+      { text: t('detail.notNow'), style: 'cancel' },
+      { text: t('card.canDonate'), onPress: () => accept.mutate() },
     ]);
 
   return (
@@ -107,7 +103,7 @@ export default function RequestDetail() {
             {isOpen ? <UrgencyPill level={urgency.level} /> : <StatusPill status={data.donation_status} />}
           </View>
           <Text style={styles.heroSub}>
-            Needs {data.blood_group} · {formatNeededBy(data.donation_date, data.donation_time)}
+            {t('detail.needs', { group: data.blood_group, when: formatNeededBy(data.donation_date, data.donation_time) })}
           </Text>
         </View>
       </View>
@@ -126,7 +122,7 @@ export default function RequestDetail() {
               })
             }
             accessibilityRole="button"
-            accessibilityLabel="Expand map to full screen"
+            accessibilityLabel={t('detail.expandA11y')}
           >
             <View pointerEvents="none">
               <WebView
@@ -140,22 +136,22 @@ export default function RequestDetail() {
             {distance != null ? (
               <View style={styles.distanceChip}>
                 <Feather name="map-pin" size={11} color={colors.primary} />
-                <Text style={styles.distanceChipText}>{distance.toFixed(1)} km from you</Text>
+                <Text style={styles.distanceChipText}>{t('detail.kmFromYou', { km: distance.toFixed(1) })}</Text>
               </View>
             ) : null}
             <View style={styles.expandHint}>
-              <Text style={styles.expandHintText}>Tap to expand</Text>
+              <Text style={styles.expandHintText}>{t('detail.tapExpand')}</Text>
             </View>
           </Pressable>
         ) : geocoding ? (
           <View style={[styles.map, styles.mapPlaceholder]}>
             <ActivityIndicator color={colors.accent} />
-            <Text style={styles.mapPlaceholderText}>Locating hospital…</Text>
+            <Text style={styles.mapPlaceholderText}>{t('detail.locating')}</Text>
           </View>
         ) : (
           <View style={[styles.map, styles.mapPlaceholder]}>
             <Text style={styles.mapPlaceholderText}>
-              {geoError ? "Couldn't reach the map service." : "Couldn't locate this hospital."}
+              {geoError ? t('detail.mapError') : t('detail.mapNotFound')}
             </Text>
           </View>
         )}
@@ -186,12 +182,12 @@ export default function RequestDetail() {
             onPress={confirmAccept}
             disabled={accept.isPending}
             accessibilityRole="button"
-            accessibilityLabel="I can donate"
+            accessibilityLabel={t('card.canDonate')}
           >
             {accept.isPending ? (
               <ActivityIndicator color={colors.onPrimary} />
             ) : (
-              <Text style={styles.donateText}>I can donate</Text>
+              <Text style={styles.donateText}>{t('card.canDonate')}</Text>
             )}
           </Pressable>
           {hospital ? (
@@ -204,17 +200,17 @@ export default function RequestDetail() {
                 })
               }
               accessibilityRole="button"
-              accessibilityLabel="Directions"
+              accessibilityLabel={t('detail.directions')}
             >
               <Feather name="corner-up-right" size={16} color={colors.ink} />
-              <Text style={styles.secondaryText}>Directions</Text>
+              <Text style={styles.secondaryText}>{t('detail.directions')}</Text>
             </Pressable>
           ) : null}
         </View>
       ) : (
         <View style={styles.closedNote}>
           <Text style={styles.closedNoteText}>
-            This request {CLOSED_LABEL[data.donation_status] ?? 'is closed'}.
+            {t([`detail.closed.${data.donation_status}`, 'detail.closed.default'])}
           </Text>
         </View>
       )}

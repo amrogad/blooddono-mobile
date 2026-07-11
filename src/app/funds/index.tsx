@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Pressable, RefreshControl, ActivityIn
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { getFunds, Fund } from '@/services/fundService';
 import { spacing, radius, fonts, type } from '@/constants/theme';
@@ -17,7 +18,8 @@ function initials(name: string) {
 
 const FundRow = memo(function FundRow({ item }: { item: Fund }) {
   const { colors, styles } = useThemedStyles(makeStyles);
-  const label = (item.name ?? '').trim() || 'Anonymous';
+  const { t } = useTranslation();
+  const label = (item.name ?? '').trim() || t('funds.anonymous');
   const badge = initials(item.name ?? '');
   return (
     <View style={styles.row}>
@@ -44,6 +46,7 @@ const FundRow = memo(function FundRow({ item }: { item: Fund }) {
 export default function Funds() {
   const router = useRouter();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ['funds'],
     queryFn: getFunds,
@@ -55,47 +58,45 @@ export default function Funds() {
   const header = (
     <View style={styles.headerWrap}>
       <View style={styles.topBar}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
+        <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityRole="button" accessibilityLabel={t('funds.back')}>
           <Feather name="chevron-left" size={20} color={colors.ink} />
         </Pressable>
-        <Text style={styles.topTitle}>Community fund</Text>
+        <Text style={styles.topTitle}>{t('funds.title')}</Text>
       </View>
 
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>RAISED SO FAR</Text>
+        <Text style={styles.heroLabel}>{t('funds.raisedLabel')}</Text>
         <Text style={styles.heroAmount}>EGP {total.toLocaleString()}</Text>
-        <Text style={styles.heroCopy}>
-          Covers transport for donors who can&apos;t afford the trip, and SMS alerts where push doesn&apos;t reach.
-        </Text>
+        <Text style={styles.heroCopy}>{t('funds.heroCopy')}</Text>
         <View style={styles.heroButtons}>
           <Pressable
             style={({ pressed }) => [styles.giveBtn, pressed && { opacity: 0.9 }]}
             onPress={() => router.push({ pathname: '/funds/payment', params: { amount: '100' } })}
             accessibilityRole="button"
-            accessibilityLabel="Give 100 EGP"
+            accessibilityLabel={t('funds.give100A11y')}
           >
-            <Text style={styles.giveBtnText}>Give EGP 100</Text>
+            <Text style={styles.giveBtnText}>{t('funds.give100')}</Text>
           </Pressable>
           <Pressable
             style={({ pressed }) => [styles.otherBtn, pressed && { opacity: 0.9 }]}
             onPress={() => router.push('/funds/payment')}
             accessibilityRole="button"
-            accessibilityLabel="Give another amount"
+            accessibilityLabel={t('funds.otherA11y')}
           >
-            <Text style={styles.otherBtnText}>Other</Text>
+            <Text style={styles.otherBtnText}>{t('funds.other')}</Text>
           </Pressable>
         </View>
         <View style={styles.secureRow}>
           <Feather name="lock" size={11} color="#9C938E" />
-          <Text style={styles.secureText}>Secure payment · every pound is listed below</Text>
+          <Text style={styles.secureText}>{t('funds.secure')}</Text>
         </View>
       </View>
 
       <View style={styles.ledgerHead}>
-        <Text style={styles.ledgerHeadLabel}>RECENT SUPPORT</Text>
+        <Text style={styles.ledgerHeadLabel}>{t('funds.recentLabel')}</Text>
         {count > 0 ? (
           <Text style={styles.ledgerHeadCount}>
-            {count} {count === 1 ? 'person' : 'people'}
+            {count} {count === 1 ? t('funds.person') : t('funds.people')}
           </Text>
         ) : null}
       </View>
@@ -118,17 +119,15 @@ export default function Funds() {
             {isLoading ? (
               <ActivityIndicator color={colors.accent} />
             ) : error ? (
-              <Text style={styles.stateText}>Couldn&apos;t load records. Pull to retry.</Text>
+              <Text style={styles.stateText}>{t('funds.errorBody')}</Text>
             ) : (
-              <Text style={styles.stateText}>No support yet — be the first to give.</Text>
+              <Text style={styles.stateText}>{t('funds.emptyBody')}</Text>
             )}
           </View>
         }
         ListFooterComponent={
           count > 0 ? (
-            <Text style={styles.footerNote}>
-              Money never buys blood — it removes the obstacles around giving it.
-            </Text>
+            <Text style={styles.footerNote}>{t('funds.footer')}</Text>
           ) : null
         }
       />
