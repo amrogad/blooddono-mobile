@@ -1,16 +1,9 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  ActivityIndicator,
-  StyleSheet,
-  Pressable,
-  Alert,
-} from 'react-native';
+import { View, Text, FlatList, ScrollView, ActivityIndicator, StyleSheet, Pressable, Alert } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import {
   getMyRequests,
@@ -20,27 +13,21 @@ import {
   DonationStatus,
 } from '@/services/donationService';
 import { useAuth } from '@/providers/AuthProvider';
-import { colors, spacing, radius, fonts, type } from '@/constants/theme';
+import { BloodRoundel } from '@/components/BloodRoundel';
+import { StatusPill } from '@/components/Pills';
+import { formatNeededBy } from '@/utils/urgency';
+import { spacing, radius, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
-const STATUS_STYLE: Record<DonationStatus, { bg: string; fg: string }> = {
-  pending: { bg: '#FDECEC', fg: colors.primary },
-  inprogress: { bg: '#FFF4E5', fg: '#B26A00' },
-  done: { bg: '#E7F6EC', fg: colors.success },
-  canceled: { bg: colors.surface, fg: colors.textMuted },
-};
-
-const FILTERS: { label: string; value: 'all' | DonationStatus }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'In progress', value: 'inprogress' },
-  { label: 'Done', value: 'done' },
-  { label: 'Canceled', value: 'canceled' },
-];
+const FILTERS: ('all' | DonationStatus)[] = ['all', 'pending', 'inprogress', 'done', 'canceled'];
 
 export default function MyRequests() {
   const { session } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | DonationStatus>('all');
 
   const { data, isLoading, error } = useQuery({
@@ -49,32 +36,37 @@ export default function MyRequests() {
     enabled: !!session,
   });
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['myRequests', session?.user.id] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['myRequests', session?.user.id] });
 
   const setStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: DonationStatus }) =>
       updateDonationRequest(id, { donation_status: status }),
     onSuccess: invalidate,
-    onError: (e: Error) => Alert.alert('Update failed', e.message),
+    onError: (e: Error) => Alert.alert(t('myRequests.updateFailed'), e.message),
   });
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteDonationRequest(id),
     onSuccess: invalidate,
-    onError: (e: Error) => Alert.alert('Delete failed', e.message),
+    onError: (e: Error) => Alert.alert(t('myRequests.deleteFailed'), e.message),
   });
 
-  const confirmDelete = (id: string) =>
-    Alert.alert('Delete request?', 'This request will be permanently removed.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => remove.mutate(id) },
+  const confirmCancel = (item: MyRequest) =>
+    Alert.alert(t('myRequests.cancelTitle'), t('myRequests.cancelBody', { name: item.recipient_name }), [
+      { text: t('myRequests.keepIt'), style: 'cancel' },
+      { text: t('myRequests.cancelConfirm'), style: 'destructive', onPress: () => setStatus.mutate({ id: item.id, status: 'canceled' }) },
+    ]);
+
+  const confirmDelete = (item: MyRequest) =>
+    Alert.alert(t('myRequests.deleteTitle'), t('myRequests.deleteBody'), [
+      { text: t('myRequests.keepIt'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: () => remove.mutate(item.id) },
     ]);
 
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
         <ActivityIndicator color={colors.accent} />
       </View>
     );
@@ -83,8 +75,8 @@ export default function MyRequests() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
-        <Text style={type.body}>Couldn&apos;t load your requests.</Text>
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
+        <Text style={type.body}>{t('myRequests.errorBody')}</Text>
       </View>
     );
   }
@@ -92,9 +84,9 @@ export default function MyRequests() {
   if (!data || data.length === 0) {
     return (
       <View style={styles.center}>
-        <Stack.Screen options={{ title: 'My requests' }} />
-        <Text style={styles.emptyTitle}>No requests yet</Text>
-        <Text style={styles.emptyBody}>Requests you post will show up here with their status.</Text>
+        <Stack.Screen options={{ title: t('nav.myRequests') }} />
+        <Text style={styles.emptyTitle}>{t('myRequests.emptyTitle')}</Text>
+        <Text style={styles.emptyBody}>{t('myRequests.emptyBody')}</Text>
       </View>
     );
   }
@@ -104,23 +96,19 @@ export default function MyRequests() {
 
   return (
     <View style={styles.screen}>
-      <Stack.Screen options={{ title: 'My requests' }} />
+      <Stack.Screen options={{ title: t('nav.myRequests') }} />
 
       <View style={styles.filterBar}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {FILTERS.map((f) => {
-            const active = filter === f.value;
+            const active = filter === f;
             return (
               <Pressable
-                key={f.value}
-                onPress={() => setFilter(f.value)}
+                key={f}
+                onPress={() => setFilter(f)}
                 style={[styles.chip, active && styles.chipActive]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{f.label}</Text>
+                <Text style={[styles.chipText, active && styles.chipTextActive]}>{t(`myRequests.filter.${f}`)}</Text>
               </Pressable>
             );
           })}
@@ -131,18 +119,16 @@ export default function MyRequests() {
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={
-          <Text style={styles.filterEmpty}>No requests with this status.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.filterEmpty}>{t('myRequests.filterEmpty')}</Text>}
         renderItem={({ item }) => (
-          <RequestCard
+          <MyRequestCard
             item={item}
             busy={busy}
             onView={() => router.push(`/request/${item.id}`)}
             onEdit={() => router.push(`/edit-request/${item.id}`)}
-            onDelete={() => confirmDelete(item.id)}
-            onDone={() => setStatus.mutate({ id: item.id, status: 'done' })}
-            onCancel={() => setStatus.mutate({ id: item.id, status: 'canceled' })}
+            onFulfill={() => setStatus.mutate({ id: item.id, status: 'done' })}
+            onCancel={() => confirmCancel(item)}
+            onDelete={() => confirmDelete(item)}
           />
         )}
       />
@@ -150,95 +136,96 @@ export default function MyRequests() {
   );
 }
 
-function RequestCard({
+function MyRequestCard({
   item,
   busy,
   onView,
   onEdit,
-  onDelete,
-  onDone,
+  onFulfill,
   onCancel,
+  onDelete,
 }: {
   item: MyRequest;
   busy: boolean;
   onView: () => void;
   onEdit: () => void;
-  onDelete: () => void;
-  onDone: () => void;
+  onFulfill: () => void;
   onCancel: () => void;
+  onDelete: () => void;
 }) {
-  const s = STATUS_STYLE[item.donation_status];
+  const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
+  const active = item.donation_status === 'pending' || item.donation_status === 'inprogress';
   return (
     <View style={styles.card}>
-      <View style={styles.topRow}>
-        <View style={styles.groupPill}>
-          <Text style={styles.groupPillText}>{item.blood_group}</Text>
+      <Pressable onPress={onView} accessibilityRole="button" accessibilityLabel={t('myRequests.viewA11y', { name: item.recipient_name })}>
+        <View style={styles.topRow}>
+          <BloodRoundel group={item.blood_group} size={46} variant="tint" />
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.name} numberOfLines={1}>
+              {item.recipient_name}
+            </Text>
+            <Text style={styles.meta} numberOfLines={1}>
+              {t('myRequests.cardMeta', {
+                city: item.recipient_city,
+                gov: item.recipient_governorate,
+                when: formatNeededBy(item.donation_date, item.donation_time),
+              })}
+            </Text>
+          </View>
+          <StatusPill status={item.donation_status} />
         </View>
-        <View style={[styles.statusPill, { backgroundColor: s.bg }]}>
-          <Text style={[styles.statusText, { color: s.fg }]}>{item.donation_status}</Text>
-        </View>
-      </View>
-      <Text style={styles.name}>{item.recipient_name}</Text>
-      <Text style={styles.meta}>
-        {item.recipient_city}, {item.recipient_governorate}
-      </Text>
-      <Text style={styles.metaMuted}>
-        {item.donation_date} · {item.donation_time.slice(0, 5)}
-      </Text>
+      </Pressable>
 
-      <View style={styles.actions}>
-        {item.donation_status === 'inprogress' && (
-          <>
-            <Action label="Mark done" tone="success" onPress={onDone} disabled={busy} />
-            <Action label="Cancel" tone="warning" onPress={onCancel} disabled={busy} />
-          </>
-        )}
-        <Action label="View" tone="neutral" onPress={onView} disabled={busy} />
-        <Action label="Edit" tone="neutral" onPress={onEdit} disabled={busy} />
-        <Action label="Delete" tone="danger" onPress={onDelete} disabled={busy} />
-      </View>
+      {active ? (
+        <>
+          <View style={styles.actions}>
+            <Pressable
+              style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.9 }]}
+              onPress={onEdit}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel={t('myRequests.editDetails')}
+            >
+              <Feather name="edit-3" size={14} color={colors.ink} />
+              <Text style={styles.outlineText}>{t('myRequests.editDetails')}</Text>
+            </Pressable>
+            <Pressable
+              style={({ pressed }) => [styles.fulfill, pressed && { opacity: 0.9 }, busy && { opacity: 0.5 }]}
+              onPress={onFulfill}
+              disabled={busy}
+              accessibilityRole="button"
+              accessibilityLabel={t('myRequests.markFulfilled')}
+            >
+              <Feather name="check" size={15} color={colors.onInk} />
+              <Text style={styles.fulfillText}>{t('myRequests.markFulfilled')}</Text>
+            </Pressable>
+          </View>
+          <Pressable style={styles.link} onPress={onCancel} disabled={busy} accessibilityRole="button" accessibilityLabel={t('myRequests.cancelRequest')}>
+            <Text style={styles.cancelLink}>{t('myRequests.cancelRequest')}</Text>
+          </Pressable>
+        </>
+      ) : (
+        <>
+          <Pressable
+            style={({ pressed }) => [styles.outlineBtn, styles.viewFull, pressed && { opacity: 0.9 }]}
+            onPress={onView}
+            accessibilityRole="button"
+            accessibilityLabel={t('card.viewDetails')}
+          >
+            <Text style={styles.outlineText}>{t('card.viewDetails')}</Text>
+          </Pressable>
+          <Pressable style={styles.link} onPress={onDelete} disabled={busy} accessibilityRole="button" accessibilityLabel={t('myRequests.deleteA11y')}>
+            <Text style={styles.deleteLink}>{t('common.delete')}</Text>
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }
 
-const TONE: Record<string, { border: string; fg: string }> = {
-  neutral: { border: colors.border, fg: colors.text },
-  success: { border: '#BEE7CC', fg: colors.success },
-  warning: { border: '#F3D9B0', fg: '#B26A00' },
-  danger: { border: '#F3C4C4', fg: colors.error },
-};
-
-function Action({
-  label,
-  tone,
-  onPress,
-  disabled,
-}: {
-  label: string;
-  tone: keyof typeof TONE;
-  onPress: () => void;
-  disabled: boolean;
-}) {
-  const t = TONE[tone];
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.action,
-        { borderColor: t.border },
-        pressed && { opacity: 0.6 },
-        disabled && { opacity: 0.5 },
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Text style={[styles.actionText, { color: t.fg }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   center: {
     flex: 1,
@@ -250,61 +237,57 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { ...type.h3, color: colors.text },
   emptyBody: { ...type.body, color: colors.textMuted, textAlign: 'center' },
-  filterBar: { borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.white },
+  filterBar: { borderBottomWidth: 1, borderBottomColor: colors.border, backgroundColor: colors.background },
   filterRow: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },
   chip: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
     backgroundColor: colors.white,
   },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.textMuted },
-  chipTextActive: { color: colors.white },
+  chipActive: { backgroundColor: colors.ink, borderColor: colors.ink },
+  chipText: { fontFamily: fonts.semibold, fontSize: 12.5, color: colors.textBody },
+  chipTextActive: { color: colors.onInk },
   filterEmpty: { ...type.body, color: colors.textMuted, textAlign: 'center', marginTop: spacing.xl },
   list: { padding: spacing.lg, gap: spacing.md },
   card: {
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: 4,
+    borderRadius: radius.card,
+    padding: 14,
   },
-  topRow: {
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  name: { ...type.title, color: colors.ink },
+  meta: { ...type.small, color: colors.textMuted, marginTop: 1 },
+  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  outlineBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.control,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
+    justifyContent: 'center',
+    gap: 6,
   },
-  groupPill: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.pill,
-  },
-  groupPillText: { color: colors.white, fontFamily: fonts.bold, fontSize: 14, letterSpacing: 0.5 },
-  statusPill: { paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: radius.pill },
-  statusText: { fontFamily: fonts.semibold, fontSize: 12, textTransform: 'capitalize' },
-  name: { ...type.h3, color: colors.text, marginTop: 4 },
-  meta: { ...type.body, color: colors.textMuted },
-  metaMuted: { ...type.small, color: colors.textMuted },
-  actions: {
+  outlineText: { color: colors.ink, fontFamily: fonts.semibold, fontSize: 13 },
+  viewFull: { marginTop: spacing.md },
+  fulfill: {
+    flex: 1,
+    height: 44,
+    borderRadius: radius.control,
+    backgroundColor: colors.ink,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
   },
-  action: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  actionText: { fontFamily: fonts.semibold, fontSize: 13 },
+  fulfillText: { color: colors.onInk, fontFamily: fonts.bold, fontSize: 13 },
+  link: { alignItems: 'center', paddingVertical: spacing.md, marginTop: 2 },
+  cancelLink: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 12.5 },
+  deleteLink: { color: colors.error, fontFamily: fonts.semibold, fontSize: 12.5 },
 });

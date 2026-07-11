@@ -11,18 +11,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+
 import { useAuth } from '@/providers/AuthProvider';
 import { useProfile } from '@/hooks/useProfile';
+import { useLocale } from '@/providers/LocaleProvider';
 import { askAssistant, Message } from '@/services/assistantService';
-import { BrandHeader } from '@/components/BrandHeader';
-import { colors, spacing, radius, fonts, type, shadow } from '@/constants/theme';
-
-const CHIPS = [
-  'I got a tattoo 2 weeks ago, can I donate?',
-  'I take blood pressure meds, am I eligible?',
-  'How long after a cold can I donate?',
-  'What should I eat before donating?',
-];
+import { useThemedStyles } from '@/providers/ThemeProvider';
+import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
 
 export default function Assistant() {
   const { session } = useAuth();
@@ -31,32 +29,34 @@ export default function Assistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
+  const { locale } = useLocale();
+  const chips = t('assistant.chips', { returnObjects: true }) as string[];
 
   const send = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
 
+      const errText = t('assistant.error');
       const userMsg: Message = { role: 'user', text: trimmed };
-      const validHistory = messages.filter((m) => m.text !== 'Something went wrong. Try again.');
+      const validHistory = messages.filter((m) => m.text !== errText);
       const next = [...validHistory, userMsg];
       setMessages(next);
       setInput('');
       setLoading(true);
 
       try {
-        const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '');
+        const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '', locale);
         setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
       } catch {
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', text: 'Something went wrong. Try again.' },
-        ]);
+        setMessages((prev) => [...prev, { role: 'assistant', text: errText }]);
       } finally {
         setLoading(false);
       }
     },
-    [messages, loading, profile],
+    [messages, loading, profile, t, locale],
   );
 
   const renderMessage = ({ item }: { item: Message }) => {
@@ -75,7 +75,15 @@ export default function Assistant() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <BrandHeader title="Eligibility assistant" subtitle="Ask anything about donating" />
+      <View style={styles.header}>
+        <View style={styles.headerIcon}>
+          <Feather name="message-circle" size={18} color={colors.onInk} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{t('assistant.title')}</Text>
+          <Text style={styles.headerSub}>{t('assistant.subtitle')}</Text>
+        </View>
+      </View>
 
       <FlatList
         ref={listRef}
@@ -85,7 +93,7 @@ export default function Assistant() {
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={
           <View style={styles.chips}>
-            {CHIPS.map((chip) => (
+            {chips.map((chip) => (
               <Pressable
                 key={chip}
                 style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]}
@@ -109,13 +117,13 @@ export default function Assistant() {
       />
 
       <View style={styles.inputArea}>
-        <Text style={styles.disclaimer}>Informational only — not medical advice</Text>
+        <Text style={styles.disclaimer}>{t('assistant.disclaimer')}</Text>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             value={input}
             onChangeText={setInput}
-            placeholder="Ask a question..."
+            placeholder={t('assistant.inputPlaceholder')}
             placeholderTextColor={colors.textMuted}
             returnKeyType="send"
             onSubmitEditing={() => send(input)}
@@ -131,9 +139,9 @@ export default function Assistant() {
             onPress={() => send(input)}
             disabled={!input.trim() || loading}
             accessibilityRole="button"
-            accessibilityLabel="Send message"
+            accessibilityLabel={t('assistant.sendA11y')}
           >
-            <Text style={styles.sendButtonText}>↑</Text>
+            <Feather name="arrow-up" size={18} color={colors.onPrimary} />
           </Pressable>
         </View>
       </View>
@@ -141,8 +149,27 @@ export default function Assistant() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingTop: 60,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  headerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.control,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: { fontFamily: fonts.display, fontSize: 20, color: colors.ink, letterSpacing: -0.3 },
+  headerSub: { ...type.small, color: colors.textMuted, marginTop: 1 },
   listContent: { padding: spacing.lg, gap: spacing.md, flexGrow: 1 },
   chips: { gap: spacing.sm, paddingTop: spacing.xl },
   chip: {
@@ -167,13 +194,15 @@ const styles = StyleSheet.create({
   },
   aiBubble: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderBottomLeftRadius: radius.sm,
   },
   loadingBubble: { paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
   bubbleText: { ...type.body, lineHeight: 22 },
-  userText: { color: colors.white },
-  aiText: { color: colors.text },
+  userText: { color: colors.onPrimary },
+  aiText: { color: colors.textBody },
   inputArea: {
     borderTopWidth: 1,
     borderTopColor: colors.border,

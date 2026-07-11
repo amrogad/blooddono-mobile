@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import Login from '../login';
 import * as authService from '@/services/authService';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 
 jest.mock('@/services/supabase', () => ({
   supabase: {
@@ -19,7 +20,14 @@ jest.mock('@/services/authService', () => ({
   signOut: jest.fn(),
 }));
 
-const withAuth = <Login />;
+const renderLogin = () =>
+  render(
+    <ThemeProvider>
+      <AuthProvider>
+        <Login />
+      </AuthProvider>
+    </ThemeProvider>,
+  );
 
 describe('Login screen', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -27,7 +35,7 @@ describe('Login screen', () => {
   test('tapping the donor demo button calls signIn with the donor credentials', async () => {
     (authService.signIn as jest.Mock).mockResolvedValue({ user: { id: 'u1' } });
 
-    render(<AuthProvider>{withAuth}</AuthProvider>);
+    renderLogin();
 
     fireEvent.press(await screen.findByLabelText(/Donor demo account/i));
 
@@ -37,7 +45,7 @@ describe('Login screen', () => {
   });
 
   test('shows a validation error for an invalid email', async () => {
-    render(<AuthProvider>{withAuth}</AuthProvider>);
+    renderLogin();
 
     fireEvent.changeText(screen.getByPlaceholderText('you@example.com'), 'not-an-email');
     fireEvent.changeText(screen.getByPlaceholderText('••••••••'), 'password1');

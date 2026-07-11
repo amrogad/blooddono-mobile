@@ -28,10 +28,11 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'messages array required' }, { status: 400 });
   }
 
-  const { messages, bloodGroup, city } = body as {
+  const { messages, bloodGroup, city, locale } = body as {
     messages: Array<{ role: string; text: string }>;
     bloodGroup: string;
     city: string;
+    locale?: string;
   };
 
   const systemPrompt =
@@ -39,7 +40,8 @@ Deno.serve(async (req) => {
     `The user has blood group ${bloodGroup || 'unknown'} and is based in ${city || 'Egypt'}. ` +
     `Answer questions about eligibility, preparation, and aftercare. ` +
     `Be concise and direct. ` +
-    `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.`;
+    `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.` +
+    (locale === 'ar' ? ` Respond entirely in Modern Standard Arabic.` : ``);
 
   const groqMessages = [
     { role: 'system', content: systemPrompt },

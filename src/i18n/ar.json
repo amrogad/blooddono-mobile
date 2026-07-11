@@ -1,0 +1,293 @@
+{
+  "common": {
+    "appName": "BloodDono",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "retry": "إعادة المحاولة",
+    "loading": "جارٍ التحميل…",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "confirm": "تأكيد",
+    "somethingWrong": "حدث خطأ ما.",
+    "restartTitle": "يلزم إعادة التشغيل",
+    "restartBody": "من فضلك أغلق التطبيق وأعد فتحه لتطبيق تغيير اللغة."
+  },
+  "nav": {
+    "request": "طلب",
+    "map": "الخريطة",
+    "myRequests": "طلباتي",
+    "editRequest": "تعديل الطلب",
+    "editProfile": "تعديل الملف الشخصي",
+    "donate": "تبرّع"
+  },
+  "date": {
+    "today": "اليوم",
+    "tomorrow": "غدًا",
+    "weekdays": ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
+    "months": ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"],
+    "neededBy": "{{day}}، {{time}}"
+  },
+  "tabs": {
+    "requests": "الطلبات",
+    "create": "إنشاء",
+    "donors": "المتبرعون",
+    "assistant": "المساعد",
+    "profile": "حسابي"
+  },
+  "urgency": {
+    "level": {
+      "critical": "حرِج",
+      "overdue": "متأخر",
+      "urgent": "عاجل",
+      "planned": "مُخطَّط"
+    },
+    "section": {
+      "today": "اليوم",
+      "week": "هذا الأسبوع",
+      "later": "لاحقًا"
+    }
+  },
+  "status": {
+    "pending": "جارٍ البحث عن متبرعين",
+    "inprogress": "تم العثور على متبرع",
+    "done": "مكتمل",
+    "canceled": "ملغى"
+  },
+  "card": {
+    "openRequestA11y": "فتح طلب {{name}}، فصيلة الدم {{group}}",
+    "nearYou": "قريب منك",
+    "cityGov": "{{city}}، {{gov}}",
+    "cityNear": "{{city}} · قريب منك",
+    "needed": "مطلوب {{when}}",
+    "canDonate": "أستطيع التبرع",
+    "viewDetails": "عرض التفاصيل"
+  },
+  "requests": {
+    "title": "الطلبات المفتوحة",
+    "subtitleWaiting": "{{count}} في الانتظار",
+    "subtitleNear": " · {{count}} بالقرب منك",
+    "subtitleEmpty": "شخص قريب يحتاج إليك",
+    "myMatches": "متوافق مع {{group}}",
+    "criticalCount": "{{count}} حالة حرجة",
+    "errorTitle": "تعذّر تحميل الطلبات",
+    "errorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "emptyTitle": "لا توجد طلبات مفتوحة",
+    "emptyBody": "ستظهر الطلبات الجديدة هنا فور نشرها.",
+    "emptyMatchesTitle": "لا توجد نتائج متطابقة الآن",
+    "emptyMatchesBody": "أوقف الفلتر لعرض كل الطلبات المفتوحة."
+  },
+  "auth": {
+    "welcome": "أهلًا بعودتك.",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "invalidEmail": "من فضلك أدخل بريدًا إلكترونيًا صحيحًا.",
+    "shortPassword": "كلمة المرور 6 أحرف على الأقل.",
+    "signIn": "تسجيل الدخول",
+    "demoDivider": "تستكشف؟ جرّب دورًا تجريبيًا",
+    "demoA11y": "حساب تجريبي: {{label}}",
+    "staySignedIn": "ستبقى مسجّلًا للدخول على هذا الجهاز",
+    "role": { "admin": "مشرف", "donor": "متبرع", "volunteer": "منسّق" },
+    "roleDesc": {
+      "donor": "تصفّح الطلبات القريبة واقبل أحدها",
+      "volunteer": "انشر الطلبات ونسّقها للمرضى",
+      "admin": "راجع الطلبات وأدر المستخدمين والتبرعات"
+    }
+  },
+  "create": {
+    "headerTitle": "طلب جديد",
+    "stepOf": "{{step}} من {{total}}",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "post": "نشر الطلب",
+    "step1Title": "من يحتاج إلى التبرع بالدم؟",
+    "step1Sub": "يظهر الاسم الأول فقط للعامة.",
+    "whoForLabel": "هذا الطلب من أجل…",
+    "whoFor": { "me": "أنا", "family": "العائلة", "other": "شخص آخر" },
+    "patientName": "اسم المريض",
+    "fullNamePlaceholder": "الاسم الكامل",
+    "bloodTypeLabel": "فصيلة الدم المطلوبة",
+    "compatHint": "مرضى {{group}} يمكنهم تلقّي الدم من {{donors}} — سننبّههم.",
+    "step2Title": "أين المستشفى؟",
+    "step2Sub": "يتم تنبيه المتبرعين القريبين أولًا.",
+    "governorate": "المحافظة",
+    "selectGovernorate": "اختر المحافظة",
+    "city": "المدينة",
+    "selectCity": "اختر المدينة",
+    "hospital": "المستشفى",
+    "hospitalPlaceholder": "مثال: القصر العيني",
+    "fullAddress": "العنوان بالكامل",
+    "addressPlaceholder": "الشارع، المنطقة، المبنى",
+    "step3Title": "متى ولماذا؟",
+    "step3Sub": "ملاحظة قصيرة وواضحة تساعد على زيادة الاستجابة.",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "message": "رسالة",
+    "messagePlaceholder": "أي شيء يجب أن يعرفه المتبرعون…"
+  },
+  "donors": {
+    "title": "ابحث عن متبرعين",
+    "subtitle": "اختر فصيلة الدم لتحديث النتائج مباشرة",
+    "safeFor": "مناسب لمريض {{group}}: {{donors}}",
+    "governorate": "المحافظة",
+    "anyCity": "أي مدينة",
+    "anonymous": "بدون اسم",
+    "emptyPrompt": "اختر فصيلة دم ومنطقة لعرض المتبرعين المتطابقين.",
+    "emptyResults": "لا يوجد متبرعون متطابقون في هذه المنطقة بعد."
+  },
+  "assistant": {
+    "title": "المساعد",
+    "subtitle": "إجابات في ثوانٍ · ليست نصيحة طبية",
+    "disclaimer": "للعلم فقط — ليست نصيحة طبية",
+    "inputPlaceholder": "اطرح سؤالًا...",
+    "sendA11y": "إرسال الرسالة",
+    "error": "حدث خطأ ما. حاول مرة أخرى.",
+    "chips": [
+      "لقد أجريت وشمًا قبل أسبوعين، هل يمكنني التبرع؟",
+      "أتناول أدوية ضغط الدم، هل أنا مؤهل؟",
+      "كم أنتظر بعد نزلة برد لأتبرع؟",
+      "ماذا آكل قبل التبرع؟"
+    ]
+  },
+  "myRequests": {
+    "updateFailed": "فشل التحديث",
+    "deleteFailed": "فشل الحذف",
+    "cancelTitle": "إلغاء الطلب؟",
+    "cancelBody": "هل تريد إيقاف البحث عن متبرعين لـ {{name}}؟",
+    "keepIt": "الاحتفاظ به",
+    "cancelConfirm": "إلغاء الطلب",
+    "deleteTitle": "حذف الطلب؟",
+    "deleteBody": "سيُحذف هذا الطلب نهائيًا.",
+    "errorBody": "تعذّر تحميل طلباتك.",
+    "emptyTitle": "لا توجد طلبات بعد",
+    "emptyBody": "ستظهر الطلبات التي تنشرها هنا مع حالتها.",
+    "filterEmpty": "لا توجد طلبات بهذه الحالة.",
+    "filter": { "all": "الكل", "pending": "قيد الانتظار", "inprogress": "قيد التنفيذ", "done": "مكتمل", "canceled": "ملغى" },
+    "viewA11y": "عرض طلب {{name}}",
+    "cardMeta": "{{city}}، {{gov}} · {{when}}",
+    "editDetails": "تعديل التفاصيل",
+    "markFulfilled": "تمّ التنفيذ",
+    "cancelRequest": "إلغاء الطلب",
+    "deleteA11y": "حذف الطلب"
+  },
+  "editRequest": {
+    "title": "تعديل الطلب",
+    "subtitle": "حدّث التفاصيل التي سيراها المتبرعون",
+    "notFound": "الطلب غير موجود.",
+    "recipientName": "اسم المريض",
+    "bloodGroup": "فصيلة الدم",
+    "selectBloodGroup": "اختر فصيلة الدم",
+    "hospitalPlaceholder": "اسم المستشفى",
+    "addressPlaceholder": "الشارع، المنطقة",
+    "save": "حفظ التغييرات"
+  },
+  "profileEdit": {
+    "permTitle": "الإذن مطلوب",
+    "permBody": "اسمح بالوصول إلى الصور لتغيير صورتك.",
+    "changePhoto": "تغيير الصورة",
+    "displayName": "الاسم المعروض",
+    "namePlaceholder": "اسمك",
+    "bloodGroup": "فصيلة الدم",
+    "selectBloodGroup": "اختر فصيلة الدم",
+    "searchable": "قابل للبحث من الآخرين",
+    "searchableHint": "دع الآخرين يجدونك في بحث المتبرعين",
+    "saveA11y": "حفظ الملف الشخصي"
+  },
+  "detail": {
+    "notFound": "الطلب غير موجود.",
+    "needs": "يحتاج {{group}} · {{when}}",
+    "acceptedTitle": "شكرًا لك",
+    "acceptedBody": "تم إخطار الأسرة بأنك تستطيع التبرع.",
+    "acceptFailed": "تعذّر القبول",
+    "confirmTitle": "تأكيد التبرع",
+    "confirmBody": "هل نُخبر أسرة {{name}} بأنك تستطيع التبرع؟",
+    "notNow": "ليس الآن",
+    "expandA11y": "توسيع الخريطة إلى ملء الشاشة",
+    "kmFromYou": "{{km}} كم منك",
+    "tapExpand": "اضغط للتوسيع",
+    "locating": "جارٍ تحديد موقع المستشفى…",
+    "mapError": "تعذّر الوصول إلى خدمة الخرائط.",
+    "mapNotFound": "تعذّر تحديد موقع هذا المستشفى.",
+    "directions": "الاتجاهات",
+    "closed": {
+      "inprogress": "تم العثور على متبرع لهذا الطلب.",
+      "done": "هذا الطلب اكتمل.",
+      "canceled": "هذا الطلب أُلغي.",
+      "default": "هذا الطلب مُغلق."
+    }
+  },
+  "map": {
+    "location": "الموقع",
+    "kmAway": "{{km}} كم · مسافة بخط مستقيم",
+    "tapDirections": "اضغط على الاتجاهات لعرض المسار",
+    "getDirections": "الحصول على الاتجاهات",
+    "directionsA11y": "الحصول على الاتجاهات في خرائط جوجل"
+  },
+  "funds": {
+    "title": "صندوق التبرعات",
+    "back": "رجوع",
+    "raisedLabel": "إجمالي ما تم جمعه",
+    "heroCopy": "يغطي مواصلات المتبرعين غير القادرين على تكلفة الرحلة، وتنبيهات الرسائل حيث لا يصل الإشعار.",
+    "give100": "تبرّع بـ 100 EGP",
+    "give100A11y": "تبرّع بـ 100 EGP",
+    "other": "مبلغ آخر",
+    "otherA11y": "تبرّع بمبلغ آخر",
+    "secure": "دفع آمن · كل جنيه مُدرَج بالأسفل",
+    "recentLabel": "الداعمون مؤخرًا",
+    "person": "داعم",
+    "people": "داعمين",
+    "anonymous": "بدون اسم",
+    "errorBody": "تعذّر تحميل السجلات. اسحب لإعادة المحاولة.",
+    "emptyBody": "لا يوجد دعم بعد — كن أول المتبرعين.",
+    "footer": "المال لا يشتري الدم أبدًا — بل يزيل العوائق حول التبرع به."
+  },
+  "payment": {
+    "thankTitle": "شكرًا لك",
+    "thankBody": "تم استلام دعمك.",
+    "ok": "حسنًا",
+    "failed": "فشل الدفع",
+    "invalidAmount": "أدخل مبلغًا صحيحًا",
+    "title": "تبرّع للصندوق",
+    "subtitle": "يظهر اسمك ومبلغك للعامة.",
+    "amount": "المبلغ",
+    "otherPlaceholder": "مبلغ آخر (EGP)",
+    "cardNumber": "رقم البطاقة",
+    "expiry": "تاريخ الانتهاء",
+    "cvc": "CVC",
+    "submitA11y": "إرسال التبرع",
+    "giveAmount": "تبرّع بـ {{amount}} EGP",
+    "give": "تبرّع"
+  },
+  "validation": {
+    "email": "أدخل بريدًا إلكترونيًا صحيحًا",
+    "recipientName": "اسم المريض مطلوب.",
+    "governorate": "من فضلك اختر المحافظة.",
+    "city": "من فضلك اختر المدينة.",
+    "hospitalName": "اسم المستشفى مطلوب.",
+    "fullAddress": "العنوان بالكامل مطلوب.",
+    "bloodGroup": "من فضلك اختر فصيلة الدم.",
+    "message": "من فضلك أضف رسالة قصيرة."
+  },
+  "errors": {
+    "invalidLogin": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    "emailNotConfirmed": "من فضلك أكّد بريدك الإلكتروني أولًا.",
+    "rateLimit": "محاولات كثيرة، انتظر لحظة من فضلك.",
+    "network": "مشكلة في الشبكة، تحقق من اتصالك.",
+    "permission": "ليس لديك صلاحية للقيام بذلك.",
+    "duplicate": "هذا الطلب موجود بالفعل.",
+    "generic": "حدث خطأ ما. من فضلك حاول مرة أخرى."
+  },
+  "profile": {
+    "unnamed": "مستخدم بدون اسم",
+    "email": "البريد الإلكتروني",
+    "location": "الموقع",
+    "myRequests": "طلباتي",
+    "editProfile": "تعديل الملف الشخصي",
+    "communityFund": "صندوق التبرعات",
+    "visibleInSearch": "ظاهر في بحث المتبرعين",
+    "darkMode": "الوضع الليلي",
+    "language": "اللغة",
+    "signOut": "تسجيل الخروج",
+    "toggleSearchA11y": "تبديل ظهورك في بحث المتبرعين",
+    "toggleDarkA11y": "تبديل الوضع الليلي"
+  }
+}

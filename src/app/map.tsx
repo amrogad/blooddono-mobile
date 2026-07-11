@@ -1,15 +1,21 @@
-import { View, Text, Pressable, StyleSheet, Linking } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Linking, I18nManager } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { WebView } from 'react-native-webview';
+import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useLocation } from '@/hooks/useLocation';
 import { distanceKm } from '@/utils/distance';
 import { mapHtml, MapPoint } from '@/utils/mapHtml';
-import { colors, spacing, radius, fonts } from '@/constants/theme';
+import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
 
 export default function FullscreenMap() {
   const { lat, lng, label } = useLocalSearchParams<{ lat: string; lng: string; label: string }>();
   const { coords: me } = useLocation();
+  const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
 
   const hospital: MapPoint = { latitude: parseFloat(lat), longitude: parseFloat(lng) };
   const distance = me ? distanceKm(me.latitude, me.longitude, hospital.latitude, hospital.longitude) : null;
@@ -22,65 +28,82 @@ export default function FullscreenMap() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: label ?? 'Map', headerShown: true }} />
+      <Stack.Screen options={{ title: label ?? t('nav.map'), headerShown: true }} />
 
       <WebView
         key={me ? 'route' : 'hospital'}
         style={styles.map}
         originWhitelist={['*']}
-        source={{ html: mapHtml(hospital, me, label ?? 'Location') }}
+        source={{ html: mapHtml(hospital, me, label ?? t('map.location')) }}
       />
 
-      {distance != null && (
-        <View style={styles.distanceChip}>
-          <Text style={styles.distanceText}>{distance.toFixed(1)} km away</Text>
+      <View style={styles.sheet}>
+        <View style={styles.handle} />
+        <View style={styles.sheetRow}>
+          <View style={styles.pin}>
+            <Feather name="map-pin" size={16} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text style={styles.sheetTitle} numberOfLines={1}>
+              {label ?? t('map.location')}
+            </Text>
+            <Text style={styles.sheetMeta}>
+              {distance != null ? t('map.kmAway', { km: distance.toFixed(1) }) : t('map.tapDirections')}
+            </Text>
+          </View>
         </View>
-      )}
-
-      <Pressable
-        style={({ pressed }) => [styles.fab, pressed && { opacity: 0.9 }]}
-        onPress={openInGoogleMaps}
-        accessibilityRole="button"
-        accessibilityLabel="Open directions in Google Maps"
-      >
-        <Text style={styles.fabText}>Open in Google Maps</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.directions, pressed && { opacity: 0.9 }]}
+          onPress={openInGoogleMaps}
+          accessibilityRole="button"
+          accessibilityLabel={t('map.directionsA11y')}
+        >
+          <Feather name={I18nManager.isRTL ? 'corner-up-left' : 'corner-up-right'} size={16} color={colors.onPrimary} />
+          <Text style={styles.directionsText}>{t('map.getDirections')}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   map: { flex: 1 },
-  distanceChip: {
+  sheet: {
     position: 'absolute',
-    top: spacing.lg,
-    alignSelf: 'center',
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: colors.white,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+    ...shadow.floating,
   },
-  distanceText: { fontFamily: fonts.semibold, color: colors.primary, fontSize: 14 },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.xl,
-    left: spacing.xl,
-    right: spacing.xl,
-    backgroundColor: colors.black,
-    paddingVertical: 16,
-    borderRadius: radius.md,
+  handle: { width: 38, height: 4.5, borderRadius: 3, backgroundColor: colors.border, alignSelf: 'center' },
+  sheetRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  pin: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.control,
+    backgroundColor: colors.crimsonTint,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    justifyContent: 'center',
   },
-  fabText: { color: colors.white, fontFamily: fonts.bold, fontSize: 16 },
+  sheetTitle: { ...type.bodyBold, color: colors.ink },
+  sheetMeta: { ...type.small, color: colors.textMuted, marginTop: 2 },
+  directions: {
+    height: 50,
+    borderRadius: radius.card,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  directionsText: { color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 15 },
 });

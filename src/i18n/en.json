@@ -1,0 +1,293 @@
+{
+  "common": {
+    "appName": "BloodDono",
+    "cancel": "Cancel",
+    "save": "Save",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "somethingWrong": "Something went wrong.",
+    "restartTitle": "Restart required",
+    "restartBody": "Please close and reopen the app to apply the language change."
+  },
+  "nav": {
+    "request": "Request",
+    "map": "Map",
+    "myRequests": "My requests",
+    "editRequest": "Edit request",
+    "editProfile": "Edit profile",
+    "donate": "Donate"
+  },
+  "date": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "neededBy": "{{day}}, {{time}}"
+  },
+  "tabs": {
+    "requests": "Requests",
+    "create": "Create",
+    "donors": "Donors",
+    "assistant": "Assistant",
+    "profile": "Profile"
+  },
+  "urgency": {
+    "level": {
+      "critical": "CRITICAL",
+      "overdue": "OVERDUE",
+      "urgent": "URGENT",
+      "planned": "PLANNED"
+    },
+    "section": {
+      "today": "Today",
+      "week": "This week",
+      "later": "Later"
+    }
+  },
+  "status": {
+    "pending": "Searching donors",
+    "inprogress": "Donor matched",
+    "done": "Completed",
+    "canceled": "Cancelled"
+  },
+  "card": {
+    "openRequestA11y": "Open request for {{name}}, blood group {{group}}",
+    "nearYou": "near you",
+    "cityGov": "{{city}}, {{gov}}",
+    "cityNear": "{{city}} · near you",
+    "needed": "Needed {{when}}",
+    "canDonate": "I can donate",
+    "viewDetails": "View details"
+  },
+  "requests": {
+    "title": "Open requests",
+    "subtitleWaiting": "{{count}} waiting",
+    "subtitleNear": " · {{count}} near you",
+    "subtitleEmpty": "Someone nearby needs you",
+    "myMatches": "My {{group}} matches",
+    "criticalCount": "{{count}} critical",
+    "errorTitle": "Couldn't load requests",
+    "errorBody": "Check your connection and try again.",
+    "emptyTitle": "No open requests",
+    "emptyBody": "New requests will appear here as they're posted.",
+    "emptyMatchesTitle": "No matches right now",
+    "emptyMatchesBody": "Turn off the filter to see every open request."
+  },
+  "auth": {
+    "welcome": "Welcome back.",
+    "email": "Email",
+    "password": "Password",
+    "invalidEmail": "Please enter a valid email.",
+    "shortPassword": "Password must be at least 6 characters.",
+    "signIn": "Sign in",
+    "demoDivider": "EXPLORING? TRY A DEMO ROLE",
+    "demoA11y": "{{label}} demo account",
+    "staySignedIn": "You stay signed in on this device",
+    "role": { "admin": "Admin", "donor": "Donor", "volunteer": "Volunteer" },
+    "roleDesc": {
+      "donor": "Browse nearby requests and accept one",
+      "volunteer": "Post and coordinate requests for patients",
+      "admin": "Verify requests, manage users and funds"
+    }
+  },
+  "create": {
+    "headerTitle": "New request",
+    "stepOf": "{{step}} of {{total}}",
+    "back": "Back",
+    "continue": "Continue",
+    "post": "Post request",
+    "step1Title": "Who needs blood?",
+    "step1Sub": "Only their first name is shown publicly.",
+    "whoForLabel": "This request is for…",
+    "whoFor": { "me": "Me", "family": "Family", "other": "Someone else" },
+    "patientName": "Patient's name",
+    "fullNamePlaceholder": "Full name",
+    "bloodTypeLabel": "Blood type needed",
+    "compatHint": "{{group}} patients can receive from {{donors}} — we'll alert them.",
+    "step2Title": "Where's the hospital?",
+    "step2Sub": "Donors nearby are alerted first.",
+    "governorate": "Governorate",
+    "selectGovernorate": "Select governorate",
+    "city": "City",
+    "selectCity": "Select city",
+    "hospital": "Hospital",
+    "hospitalPlaceholder": "e.g. Kasr El Aini",
+    "fullAddress": "Full address",
+    "addressPlaceholder": "Street, area, building",
+    "step3Title": "When and why?",
+    "step3Sub": "A short, honest note gets more responses.",
+    "date": "Date",
+    "time": "Time",
+    "message": "Message",
+    "messagePlaceholder": "Anything donors should know…"
+  },
+  "donors": {
+    "title": "Find donors",
+    "subtitle": "Pick the patient's blood group — results update live",
+    "safeFor": "Safe for a {{group}} patient: {{donors}}",
+    "governorate": "Governorate",
+    "anyCity": "Any city",
+    "anonymous": "Anonymous",
+    "emptyPrompt": "Pick a blood group and area to see matching donors.",
+    "emptyResults": "No matching donors in this area yet."
+  },
+  "assistant": {
+    "title": "Eligibility assistant",
+    "subtitle": "Answers in seconds · not medical advice",
+    "disclaimer": "Informational only — not medical advice",
+    "inputPlaceholder": "Ask a question...",
+    "sendA11y": "Send message",
+    "error": "Something went wrong. Try again.",
+    "chips": [
+      "I got a tattoo 2 weeks ago, can I donate?",
+      "I take blood pressure meds, am I eligible?",
+      "How long after a cold can I donate?",
+      "What should I eat before donating?"
+    ]
+  },
+  "myRequests": {
+    "updateFailed": "Update failed",
+    "deleteFailed": "Delete failed",
+    "cancelTitle": "Cancel request?",
+    "cancelBody": "Stop looking for donors for {{name}}?",
+    "keepIt": "Keep it",
+    "cancelConfirm": "Cancel request",
+    "deleteTitle": "Delete request?",
+    "deleteBody": "This request will be permanently removed.",
+    "errorBody": "Couldn't load your requests.",
+    "emptyTitle": "No requests yet",
+    "emptyBody": "Requests you post will show up here with their status.",
+    "filterEmpty": "No requests with this status.",
+    "filter": { "all": "All", "pending": "Pending", "inprogress": "In progress", "done": "Done", "canceled": "Canceled" },
+    "viewA11y": "View request for {{name}}",
+    "cardMeta": "{{city}}, {{gov}} · {{when}}",
+    "editDetails": "Edit details",
+    "markFulfilled": "Mark fulfilled",
+    "cancelRequest": "Cancel request",
+    "deleteA11y": "Delete request"
+  },
+  "editRequest": {
+    "title": "Edit request",
+    "subtitle": "Update the details donors will see",
+    "notFound": "Request not found.",
+    "recipientName": "Recipient name",
+    "bloodGroup": "Blood group",
+    "selectBloodGroup": "Select blood group",
+    "hospitalPlaceholder": "Hospital name",
+    "addressPlaceholder": "Street, area",
+    "save": "Save changes"
+  },
+  "profileEdit": {
+    "permTitle": "Permission needed",
+    "permBody": "Allow photo access to change your avatar.",
+    "changePhoto": "Change photo",
+    "displayName": "Display name",
+    "namePlaceholder": "Your name",
+    "bloodGroup": "Blood group",
+    "selectBloodGroup": "Select blood group",
+    "searchable": "Searchable by others",
+    "searchableHint": "Let people find you in donor search",
+    "saveA11y": "Save profile"
+  },
+  "detail": {
+    "notFound": "Request not found.",
+    "needs": "Needs {{group}} · {{when}}",
+    "acceptedTitle": "Thank you",
+    "acceptedBody": "The family has been notified that you can donate.",
+    "acceptFailed": "Could not accept",
+    "confirmTitle": "Confirm donation",
+    "confirmBody": "Let {{name}}'s family know you can donate?",
+    "notNow": "Not now",
+    "expandA11y": "Expand map to full screen",
+    "kmFromYou": "{{km}} km from you",
+    "tapExpand": "Tap to expand",
+    "locating": "Locating hospital…",
+    "mapError": "Couldn't reach the map service.",
+    "mapNotFound": "Couldn't locate this hospital.",
+    "directions": "Directions",
+    "closed": {
+      "inprogress": "This request has a donor matched.",
+      "done": "This request has been completed.",
+      "canceled": "This request was cancelled.",
+      "default": "This request is closed."
+    }
+  },
+  "map": {
+    "location": "Location",
+    "kmAway": "{{km}} km away · straight-line distance",
+    "tapDirections": "Tap directions for the route",
+    "getDirections": "Get directions",
+    "directionsA11y": "Get directions in Google Maps"
+  },
+  "funds": {
+    "title": "Community fund",
+    "back": "Back",
+    "raisedLabel": "RAISED SO FAR",
+    "heroCopy": "Covers transport for donors who can't afford the trip, and SMS alerts where push doesn't reach.",
+    "give100": "Give EGP 100",
+    "give100A11y": "Give 100 EGP",
+    "other": "Other",
+    "otherA11y": "Give another amount",
+    "secure": "Secure payment · every pound is listed below",
+    "recentLabel": "RECENT SUPPORT",
+    "person": "person",
+    "people": "people",
+    "anonymous": "Anonymous",
+    "errorBody": "Couldn't load records. Pull to retry.",
+    "emptyBody": "No support yet — be the first to give.",
+    "footer": "Money never buys blood — it removes the obstacles around giving it."
+  },
+  "payment": {
+    "thankTitle": "Thank you",
+    "thankBody": "Your support was received.",
+    "ok": "OK",
+    "failed": "Payment failed",
+    "invalidAmount": "Enter a valid amount",
+    "title": "Give to the fund",
+    "subtitle": "Your name and amount are listed publicly.",
+    "amount": "Amount",
+    "otherPlaceholder": "Other amount (EGP)",
+    "cardNumber": "Card number",
+    "expiry": "Expiry",
+    "cvc": "CVC",
+    "submitA11y": "Submit donation",
+    "giveAmount": "Give EGP {{amount}}",
+    "give": "Give"
+  },
+  "validation": {
+    "email": "Enter a valid email address",
+    "recipientName": "Recipient name is required.",
+    "governorate": "Please pick a governorate.",
+    "city": "Please pick a city.",
+    "hospitalName": "Hospital name is required.",
+    "fullAddress": "Full address is required.",
+    "bloodGroup": "Please pick a blood group.",
+    "message": "Please add a short message."
+  },
+  "errors": {
+    "invalidLogin": "Email or password is incorrect.",
+    "emailNotConfirmed": "Please confirm your email first.",
+    "rateLimit": "Too many attempts, please wait a moment.",
+    "network": "Network problem, check your connection.",
+    "permission": "You don't have permission to do this.",
+    "duplicate": "That request already exists.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "profile": {
+    "unnamed": "Unnamed user",
+    "email": "Email",
+    "location": "Location",
+    "myRequests": "My requests",
+    "editProfile": "Edit profile",
+    "communityFund": "Community fund",
+    "visibleInSearch": "Visible in donor search",
+    "darkMode": "Dark mode",
+    "language": "Language",
+    "signOut": "Sign out",
+    "toggleSearchA11y": "Toggle donor search visibility",
+    "toggleDarkA11y": "Toggle dark mode"
+  }
+}

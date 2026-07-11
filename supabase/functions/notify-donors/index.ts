@@ -39,11 +39,15 @@ Deno.serve(async (req) => {
   const tokens = (donors ?? []).map((d) => d.push_token).filter(Boolean);
 
   if (tokens.length > 0) {
+    const count = tokens.length;
+    const nearby =
+      count > 1 ? `You're 1 of ${count} compatible donors nearby.` : `You're a compatible donor nearby.`;
+    const place = record.hospital_name || record.recipient_city;
     const messages = tokens.map((to) => ({
       to,
       sound: 'default',
-      title: `${record.blood_group} blood needed in ${record.recipient_governorate}`,
-      body: `${record.recipient_name} needs a donor near ${record.recipient_city}.`,
+      title: `${record.blood_group} needed near ${record.recipient_city}`,
+      body: `${record.recipient_name} needs ${record.blood_group} at ${place}. ${nearby}`,
       data: { requestId: record.id },
     }));
     await fetch(EXPO_PUSH_URL, {

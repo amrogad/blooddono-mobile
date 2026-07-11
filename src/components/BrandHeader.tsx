@@ -1,45 +1,34 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { colors, spacing, fonts, type } from '@/constants/theme';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { spacing, fonts, type } from '@/constants/theme';
+import type { ThemeColors } from '@/constants/theme';
+import { useThemedStyles } from '@/providers/ThemeProvider';
+import brandMark from '@/assets/images/brand-mark.png';
 
 export function BrandHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  const { styles } = useThemedStyles(makeStyles);
   return (
-    <LinearGradient
-      colors={[colors.primaryDeep, colors.primary, colors.primaryLight]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.wrap}
-    >
-      <View style={styles.drop} />
-      <Text style={styles.wordmark}>
-        Blood<Text style={styles.accent}>Dono</Text>
-      </Text>
+    <View style={styles.wrap}>
+      <View style={styles.brandRow}>
+        <Image source={brandMark} style={styles.mark} />
+        <Text style={styles.wordmark}>BloodDono</Text>
+      </View>
       <Text style={styles.title}>{title}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-    </LinearGradient>
+      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    paddingTop: 64,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.xl,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    overflow: 'hidden',
-  },
-  drop: {
-    position: 'absolute',
-    top: -50,
-    right: -30,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-  },
-  wordmark: { fontFamily: fonts.extrabold, fontSize: 18, color: 'rgba(255,255,255,0.85)', letterSpacing: -0.4 },
-  accent: { color: '#FFD9D2' },
-  title: { ...type.h1, color: colors.white, marginTop: spacing.sm },
-  subtitle: { fontFamily: fonts.script, fontSize: 16, color: 'rgba(255,255,255,0.9)', marginTop: 4 },
-});
+const makeStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    wrap: {
+      paddingTop: 64,
+      paddingBottom: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.md },
+    mark: { width: 24, height: 24, borderRadius: 7 },
+    wordmark: { fontFamily: fonts.display, fontSize: 17, color: colors.ink, letterSpacing: -0.3 },
+    title: { ...type.h1, color: colors.ink },
+    subtitle: { ...type.small, color: colors.textMuted, marginTop: 3 },
+  });

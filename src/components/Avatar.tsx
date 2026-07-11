@@ -1,6 +1,6 @@
-import { Image, StyleSheet, type StyleProp, type ImageStyle } from 'react-native';
+import { Image, type StyleProp, type ImageStyle } from 'react-native';
 
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/providers/ThemeProvider';
 import avatarPlaceholder from '@/assets/images/avatar-placeholder.png';
 
 export function Avatar({
@@ -12,14 +12,11 @@ export function Avatar({
   size?: number;
   style?: StyleProp<ImageStyle>;
 }) {
+  const { colors } = useTheme();
   return (
     <Image
       source={uri ? { uri } : avatarPlaceholder}
-      style={[{ width: size, height: size, borderRadius: size / 2 }, styles.base, style]}
+      style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.surface }, style]}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  base: { backgroundColor: colors.surface },
-});
