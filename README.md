@@ -55,23 +55,23 @@ Under 3 minutes to see the core loop:
 
 | EN · Light | AR · Dark |
 |---|---|
-| ![Requests feed in English light mode](screenshots/requests.png) | ![Requests feed in Arabic dark mode RTL](screenshots/requests-ar.png) |
+| <img src="screenshots/requests.png" alt="Requests feed in English light mode" width="390" /> | <img src="screenshots/requests-ar.png" alt="Requests feed in Arabic dark mode RTL" width="390" /> |
 
 | Request detail | Fullscreen map |
 |---|---|
-| ![Request detail with hospital map](screenshots/request-detail.png) | ![Fullscreen map with blood-drop pin](screenshots/map.png) |
+| <img src="screenshots/request-detail.png" alt="Request detail with hospital map" width="390" /> | <img src="screenshots/map.png" alt="Fullscreen map with blood-drop pin" width="390" /> |
 
 | AI assistant · EN | AI assistant · AR |
 |---|---|
-| ![Eligibility assistant in English](screenshots/assistant.png) | ![Eligibility assistant in Arabic](screenshots/assistant-ar.png) |
+| <img src="screenshots/assistant.png" alt="Eligibility assistant in English" width="390" /> | <img src="screenshots/assistant-ar.png" alt="Eligibility assistant in Arabic" width="390" /> |
 
 | Find donors | Profile |
 |---|---|
-| ![Compatible donor search](screenshots/donors.png) | ![Profile with dark mode and language toggles](screenshots/profile.png) |
+| <img src="screenshots/donors.png" alt="Compatible donor search" width="390" /> | <img src="screenshots/profile.png" alt="Profile with dark mode and language toggles" width="390" /> |
 
-| Login |  |
+| Login | |
 |---|---|
-| ![Login screen with demo roles in Arabic](screenshots/login.png) | |
+| <img src="screenshots/login.png" alt="Login screen with demo roles in Arabic" width="390" /> |
 
 ## Architecture
 
