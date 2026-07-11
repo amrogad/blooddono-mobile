@@ -18,7 +18,7 @@ import { useThemedStyles } from '@/providers/ThemeProvider';
 import { friendlyRequestError } from '@/utils/errors';
 import { validateNewRequest } from '@/utils/validation';
 import { BLOOD_GROUPS, compatibleDonorsFor } from '@/utils/bloodCompat';
-import { formatNeededBy } from '@/utils/urgency';
+import { formatDay } from '@/utils/urgency';
 
 const WHO_FOR = ['me', 'family', 'other'] as const;
 const STEPS = 3;
@@ -257,7 +257,7 @@ export default function Create() {
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>{t('create.date')}</Text>
                 <Pressable style={styles.input} onPress={() => setShowDate(true)}>
-                  <Text style={styles.inputText}>{formatNeededBy(fmtDate(date), fmtTime(time)).split(',')[0]}</Text>
+                  <Text style={styles.inputText}>{formatDay(fmtDate(date), fmtTime(time))}</Text>
                 </Pressable>
               </View>
               <View style={{ flex: 1 }}>

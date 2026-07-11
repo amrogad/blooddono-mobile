@@ -20,6 +20,13 @@
     "editProfile": "Edit profile",
     "donate": "Donate"
   },
+  "date": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "neededBy": "{{day}}, {{time}}"
+  },
   "tabs": {
     "requests": "Requests",
     "create": "Create",
@@ -249,6 +256,25 @@
     "submitA11y": "Submit donation",
     "giveAmount": "Give EGP {{amount}}",
     "give": "Give"
+  },
+  "validation": {
+    "email": "Enter a valid email address",
+    "recipientName": "Recipient name is required.",
+    "governorate": "Please pick a governorate.",
+    "city": "Please pick a city.",
+    "hospitalName": "Hospital name is required.",
+    "fullAddress": "Full address is required.",
+    "bloodGroup": "Please pick a blood group.",
+    "message": "Please add a short message."
+  },
+  "errors": {
+    "invalidLogin": "Email or password is incorrect.",
+    "emailNotConfirmed": "Please confirm your email first.",
+    "rateLimit": "Too many attempts, please wait a moment.",
+    "network": "Network problem, check your connection.",
+    "permission": "You don't have permission to do this.",
+    "duplicate": "That request already exists.",
+    "generic": "Something went wrong. Please try again."
   },
   "profile": {
     "unnamed": "Unnamed user",

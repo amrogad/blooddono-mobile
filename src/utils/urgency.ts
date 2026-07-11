@@ -1,15 +1,12 @@
+import i18n from '@/i18n';
+
 export type UrgencyLevel = 'pastdue' | 'critical' | 'urgent' | 'planned';
 export type SectionKey = 'today' | 'week' | 'later';
 
 export type Urgency = {
   level: UrgencyLevel;
-  label: string;
   sectionKey: SectionKey;
-  sectionLabel: string;
 };
-
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function requestDateTime(date: string, time: string): Date {
   const [y, m, d] = (date ?? '').split('-').map(Number);
@@ -32,29 +29,30 @@ export function getUrgency(date: string, time: string, now: Date = new Date()): 
   else if (hours <= 72) level = 'urgent';
   else level = 'planned';
 
-  const label =
-    level === 'pastdue' ? 'Overdue' : level === 'critical' ? 'Critical' : level === 'urgent' ? 'Urgent' : 'Planned';
-
   let sectionKey: SectionKey;
   if (hours < 24 || sameDay) sectionKey = 'today';
   else if (hours <= 24 * 7) sectionKey = 'week';
   else sectionKey = 'later';
-  const sectionLabel = sectionKey === 'today' ? 'Today' : sectionKey === 'week' ? 'This week' : 'Later';
 
-  return { level, label, sectionKey, sectionLabel };
+  return { level, sectionKey };
 }
 
-// Human "needed by" line — no raw ISO dates.
+// Just the day portion — "Today", "Tomorrow", a weekday, or "20 Jul".
+export function formatDay(date: string, time: string, now: Date = new Date()): string {
+  const target = requestDateTime(date, time);
+  const dayDiff = Math.round((startOfDay(target) - startOfDay(now)) / 86_400_000);
+  const weekdays = i18n.t('date.weekdays', { returnObjects: true }) as string[];
+  const months = i18n.t('date.months', { returnObjects: true }) as string[];
+
+  if (dayDiff === 0) return i18n.t('date.today');
+  if (dayDiff === 1) return i18n.t('date.tomorrow');
+  if (dayDiff > 1 && dayDiff < 7) return weekdays[target.getDay()];
+  return `${target.getDate()} ${months[target.getMonth()]}`;
+}
+
+// Human "needed by" line — day + time, no raw ISO dates.
 export function formatNeededBy(date: string, time: string, now: Date = new Date()): string {
   const target = requestDateTime(date, time);
   const hhmm = `${String(target.getHours()).padStart(2, '0')}:${String(target.getMinutes()).padStart(2, '0')}`;
-  const dayDiff = Math.round((startOfDay(target) - startOfDay(now)) / 86_400_000);
-
-  let day: string;
-  if (dayDiff === 0) day = 'Today';
-  else if (dayDiff === 1) day = 'Tomorrow';
-  else if (dayDiff > 1 && dayDiff < 7) day = WEEKDAYS[target.getDay()];
-  else day = `${target.getDate()} ${MONTHS[target.getMonth()]}`;
-
-  return `${day}, ${hhmm}`;
+  return i18n.t('date.neededBy', { day: formatDay(date, time, now), time: hhmm });
 }
