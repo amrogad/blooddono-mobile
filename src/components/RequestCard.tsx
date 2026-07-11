@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
@@ -18,6 +19,7 @@ type Props = {
 
 export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const urgency = getUrgency(item.donation_date, item.donation_time);
   const critical = urgency.level === 'critical' || urgency.level === 'pastdue';
   const variant = critical ? 'solid' : urgency.level === 'urgent' ? 'tint' : 'muted';
@@ -27,7 +29,7 @@ export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`Open request for ${item.recipient_name}, blood group ${item.blood_group}`}
+        accessibilityLabel={t('card.openRequestA11y', { name: item.recipient_name, group: item.blood_group })}
       >
         <View style={styles.topRow}>
           <BloodRoundel group={item.blood_group} variant={variant} />
@@ -36,14 +38,15 @@ export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
               {item.recipient_name}
             </Text>
             <Text style={styles.meta} numberOfLines={1}>
-              {item.recipient_city}
-              {nearHome ? ' · near you' : `, ${item.recipient_governorate}`}
+              {nearHome
+                ? t('card.cityNear', { city: item.recipient_city })
+                : t('card.cityGov', { city: item.recipient_city, gov: item.recipient_governorate })}
             </Text>
           </View>
           <UrgencyPill level={urgency.level} />
         </View>
         <Text style={[styles.needed, { color: critical ? colors.primary : colors.ink }]}>
-          Needed {formatNeededBy(item.donation_date, item.donation_time)}
+          {t('card.needed', { when: formatNeededBy(item.donation_date, item.donation_time) })}
         </Text>
       </Pressable>
       <View style={styles.actions}>
@@ -51,15 +54,15 @@ export function RequestCard({ item, nearHome, onPress, onDonate }: Props) {
           style={({ pressed }) => [styles.donate, pressed && styles.pressed]}
           onPress={onDonate ?? onPress}
           accessibilityRole="button"
-          accessibilityLabel="I can donate"
+          accessibilityLabel={t('card.canDonate')}
         >
-          <Text style={styles.donateText}>I can donate</Text>
+          <Text style={styles.donateText}>{t('card.canDonate')}</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.chevron, pressed && styles.pressed]}
           onPress={onPress}
           accessibilityRole="button"
-          accessibilityLabel="View details"
+          accessibilityLabel={t('card.viewDetails')}
         >
           <Feather name="chevron-right" size={18} color={colors.textBody} />
         </Pressable>

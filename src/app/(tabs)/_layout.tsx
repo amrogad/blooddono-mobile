@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { ColorValue } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { fonts } from '@/constants/theme';
 import { useTheme } from '@/providers/ThemeProvider';
@@ -19,6 +20,7 @@ function tabIcon(active: IoniconName, inactive: IoniconName) {
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <Tabs
       screenOptions={{
@@ -37,23 +39,23 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Requests', tabBarIcon: tabIcon('water', 'water-outline') }}
+        options={{ title: t('tabs.requests'), tabBarIcon: tabIcon('water', 'water-outline') }}
       />
       <Tabs.Screen
         name="create"
-        options={{ title: 'Create', tabBarIcon: tabIcon('add-circle', 'add-circle-outline') }}
+        options={{ title: t('tabs.create'), tabBarIcon: tabIcon('add-circle', 'add-circle-outline') }}
       />
       <Tabs.Screen
         name="donors"
-        options={{ title: 'Donors', tabBarIcon: tabIcon('search', 'search-outline') }}
+        options={{ title: t('tabs.donors'), tabBarIcon: tabIcon('search', 'search-outline') }}
       />
       <Tabs.Screen
         name="assistant"
-        options={{ title: 'Assistant', tabBarIcon: tabIcon('sparkles', 'sparkles-outline') }}
+        options={{ title: t('tabs.assistant'), tabBarIcon: tabIcon('sparkles', 'sparkles-outline') }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: tabIcon('person-circle', 'person-circle-outline') }}
+        options={{ title: t('tabs.profile'), tabBarIcon: tabIcon('person-circle', 'person-circle-outline') }}
       />
     </Tabs>
   );

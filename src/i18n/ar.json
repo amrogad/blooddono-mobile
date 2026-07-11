@@ -20,6 +20,55 @@
     "editProfile": "تعديل الملف الشخصي",
     "donate": "تبرّع"
   },
+  "tabs": {
+    "requests": "الطلبات",
+    "create": "إنشاء",
+    "donors": "المتبرعون",
+    "assistant": "المساعد",
+    "profile": "حسابي"
+  },
+  "urgency": {
+    "level": {
+      "critical": "حرِج",
+      "overdue": "متأخر",
+      "urgent": "عاجل",
+      "planned": "مُخطَّط"
+    },
+    "section": {
+      "today": "اليوم",
+      "week": "هذا الأسبوع",
+      "later": "لاحقًا"
+    }
+  },
+  "status": {
+    "pending": "جارٍ البحث عن متبرعين",
+    "inprogress": "تم العثور على متبرع",
+    "done": "مكتمل",
+    "canceled": "ملغى"
+  },
+  "card": {
+    "openRequestA11y": "فتح طلب {{name}}، فصيلة الدم {{group}}",
+    "nearYou": "قريب منك",
+    "cityGov": "{{city}}، {{gov}}",
+    "cityNear": "{{city}} · قريب منك",
+    "needed": "مطلوب {{when}}",
+    "canDonate": "أستطيع التبرع",
+    "viewDetails": "عرض التفاصيل"
+  },
+  "requests": {
+    "title": "الطلبات المفتوحة",
+    "subtitleWaiting": "{{count}} في الانتظار",
+    "subtitleNear": " · {{count}} بالقرب منك",
+    "subtitleEmpty": "شخص قريب يحتاج إليك",
+    "myMatches": "متوافق مع {{group}}",
+    "criticalCount": "{{count}} حالة حرجة",
+    "errorTitle": "تعذّر تحميل الطلبات",
+    "errorBody": "تحقق من اتصالك وحاول مرة أخرى.",
+    "emptyTitle": "لا توجد طلبات مفتوحة",
+    "emptyBody": "ستظهر الطلبات الجديدة هنا فور نشرها.",
+    "emptyMatchesTitle": "لا توجد نتائج متطابقة الآن",
+    "emptyMatchesBody": "أوقف الفلتر لعرض كل الطلبات المفتوحة."
+  },
   "profile": {
     "unnamed": "مستخدم بدون اسم",
     "email": "البريد الإلكتروني",

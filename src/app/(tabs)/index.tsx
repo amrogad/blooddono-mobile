@@ -3,6 +3,7 @@ import { View, Text, SectionList, StyleSheet, Pressable, RefreshControl } from '
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { getPendingRequests, PendingRequest } from '@/services/donationService';
 import { useAuth } from '@/providers/AuthProvider';
@@ -25,6 +26,7 @@ const isCritical = (r: PendingRequest) => {
 export default function Requests() {
   const router = useRouter();
   const { colors, styles } = useThemedStyles(makeStyles);
+  const { t } = useTranslation();
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
@@ -52,9 +54,9 @@ export default function Requests() {
 
     const critical = buckets.today.filter(isCritical).length;
     return [
-      { key: 'today', title: 'Today', accent: true, meta: critical ? `${critical} critical` : undefined, data: buckets.today },
-      { key: 'week', title: 'This week', accent: false, meta: undefined, data: buckets.week },
-      { key: 'later', title: 'Later', accent: false, meta: undefined, data: buckets.later },
+      { key: 'today' as SectionKey, accent: true, criticalCount: critical, data: buckets.today },
+      { key: 'week' as SectionKey, accent: false, criticalCount: 0, data: buckets.week },
+      { key: 'later' as SectionKey, accent: false, criticalCount: 0, data: buckets.later },
     ].filter((s) => s.data.length > 0);
   }, [data, profile?.governorate, profile?.city, onlyMatches, myGroup]);
 
@@ -66,8 +68,12 @@ export default function Requests() {
   const header = (
     <View>
       <BrandHeader
-        title="Open requests"
-        subtitle={total ? `${total} waiting${nearCount ? ` · ${nearCount} near you` : ''}` : 'Someone nearby needs you'}
+        title={t('requests.title')}
+        subtitle={
+          total
+            ? `${t('requests.subtitleWaiting', { count: total })}${nearCount ? t('requests.subtitleNear', { count: nearCount }) : ''}`
+            : t('requests.subtitleEmpty')
+        }
       />
       {myGroup ? (
         <View style={styles.filters}>
@@ -77,7 +83,7 @@ export default function Requests() {
             accessibilityRole="switch"
             accessibilityState={{ checked: onlyMatches }}
           >
-            <Text style={[styles.chipText, onlyMatches && styles.chipTextActive]}>My {myGroup} matches</Text>
+            <Text style={[styles.chipText, onlyMatches && styles.chipTextActive]}>{t('requests.myMatches', { group: myGroup })}</Text>
           </Pressable>
           {profile?.city ? (
             <View style={styles.cityChip}>
@@ -108,10 +114,10 @@ export default function Requests() {
       <View style={styles.screen}>
         {header}
         <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>Couldn&apos;t load requests</Text>
-          <Text style={styles.emptyBody}>Check your connection and try again.</Text>
+          <Text style={styles.emptyTitle}>{t('requests.errorTitle')}</Text>
+          <Text style={styles.emptyBody}>{t('requests.errorBody')}</Text>
           <Pressable style={styles.retryButton} onPress={() => refetch()} accessibilityRole="button">
-            <Text style={styles.retryText}>Try again</Text>
+            <Text style={styles.retryText}>{t('common.retry')}</Text>
           </Pressable>
         </View>
       </View>
@@ -136,9 +142,11 @@ export default function Requests() {
           <View style={styles.sectionHeader}>
             {section.accent ? <View style={styles.sectionDot} /> : null}
             <Text style={[styles.sectionTitle, section.accent && styles.sectionTitleAccent]}>
-              {section.title}
+              {t(`urgency.section.${section.key}`)}
             </Text>
-            {section.meta ? <Text style={[styles.sectionTitle, styles.sectionMeta]}>· {section.meta}</Text> : null}
+            {section.criticalCount ? (
+              <Text style={[styles.sectionTitle, styles.sectionMeta]}>· {t('requests.criticalCount', { count: section.criticalCount })}</Text>
+            ) : null}
           </View>
         )}
         renderItem={({ item }) => (
@@ -152,11 +160,9 @@ export default function Requests() {
         )}
         ListEmptyComponent={
           <View style={styles.centered}>
-            <Text style={styles.emptyTitle}>{onlyMatches ? 'No matches right now' : 'No open requests'}</Text>
+            <Text style={styles.emptyTitle}>{onlyMatches ? t('requests.emptyMatchesTitle') : t('requests.emptyTitle')}</Text>
             <Text style={styles.emptyBody}>
-              {onlyMatches
-                ? 'Turn off the filter to see every open request.'
-                : "New requests will appear here as they're posted."}
+              {onlyMatches ? t('requests.emptyMatchesBody') : t('requests.emptyBody')}
             </Text>
           </View>
         }

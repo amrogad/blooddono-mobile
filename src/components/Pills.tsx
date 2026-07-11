@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { fonts, radius } from '@/constants/theme';
 import { useTheme } from '@/providers/ThemeProvider';
 import type { UrgencyLevel } from '@/utils/urgency';
@@ -27,20 +28,29 @@ function Pill({
 
 export function UrgencyPill({ level }: { level: UrgencyLevel }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   if (level === 'critical' || level === 'pastdue') {
-    return <Pill bg={colors.primary} fg={colors.onPrimary} dot label={level === 'pastdue' ? 'OVERDUE' : 'CRITICAL'} />;
+    return (
+      <Pill
+        bg={colors.primary}
+        fg={colors.onPrimary}
+        dot
+        label={level === 'pastdue' ? t('urgency.level.overdue') : t('urgency.level.critical')}
+      />
+    );
   }
-  if (level === 'urgent') return <Pill bg={colors.warningTint} fg={colors.warning} label="URGENT" />;
-  return <Pill bg={colors.surface} fg={colors.textMuted} label="PLANNED" />;
+  if (level === 'urgent') return <Pill bg={colors.warningTint} fg={colors.warning} label={t('urgency.level.urgent')} />;
+  return <Pill bg={colors.surface} fg={colors.textMuted} label={t('urgency.level.planned')} />;
 }
 
 export function StatusPill({ status }: { status: DonationStatus }) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const map: Record<DonationStatus, { bg: string; fg: string; label: string; strike?: boolean }> = {
-    pending: { bg: colors.warningTint, fg: colors.warning, label: 'Searching donors' },
-    inprogress: { bg: colors.infoTint, fg: colors.info, label: 'Donor matched' },
-    done: { bg: colors.successTint, fg: colors.success, label: 'Completed' },
-    canceled: { bg: colors.surface, fg: colors.textMuted, label: 'Cancelled', strike: true },
+    pending: { bg: colors.warningTint, fg: colors.warning, label: t('status.pending') },
+    inprogress: { bg: colors.infoTint, fg: colors.info, label: t('status.inprogress') },
+    done: { bg: colors.successTint, fg: colors.success, label: t('status.done') },
+    canceled: { bg: colors.surface, fg: colors.textMuted, label: t('status.canceled'), strike: true },
   };
   const s = map[status];
   return <Pill bg={s.bg} fg={s.fg} label={s.label} strike={s.strike} />;
