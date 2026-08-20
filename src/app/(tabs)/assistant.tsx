@@ -14,8 +14,6 @@ import {
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
-import { useAuth } from '@/providers/AuthProvider';
-import { useProfile } from '@/hooks/useProfile';
 import { useLocale } from '@/providers/LocaleProvider';
 import { askAssistant, Message } from '@/services/assistantService';
 import { useThemedStyles } from '@/providers/ThemeProvider';
@@ -23,8 +21,6 @@ import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
 
 export default function Assistant() {
-  const { session } = useAuth();
-  const { data: profile } = useProfile(session?.user.id);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,7 +44,7 @@ export default function Assistant() {
       setLoading(true);
 
       try {
-        const reply = await askAssistant(next, profile?.blood_group ?? '', profile?.city ?? '', locale);
+        const reply = await askAssistant(next, locale);
         setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', text: errText }]);
@@ -56,7 +52,7 @@ export default function Assistant() {
         setLoading(false);
       }
     },
-    [messages, loading, profile, t, locale],
+    [messages, loading, t, locale],
   );
 
   const renderMessage = ({ item }: { item: Message }) => {

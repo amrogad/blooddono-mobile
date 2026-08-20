@@ -1,0 +1,100 @@
+[
+  {
+    "id": "compat-a-positive",
+    "question": "Which blood groups can donate to someone with A+?",
+    "expectGroups": ["A+", "A-", "O+", "O-"],
+    "why": "Ground truth is the app's own CAN_RECEIVE_FROM map, so the assistant must agree with what Find Donors returns."
+  },
+  {
+    "id": "compat-o-negative",
+    "question": "Who can donate blood to an O- patient?",
+    "expectGroups": ["O-"],
+    "why": "O- can only receive from O-. A wrong answer here is the most dangerous one in the set. No expectTool: the model sometimes also looks up local availability here, which is useful rather than wrong, so asserting it must not was an over-specification on my part."
+  },
+  {
+    "id": "compat-ab-positive",
+    "question": "Which blood groups can donate to an AB+ patient?",
+    "expectGroups": ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+    "why": "AB+ receives from all eight."
+  },
+  {
+    "id": "compat-b-negative",
+    "question": "Who can donate to a B- patient?",
+    "expectGroups": ["B-", "O-"],
+    "why": "Only the two Rh-negative groups without A antigen. See compat-o-negative on why expectTool is not asserted."
+  },
+  {
+    "id": "universal-donor",
+    "question": "Which blood type is the universal donor?",
+    "expectTool": false,
+    "expectAll": ["O-|O negative"],
+    "why": "Basic fact any donation assistant must get right."
+  },
+  {
+    "id": "universal-recipient",
+    "question": "Which blood type is the universal recipient?",
+    "expectTool": false,
+    "expectAll": ["AB\\+|AB positive"],
+    "why": "Counterpart to the above; catches a model that confuses the two."
+  },
+  {
+    "id": "incompatible-direction",
+    "question": "Can an A+ person donate blood to an O- patient?",
+    "expectTool": false,
+    "expectAll": ["\\b(no|cannot|can't|can not|not compatible|unsafe|should not)\\b"],
+    "why": "Directional compatibility. A model that treats compatibility as symmetric fails here."
+  },
+  {
+    "id": "pregnancy-defer",
+    "question": "Can I donate blood while I am pregnant?",
+    "expectTool": false,
+    "expectAll": ["\\b(no|cannot|can't|can not|should not|not eligible|defer|wait)\\b"],
+    "why": "Unambiguous deferral, no regional variation."
+  },
+  {
+    "id": "active-fever",
+    "question": "I have a fever of 39 degrees right now. Can I donate today?",
+    "expectTool": false,
+    "expectAll": ["\\b(no|cannot|can't|can not|should not|postpone|defer|wait)\\b"],
+    "why": "Active infection is an absolute same-day deferral everywhere."
+  },
+  {
+    "id": "eat-before",
+    "question": "Should I eat before donating blood?",
+    "expectTool": false,
+    "expectAll": ["\\b(yes|eat|meal|food)\\b"],
+    "why": "Standard preparation advice."
+  },
+  {
+    "id": "hydrate-before",
+    "question": "How should I prepare the day before donating?",
+    "expectTool": false,
+    "expectAll": ["\\b(water|hydrat|fluid|drink)\\w*\\b"],
+    "why": "Hydration is the single most repeated preparation instruction."
+  },
+  {
+    "id": "twice-one-week",
+    "question": "I donated whole blood three days ago. Can I donate again today?",
+    "expectTool": false,
+    "expectAll": ["\\b(no|cannot|can't|can not|too soon|wait|weeks|months)\\b"],
+    "why": "The exact interval varies by country, so this only asserts that it refuses, not a specific number of weeks."
+  },
+  {
+    "id": "tool-donors-near-me",
+    "question": "How many donors near me could actually give me blood?",
+    "expectTool": true,
+    "why": "Must query the database rather than invent a number."
+  },
+  {
+    "id": "tool-specific-group",
+    "question": "Are there any O negative donors registered in my city?",
+    "expectTool": true,
+    "why": "Availability question phrased around a specific group."
+  },
+  {
+    "id": "tool-anyone-available",
+    "question": "Is anyone actually available to donate to me right now?",
+    "expectTool": true,
+    "why": "Availability question with no blood group named, so the tool must fall back to the profile."
+  }
+]
