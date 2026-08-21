@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
@@ -23,20 +23,22 @@ export default function FindDonors() {
   const { t } = useTranslation();
 
   const [bloodGroup, setBloodGroup] = useState('');
-  const [governorate, setGovernorate] = useState('');
+  // null means the picker hasn't been touched, so it falls back to the user's
+  // own governorate. An empty string means they deliberately cleared it, which
+  // is why this isn't just `governorate || profile.governorate` — that would
+  // snap the selection back every time they picked the blank option.
+  const [governorate, setGovernorate] = useState<string | null>(null);
   const [city, setCity] = useState('');
 
-  useEffect(() => {
-    if (profile?.governorate && !governorate) setGovernorate(profile.governorate);
-  }, [profile?.governorate, governorate]);
+  const activeGovernorate = governorate ?? profile?.governorate ?? '';
 
-  const selectedGov = governorates.find((g) => g.name === governorate);
+  const selectedGov = governorates.find((g) => g.name === activeGovernorate);
   const filteredCities = cities.filter((c) => c.governorate_id === selectedGov?.id);
-  const enabled = !!bloodGroup && !!governorate;
+  const enabled = !!bloodGroup && !!activeGovernorate;
 
   const { data, isFetching, error } = useQuery({
-    queryKey: ['donors', bloodGroup, governorate, city],
-    queryFn: () => searchDonors(bloodGroup, governorate, city || null),
+    queryKey: ['donors', bloodGroup, activeGovernorate, city],
+    queryFn: () => searchDonors(bloodGroup, activeGovernorate, city || null),
     enabled,
     placeholderData: keepPreviousData,
   });
@@ -74,7 +76,7 @@ export default function FindDonors() {
 
       <View style={styles.pickerWrap}>
         <Picker
-          selectedValue={governorate}
+          selectedValue={activeGovernorate}
           onValueChange={(v) => {
             setGovernorate(v);
             setCity('');
