@@ -70,6 +70,158 @@ export const TOOLS = [
   },
 ];
 
+// Generated from the same governorates/cities data both apps ship. The donor
+// search needs all three of blood group, governorate and city, but a person
+// says "I'm in Nasr City", not "Nasr City, Cairo". Without this the model kept
+// calling the tool with the governorate missing and having to ask a follow-up
+// question it already had the answer to. Every city name here is unique across
+// the 27 governorates, so the lookup is unambiguous.
+export const CITY_TO_GOVERNORATE: Record<string, string> = {
+  '10th of Ramadan': 'Sharqia',
+  '6th of October': 'Giza',
+  'Abnub': 'Asyut',
+  'Abu Hammad': 'Sharqia',
+  'Abu Hummus': 'Beheira',
+  'Abu Simbel': 'Aswan',
+  'Abu Sultan': 'Ismailia',
+  'Abu Tig': 'Asyut',
+  'Aga': 'Dakahlia',
+  'Agami': 'Alexandria',
+  'Akhmim': 'Sohag',
+  'Arbaeen': 'Suez',
+  'Arish': 'North Sinai',
+  'Ashmoun': 'Monufia',
+  'Aswan City': 'Aswan',
+  'Asyut City': 'Asyut',
+  'Ataqa': 'Suez',
+  'Bahariya': 'New Valley',
+  'Balat': 'New Valley',
+  'Baltim': 'Kafr El Sheikh',
+  'Banha': 'Qalyubia',
+  'Belbeis': 'Sharqia',
+  'Beni Hassan': 'Minya',
+  'Beni Suef City': 'Beni Suef',
+  'Biba': 'Beni Suef',
+  'Bir al-Abd': 'North Sinai',
+  'Borg El Arab': 'Alexandria',
+  'Dabaa': 'Matrouh',
+  'Dahab': 'South Sinai',
+  'Dakhla': 'New Valley',
+  'Damanhour': 'Beheira',
+  'Damietta City': 'Damietta',
+  'Dendera': 'Qena',
+  'Desouk': 'Kafr El Sheikh',
+  'Edfu': 'Aswan',
+  'Edku': 'Beheira',
+  'El Alamein': 'Matrouh',
+  'El Dawahy': 'Port Said',
+  'El Mahalla El Kubra': 'Gharbia',
+  'El Manakh': 'Port Said',
+  'El Qurna': 'Luxor',
+  'El Quseir': 'Red Sea',
+  'El Zohour': 'Port Said',
+  'Esna': 'Luxor',
+  'Faisal': 'Suez',
+  'Faiyum City': 'Faiyum',
+  'Farafra': 'New Valley',
+  'Faraskour': 'Damietta',
+  'Fashn': 'Beni Suef',
+  'Fayed': 'Ismailia',
+  'Fuwwah': 'Kafr El Sheikh',
+  'Ganayen': 'Suez',
+  'Girga': 'Sohag',
+  'Giza City': 'Giza',
+  'Haram': 'Giza',
+  'Heliopolis': 'Cairo',
+  'Hurghada': 'Red Sea',
+  'Ibsheway': 'Faiyum',
+  'Imbaba': 'Giza',
+  'Ismailia City': 'Ismailia',
+  'Kafr El Dawwar': 'Beheira',
+  'Kafr El Sheikh City': 'Kafr El Sheikh',
+  'Kafr El Zayat': 'Gharbia',
+  'Kafr Saad': 'Damietta',
+  'Karnak': 'Luxor',
+  'Khanka': 'Qalyubia',
+  'Kharga': 'New Valley',
+  'Kom Ombo': 'Aswan',
+  'Luxor City': 'Luxor',
+  'Maadi': 'Cairo',
+  'Maidum': 'Beni Suef',
+  'Mallawi': 'Minya',
+  'Manfalut': 'Asyut',
+  'Mansoura': 'Dakahlia',
+  'Marsa Alam': 'Red Sea',
+  'Marsa Matrouh': 'Matrouh',
+  'Menouf': 'Monufia',
+  'Miami': 'Alexandria',
+  'Minya City': 'Minya',
+  'Minya El Qamh': 'Sharqia',
+  'Mit Ghamr': 'Dakahlia',
+  'Montaza': 'Alexandria',
+  'Nag Hammadi': 'Qena',
+  'Nakhl': 'North Sinai',
+  'Naqada': 'Qena',
+  'Nasr City': 'Cairo',
+  'Nasr El Nuba': 'Aswan',
+  'New Cairo': 'Cairo',
+  'New Damietta': 'Damietta',
+  'Nuweiba': 'South Sinai',
+  'Obour': 'Qalyubia',
+  'Port Fouad': 'Port Said',
+  'Port Said City': 'Port Said',
+  'Qalyub': 'Qalyubia',
+  'Qantara': 'Ismailia',
+  'Qena City': 'Qena',
+  'Quesna': 'Monufia',
+  'Qus': 'Qena',
+  'Rafah': 'North Sinai',
+  'Ras El Bar': 'Damietta',
+  'Ras Gharib': 'Red Sea',
+  'Rashid': 'Beheira',
+  'Sadat City': 'Monufia',
+  'Safaga': 'Red Sea',
+  'Saint Catherine': 'South Sinai',
+  'Sallum': 'Matrouh',
+  'Samalut': 'Minya',
+  'Samannoud': 'Gharbia',
+  'Sharm El Sheikh': 'South Sinai',
+  'Sheikh Zayed': 'Giza',
+  'Sheikh Zuweid': 'North Sinai',
+  'Sherbin': 'Dakahlia',
+  'Shibin El Kom': 'Monufia',
+  'Shubra': 'Cairo',
+  'Shubra El Kheima': 'Qalyubia',
+  'Sidfa': 'Asyut',
+  'Sidi Gaber': 'Alexandria',
+  'Sidi Salem': 'Kafr El Sheikh',
+  'Sinnuris': 'Faiyum',
+  'Siwa': 'Matrouh',
+  'Sohag City': 'Sohag',
+  'Suez City': 'Suez',
+  'Taba': 'South Sinai',
+  'Tahta': 'Sohag',
+  'Talkha': 'Dakahlia',
+  'Tamiya': 'Faiyum',
+  'Tanta': 'Gharbia',
+  'Tell El Kebir': 'Ismailia',
+  'Tima': 'Sohag',
+  'Tod': 'Luxor',
+  'Tuna El Gebel': 'Minya',
+  'Tunis Village': 'Faiyum',
+  'Wasta': 'Beni Suef',
+  'Zagazig': 'Sharqia',
+  'Zefta': 'Gharbia',
+};
+
+export function governorateForCity(city: string): string {
+  const needle = city.trim().toLowerCase();
+  for (const [name, governorate] of Object.entries(CITY_TO_GOVERNORATE)) {
+    if (name.toLowerCase() === needle) return governorate;
+  }
+  return '';
+}
+
 export type ResolvedArgs =
   | { ok: true; bloodGroup: string; governorate: string; city: string }
   | { ok: false; missing: string[] };
@@ -87,8 +239,11 @@ export function resolveDonorArgs(
   };
 
   const bloodGroup = pick(args.bloodGroup, profile?.blood_group);
-  const governorate = pick(args.governorate, profile?.governorate);
   const city = pick(args.city, profile?.city);
+  // Falls back to deriving it from the city so a caller who named only their
+  // city does not get asked for something we can already work out.
+  const governorate =
+    pick(args.governorate, profile?.governorate) || (city ? governorateForCity(city) : '');
 
   const missing: string[] = [];
   if (!bloodGroup) missing.push('bloodGroup');
@@ -109,12 +264,26 @@ export function summarizeDonors(rows: DonorRow[], where: { bloodGroup: string; g
     byBloodGroup[row.blood_group] = (byBloodGroup[row.blood_group] ?? 0) + 1;
   }
 
+  // The counts are also rendered here as one ready-to-quote line. Asked to read
+  // them out of the JSON object instead, gpt-oss-20b transcribed the breakdown
+  // wrong: for a real A+ lookup in Nasr City it reported 2 O+ donors where the
+  // table held 1, while getting the total right. Over-reporting one group is the
+  // same class of error as the A+ compatibility bug the evals caught, so the
+  // model is given a string to repeat rather than numbers to copy.
+  const breakdown = Object.entries(byBloodGroup)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([group, count]) => `${count} ${group}`)
+    .join(', ');
+
   return {
     patientBloodGroup: where.bloodGroup,
     governorate: where.governorate,
     city: where.city,
     totalDonors: rows.length,
     byBloodGroup,
+    summary: rows.length
+      ? `${rows.length} donors in ${where.city}, ${where.governorate} can donate to a ${where.bloodGroup} patient: ${breakdown}.`
+      : `No registered donors in ${where.city}, ${where.governorate} can donate to a ${where.bloodGroup} patient.`,
   };
 }
 

@@ -2,6 +2,7 @@ import {
   CAN_RECEIVE_FROM,
   TOOLS,
   compatibilityReference,
+  governorateForCity,
   resolveDonorArgs,
   summarizeDonors,
 } from '../tools';
@@ -90,6 +91,29 @@ describe('resolveDonorArgs', () => {
     expect(result).toEqual({ ok: true, bloodGroup: 'A+', governorate: 'Cairo', city: 'Nasr City' });
   });
 
+  it('derives the governorate from the city when only the city is known', () => {
+    const result = resolveDonorArgs({ bloodGroup: 'A+', city: 'Nasr City' }, null);
+    expect(result).toEqual({ ok: true, bloodGroup: 'A+', governorate: 'Cairo', city: 'Nasr City' });
+  });
+
+  it('matches the city case-insensitively', () => {
+    expect(governorateForCity('  nasr city ')).toBe('Cairo');
+    expect(governorateForCity('6th of October')).toBe('Giza');
+  });
+
+  it('still reports the governorate missing for a city it does not know', () => {
+    const result = resolveDonorArgs({ bloodGroup: 'A+', city: 'Atlantis' }, null);
+    expect(result).toEqual({ ok: false, missing: ['governorate'] });
+  });
+
+  it('lets an explicit governorate win over the one derived from the city', () => {
+    const result = resolveDonorArgs(
+      { bloodGroup: 'O-', city: 'Nasr City', governorate: 'Giza' },
+      null,
+    );
+    expect(result).toMatchObject({ ok: true, governorate: 'Giza' });
+  });
+
   it('handles a null profile without throwing', () => {
     expect(resolveDonorArgs({}, null)).toEqual({
       ok: false,
@@ -108,7 +132,7 @@ describe('summarizeDonors', () => {
       { blood_group: 'O+' },
       { blood_group: 'A+' },
     ];
-    expect(summarizeDonors(rows, where)).toEqual({
+    expect(summarizeDonors(rows, where)).toMatchObject({
       patientBloodGroup: 'A+',
       governorate: 'Cairo',
       city: 'Nasr City',
@@ -119,6 +143,29 @@ describe('summarizeDonors', () => {
 
   it('reports zero rather than failing when nobody matches', () => {
     expect(summarizeDonors([], where)).toMatchObject({ totalDonors: 0, byBloodGroup: {} });
+  });
+
+  // Regression: the model was handed byBloodGroup as an object and reported 2 O+
+  // donors where the query returned 1. It gets a finished sentence now.
+  it('renders a summary line whose counts match the rows exactly', () => {
+    const rows = [
+      { blood_group: 'O-' },
+      { blood_group: 'O-' },
+      { blood_group: 'O+' },
+      { blood_group: 'A-' },
+      { blood_group: 'A-' },
+    ];
+    const { summary, totalDonors } = summarizeDonors(rows, where);
+    expect(totalDonors).toBe(5);
+    expect(summary).toBe(
+      '5 donors in Nasr City, Cairo can donate to a A+ patient: 2 A-, 2 O-, 1 O+.',
+    );
+  });
+
+  it('says nobody matches instead of rendering an empty list', () => {
+    expect(summarizeDonors([], where).summary).toBe(
+      'No registered donors in Nasr City, Cairo can donate to a A+ patient.',
+    );
   });
 
   // The whole point of aggregating before the result reaches Groq.
