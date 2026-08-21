@@ -8,6 +8,18 @@ const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 // The eval suite exists partly so that failure surfaces immediately next time.
 const MODEL = 'openai/gpt-oss-20b';
 
+// React Native does not enforce CORS, so the mobile app never needed these and
+// the function had no browser support at all until the web app called it.
+// Allow-Origin is * because the JWT check below is the actual access boundary,
+// not the origin header.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const json = (body: unknown, status = 200) => Response.json(body, { status, headers: CORS });
+
 type ChatMessage = {
   role: string;
   content: string | null;
@@ -30,9 +42,13 @@ async function callGroq(key: string, messages: ChatMessage[], withTools: boolean
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS });
+  }
+
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return json({ error: 'Unauthorized' }, 401);
   }
 
   const supabase = createClient(
@@ -42,17 +58,17 @@ Deno.serve(async (req) => {
   );
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    return json({ error: 'Unauthorized' }, 401);
   }
 
   const groqKey = Deno.env.get('GROQ_API_KEY');
   if (!groqKey) {
-    return Response.json({ error: 'GROQ_API_KEY not configured' }, { status: 500 });
+    return json({ error: 'GROQ_API_KEY not configured' }, 500);
   }
 
   const body = await req.json().catch(() => null);
   if (!body?.messages || !Array.isArray(body.messages)) {
-    return Response.json({ error: 'messages array required' }, { status: 400 });
+    return json({ error: 'messages array required' }, 400);
   }
   const { messages, locale } = body as {
     messages: Array<{ role: string; text: string }>;
@@ -63,12 +79,12 @@ Deno.serve(async (req) => {
   // a request. This is a spend limit, and attempts are what cost money.
   const { data: quota, error: quotaError } = await supabase.rpc('bump_assistant_usage').single();
   if (quotaError) {
-    return Response.json({ error: quotaError.message }, { status: 500 });
+    return json({ error: quotaError.message }, 500);
   }
   if (quota && !quota.allowed) {
-    return Response.json(
+    return json(
       { error: 'daily_limit_reached', used: quota.used, limit: quota.daily_limit },
-      { status: 429 },
+      429,
     );
   }
 
@@ -148,8 +164,8 @@ Deno.serve(async (req) => {
     }
 
     const reply: string = completion.choices?.[0]?.message?.content ?? 'No response received.';
-    return Response.json({ reply, toolsUsed });
+    return json({ reply, toolsUsed });
   } catch (err) {
-    return Response.json({ error: String(err instanceof Error ? err.message : err) }, { status: 502 });
+    return json({ error: String(err instanceof Error ? err.message : err) }, 502);
   }
 });
