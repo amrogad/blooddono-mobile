@@ -1,8 +1,10 @@
 # BloodDono Mobile
 
+[![CI](https://github.com/amrogad/blooddono-mobile/actions/workflows/ci.yml/badge.svg)](https://github.com/amrogad/blooddono-mobile/actions/workflows/ci.yml)
+
 A React Native app for connecting blood donors with nearby donation requests. Donors browse requests sorted by proximity, post their own, and search for compatible donors by blood group and location. Each request shows a live hospital map with the distance from wherever the donor is standing.
 
-There's also a [web version](https://blooddono-two.vercel.app/) on the same Supabase backend, so the data lines up across both.
+There's also a [web version](https://github.com/amrogad/blooddono) ([live demo](https://blooddono-two.vercel.app/)) on the same Supabase backend and the same edge functions, so the data lines up across both and the AI assistant behaves identically on either.
 
 ## Highlights
 
@@ -10,7 +12,7 @@ There's also a [web version](https://blooddono-two.vercel.app/) on the same Supa
 - 📍 Location-aware sorting, so nearby requests rise to the top automatically
 - 🩸 Blood compatibility matching, not exact-type matching (O- donors see A+, B+, AB+ requests)
 - 🗺️ Interactive hospital maps with live distance, built on Leaflet + OpenStreetMap (no API key needed)
-- 🤖 AI eligibility assistant powered by Groq (Llama 3.1), personalized to your blood group and city
+- 🤖 AI eligibility assistant that can query the donor database through tool calling, not just answer from a prompt
 - 🌐 Full Arabic + English support with RTL layout that mirrors automatically on switch
 - 🌙 Dark and light mode, persisted across sessions
 
@@ -48,7 +50,7 @@ Under 3 minutes to see the core loop:
 - Interactive Leaflet map on each request showing the hospital pin, the donor's live position, and the straight-line distance between them
 - Accept a request as a donor, which moves it from pending to in-progress
 - Find compatible donors by patient blood group and location
-- AI eligibility assistant for questions like "I take blood pressure medication, am I eligible?" Answers use your blood group and city, and it replies in the active language
+- AI eligibility assistant for questions like "I take blood pressure medication, am I eligible?" It reads your blood group and city from your session rather than trusting the app to send them, and for availability questions like "how many donors near me could give me blood?" it calls a `find_compatible_donors` tool that runs a real query instead of guessing a number. Replies follow the active language
 - Push notifications when a new request needs a compatible blood type in your governorate
 - Arabic and English with automatic RTL layout mirroring, switchable without leaving the app
 - Dark and light themes, persisted with AsyncStorage
@@ -88,15 +90,15 @@ Service layer (Supabase RPCs, Nominatim, Edge Functions)
         ↓
 Supabase (PostgreSQL · Auth · Storage · Edge Functions)
         ↓
-Groq (Llama 3.1) · Expo push notifications
+Groq (tool calling back into the donor table) · Expo push notifications
 ```
 
 ## Built with
 
 - 13 screens across 3 route groups
 - 6 shared components (BloodRoundel, RequestCard, Pills, Avatar, SkeletonCard, BrandHeader)
-- 96 automated tests
-- Shared Supabase backend with the web version
+- 112 automated tests, plus a 15-case eval suite for the assistant
+- Shared Supabase backend and edge functions with the web version
 
 ## Tech stack
 
@@ -114,7 +116,7 @@ Groq (Llama 3.1) · Expo push notifications
 ### Backend
 - [Supabase](https://supabase.com/) for hosted auth, PostgreSQL, RPCs, and storage
 - Supabase Edge Functions (Deno) for push notification fan-out and the eligibility assistant
-- [Groq](https://groq.com/) (Llama 3.1 8B Instant) for the assistant, called server-side on the free tier
+- [Groq](https://groq.com/) (`openai/gpt-oss-20b`) for the assistant, called server-side on the free tier so the key never ships in the app
 - Expo push notifications
 
 ## Testing
@@ -123,13 +125,43 @@ Groq (Llama 3.1) · Expo push notifications
 npm test -- --runInBand
 ```
 
-96 tests across:
+112 tests across:
 
 - Supabase service wrappers (donations, profiles, geocoding, assistant)
 - Auth provider bootstrap
 - Login screen
+- The assistant's tool layer: argument resolution against the caller's profile, the compatibility table, and a check that donor identities never survive into what gets sent to the model
 - Pure utilities: haversine distance, proximity sorting, blood compatibility, form validation, error mapping
 - i18n key parity (every EN key has an AR translation)
+
+Lint, types, and the full suite run on every push through GitHub Actions.
+
+### Assistant evals
+
+A green test suite says nothing about whether health information is correct, so the assistant is scored separately against 15 fixed questions with known-correct answers:
+
+```bash
+npm run eval
+```
+
+Each case checks whether the model called the donor lookup when it should have, whether the blood groups it lists match the compatibility rules the rest of the app enforces, and whether the answer carries the not-medical-advice line. It makes real API calls, so it runs on demand rather than in CI. It currently passes 15 of 15.
+
+The first run scored 40%. One failure was real: the assistant claimed only A+ and O+ can donate to A+, leaving out A- and O-. Under-reporting compatible donors is the worst way for this app to be wrong. Blood compatibility now goes into the prompt from the same table the rest of the app uses, rather than being left to the model's own knowledge.
+
+The rest of that 40% was the grader, not the model. It compared blood groups using an ASCII hyphen while the model wrote "O‑negative" with a non-breaking one, so four correct answers were scored as failures.
+
+## Known limitations and what's next
+
+Things I know are missing or rough, rather than things I'm hoping nobody notices:
+
+- The assistant is question-and-answer only. It can look up donor counts, but it can't post a request, accept one, or change anything for you. Letting it act means a confirmation step and a much harder safety story, so it reads rather than writes.
+- It never sees donor identities. The lookup returns counts grouped by blood group, so no names or photos leave the backend for the model provider. The trade is that it can't tell you who to contact, only how many people could help. Find Donors does that part.
+- Answers are capped at 50 a day per account, tracked in Postgres. Groq's free tier also caps tokens per minute, so a burst of questions can briefly fail.
+- Distribution is a sideloaded APK. There's no Play Store listing or internal testing track yet.
+- New requests need a pull-to-refresh. Supabase Realtime is the obvious fix and isn't wired up yet.
+- iOS is untested. The app is built with Expo and should run, but it has only been exercised on Android.
+- Payments on the funding screen are recorded, not processed. There's no payment provider behind it.
+- The eval set covers compatibility rules, tool routing, and safety-critical deferrals. It avoids questions whose correct answer varies by country, like exact tattoo or travel deferral periods, so the assistant's answers there are unverified.
 
 ## Why I built this
 
