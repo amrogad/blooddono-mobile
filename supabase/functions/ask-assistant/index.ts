@@ -27,6 +27,19 @@ type ChatMessage = {
   tool_call_id?: string;
 };
 
+// Anonymous callers have no user id to meter, so they are metered on their
+// address instead. It is hashed with a server-side salt before it leaves this
+// function: the quota table should be able to tell two visitors apart without
+// holding anybody's IP.
+async function clientKey(req: Request) {
+  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown';
+  const salt = Deno.env.get('ANON_QUOTA_SALT') ?? 'blooddono';
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${ip}`));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 async function callGroq(key: string, messages: ChatMessage[], withTools: boolean) {
   const res = await fetch(GROQ_URL, {
     method: 'POST',
@@ -46,6 +59,9 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: CORS });
   }
 
+  // supabase-js always sends an Authorization header, carrying the anon key when
+  // nobody is signed in. So the presence of the header proves nothing; whether
+  // getUser() resolves to a real user is what separates the two paths below.
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) {
     return json({ error: 'Unauthorized' }, 401);
@@ -56,10 +72,7 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_ANON_KEY')!,
     { global: { headers: { Authorization: authHeader } } },
   );
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return json({ error: 'Unauthorized' }, 401);
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   const groqKey = Deno.env.get('GROQ_API_KEY');
   if (!groqKey) {
@@ -77,7 +90,24 @@ Deno.serve(async (req) => {
 
   // Counted before the model runs, so a failed Groq call still costs the caller
   // a request. This is a spend limit, and attempts are what cost money.
-  const { data: quota, error: quotaError } = await supabase.rpc('bump_assistant_usage').single();
+  let quota: { allowed: boolean; used: number; daily_limit: number } | null = null;
+  let quotaError: { message: string } | null = null;
+
+  if (user) {
+    ({ data: quota, error: quotaError } = await supabase.rpc('bump_assistant_usage').single());
+  } else {
+    // The anon quota function is service-role only, so it needs its own client.
+    // Metering a signed-out visitor on the key they sent us would be pointless:
+    // the anon key is the same for everybody.
+    const admin = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+    ({ data: quota, error: quotaError } = await admin
+      .rpc('bump_anon_assistant_usage', { p_client_key: await clientKey(req) })
+      .single());
+  }
+
   if (quotaError) {
     return json({ error: quotaError.message }, 500);
   }
@@ -90,20 +120,31 @@ Deno.serve(async (req) => {
 
   // Read from the session rather than the request body. The client used to send
   // its own blood group and city, which meant the model could be fed whatever a
-  // caller decided to claim about themselves.
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('blood_group, governorate, city')
-    .eq('id', user.id)
-    .single();
+  // caller decided to claim about themselves. A signed-out visitor simply has no
+  // profile, so the model has to ask them for a blood group and city instead.
+  const { data: profile } = user
+    ? await supabase
+        .from('profiles')
+        .select('blood_group, governorate, city')
+        .eq('id', user.id)
+        .single()
+    : { data: null };
+
+  const whoTheyAre = user
+    ? `The signed-in user's blood group is ${profile?.blood_group || 'unknown'} and they are in ` +
+      `${[profile?.city, profile?.governorate].filter(Boolean).join(', ') || 'Egypt'}. `
+    : `The user is not signed in, so you do not know their blood group or city. ` +
+      `If a question needs either one, ask for it before calling any tool. ` +
+      `Do not tell them to sign in unless they ask how to save something. `;
 
   const systemPrompt =
     `You are a blood donation eligibility assistant for BloodDono, used in Egypt. ` +
-    `The signed-in user's blood group is ${profile?.blood_group || 'unknown'} and they are in ` +
-    `${[profile?.city, profile?.governorate].filter(Boolean).join(', ') || 'Egypt'}. ` +
+    whoTheyAre +
     `Answer questions about donation eligibility, preparation, and aftercare. ` +
     `Use the find_compatible_donors tool for any question about donor availability rather than guessing numbers. ` +
-    `Never invent donor counts. Be concise and direct. ` +
+    `Never invent donor counts. When that tool returns, state its "summary" field as written and do not ` +
+    `recalculate, round, or re-derive any number in it. Translate the wording if answering in another ` +
+    `language, but keep every count exactly as given. Be concise and direct. ` +
     `Use this compatibility reference verbatim and never contradict it: ${compatibilityReference()}. ` +
     `When asked who can donate to a group, list every group in that reference entry, including the Rh-negative ones. ` +
     `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.` +
@@ -159,7 +200,15 @@ Deno.serve(async (req) => {
       }
 
       // Second pass runs without tools so a confused model cannot loop, which
-      // bounds both latency and spend at two calls per request.
+      // bounds both latency and spend at two calls per request. Groq rejects the
+      // whole request if the model tries to call a tool anyway ("Tool choice is
+      // none, but model called a tool"), which surfaced as an intermittent 502,
+      // so it gets told in words that the lookup is already done.
+      chat.push({
+        role: 'system',
+        content:
+          'The tool results above are final. Answer the user in prose now and do not call any tool.',
+      });
       completion = await callGroq(groqKey, chat, false);
     }
 
