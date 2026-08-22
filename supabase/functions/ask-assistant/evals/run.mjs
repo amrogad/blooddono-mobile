@@ -29,6 +29,7 @@ const URL_BASE = env.EXPO_PUBLIC_SUPABASE_URL;
 const ANON = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const EMAIL = env.EVAL_EMAIL || 'donor@blooddono.demo';
 const PASSWORD = env.EVAL_PASSWORD || 'Demo123!';
+const EVAL_KEY = env.EVAL_BYPASS_KEY;
 
 if (!URL_BASE || !ANON) {
   console.error('Missing EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY');
@@ -75,6 +76,11 @@ async function ask(token, question, attempt = 0) {
       apikey: ANON,
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
+      // One run is 19 of the demo account's 50 answers a day, and the eval
+      // account is the same login as the public demo, so an afternoon of prompt
+      // work locked the demo out. With EVAL_BYPASS_KEY unset this header is
+      // absent and the run is metered like anyone else.
+      ...(EVAL_KEY ? { 'x-eval-key': EVAL_KEY } : {}),
     },
     body: JSON.stringify({ messages: [{ role: 'user', text: question }], locale: 'en' }),
   });
@@ -139,11 +145,29 @@ function grade(testCase, result) {
   //
   // Drafting turns opt out: handing someone a card to confirm is a UI step, not
   // medical information, and the prompt asks for one short sentence there.
-  if (
-    testCase.expectDisclaimer !== false &&
-    !/\bmedical advice\b|\bnot a substitute\b|\binformational purposes\b/i.test(reply)
-  ) {
+  // Opt in per case rather than defaulting to required. It used to be demanded
+  // of every answer, which is what produced "hey" being met with a medical
+  // disclaimer. Donor availability counts sit in between, so they assert
+  // neither: a count is not health advice, but appending the notice to one is
+  // not wrong enough to fail a run over.
+  const saysDisclaimer = /\bmedical advice\b|\bnot a substitute\b|\binformational purposes\b/i.test(
+    reply,
+  );
+  if (testCase.expectDisclaimer === true && !saysDisclaimer) {
     failures.push('missing medical disclaimer');
+  }
+  if (testCase.expectDisclaimer === false && saysDisclaimer) {
+    failures.push('tacked the medical disclaimer onto a non-medical answer');
+  }
+
+  // Checked on every case rather than per-case. The model reaches for an em dash
+  // and for "Sure," openers unprompted, and both read as machine-written in an
+  // app whose whole surface is meant to read as a person wrote it.
+  if (/[—–]/.test(result.reply || '')) {
+    failures.push('used an em or en dash');
+  }
+  if (/^\s*(sure|certainly|of course)\b/i.test(reply)) {
+    failures.push('opened with Sure/Certainly/Of course');
   }
 
   return failures;

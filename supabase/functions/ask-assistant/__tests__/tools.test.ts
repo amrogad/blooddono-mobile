@@ -3,9 +3,14 @@ import {
   DRAFT_REQUEST_TOOL,
   TOOLS,
   compatibilityReference,
+  ensureDisclaimer,
   governorateForCity,
+  isSmallTalk,
   resolveDonorArgs,
   resolveDraftArgs,
+  stripAiDashes,
+  stripChatbotOpener,
+  stripDisclaimer,
   summarizeDonors,
   toolsFor,
 } from '../tools';
@@ -63,6 +68,170 @@ describe('find_compatible_donors tool schema', () => {
   });
 });
 
+describe('isSmallTalk', () => {
+  it('recognises a bare greeting or thanks in either language', () => {
+    for (const text of ['hey', 'Hi!', 'hello', 'thanks!', 'Thank you.', 'good morning', 'شكرا']) {
+      expect(isSmallTalk(text)).toBe(true);
+    }
+  });
+
+  // The whole point of anchoring it. These are health questions with a hello
+  // stuck on the front and must keep their disclaimer.
+  it('does not treat a question as small talk just because it opens with hello', () => {
+    for (const text of [
+      'hey can I donate after a tattoo?',
+      'hi, who can donate to O-?',
+      'thanks, and can I donate today?',
+    ]) {
+      expect(isSmallTalk(text)).toBe(false);
+    }
+  });
+});
+
+describe('stripDisclaimer', () => {
+  it('removes the closing not-medical-advice sentence', () => {
+    expect(
+      stripDisclaimer('Hello! How can I help? This is informational only and not medical advice.'),
+    ).toBe('Hello! How can I help?');
+  });
+
+  it('removes the Arabic one too', () => {
+    expect(stripDisclaimer('مرحبا! كيف أساعدك؟ هذه معلومات عامة وليست نصيحة طبية.')).toBe(
+      'مرحبا! كيف أساعدك؟',
+    );
+  });
+
+  it('leaves a reply that never had one alone', () => {
+    const clean = 'Hello! How can I help you with blood donation today?';
+    expect(stripDisclaimer(clean)).toBe(clean);
+  });
+
+  it('keeps the reply when the disclaimer was the whole of it', () => {
+    const only = 'This is informational only and not medical advice.';
+    expect(stripDisclaimer(only)).toBe(only);
+  });
+
+  it('does not eat the sentence before it', () => {
+    expect(
+      stripDisclaimer('You should wait four weeks. Not medical advice.'),
+    ).toBe('You should wait four weeks.');
+  });
+});
+
+describe('ensureDisclaimer', () => {
+  it('appends the line when the model forgot it', () => {
+    expect(ensureDisclaimer('You should wait four weeks.')).toBe(
+      'You should wait four weeks. This is informational only and not medical advice.',
+    );
+  });
+
+  it('leaves the model own wording alone rather than doubling up', () => {
+    const own = 'You should wait four weeks. Just a reminder, this is not medical advice.';
+    expect(ensureDisclaimer(own)).toBe(own);
+  });
+
+  it('appends the Arabic line for an Arabic reply', () => {
+    expect(ensureDisclaimer('انتظر أربعة أسابيع.', 'ar')).toBe(
+      'انتظر أربعة أسابيع. هذه معلومات عامة وليست نصيحة طبية.',
+    );
+  });
+
+  // Whether the line appears is decided from the turn, so appending then
+  // stripping has to be safe in either order.
+  it('round-trips with stripDisclaimer', () => {
+    const answer = 'You should wait four weeks.';
+    expect(stripDisclaimer(ensureDisclaimer(answer))).toBe(answer);
+  });
+});
+
+describe('stripChatbotOpener', () => {
+  it('drops the opener and recapitalises what is left', () => {
+    expect(stripChatbotOpener("Sure, I'll draft that once I know his blood group.")).toBe(
+      "I'll draft that once I know his blood group.",
+    );
+    expect(stripChatbotOpener('Of course! what would you like to know?')).toBe(
+      'What would you like to know?',
+    );
+  });
+
+  it('catches the other openers the model reaches for', () => {
+    expect(stripChatbotOpener('Certainly. You can donate.')).toBe('You can donate.');
+    expect(stripChatbotOpener('Absolutely — eat first.')).toBe('Eat first.');
+    expect(stripChatbotOpener('No problem! You can donate.')).toBe('You can donate.');
+  });
+
+  // Regression, and the reason the punctuation is required. Matching a bare
+  // "sure" left the second word behind and shipped "Thing! I'll need a few
+  // details first" to a real user.
+  it('takes the whole of "Sure thing!" rather than leaving the noun behind', () => {
+    expect(stripChatbotOpener("Sure thing! I'll need a few details first.")).toBe(
+      "I'll need a few details first.",
+    );
+  });
+
+  // "Surely" and "Certainly" mid-sentence are ordinary words, not openers.
+  it('leaves words that merely start the same way alone', () => {
+    expect(stripChatbotOpener('Surely you have eaten today?')).toBe(
+      'Surely you have eaten today?',
+    );
+    expect(stripChatbotOpener('You can certainly donate next month.')).toBe(
+      'You can certainly donate next month.',
+    );
+  });
+
+  // Without punctuation there is no way to tell an opener from the first word of
+  // a sentence, so it is left alone. Under-stripping is the safe direction.
+  it('leaves an opener alone when no punctuation marks it as one', () => {
+    expect(stripChatbotOpener('Sure I can help with that.')).toBe('Sure I can help with that.');
+  });
+
+  it('leaves a reply that is only the opener, since nothing would be left', () => {
+    expect(stripChatbotOpener('Sure.')).toBe('Sure.');
+  });
+
+  it('leaves an ordinary reply untouched', () => {
+    const clean = 'Hello! How can I help you with blood donation today?';
+    expect(stripChatbotOpener(clean)).toBe(clean);
+  });
+});
+
+describe('stripAiDashes', () => {
+  // The real reply that prompted this, from a live run against the deployed
+  // function after the prompt had already been told not to use em dashes.
+  it('turns the aside dash the model keeps reaching for into a comma', () => {
+    expect(
+      stripAiDashes('Just a reminder—this is informational only and not medical advice.'),
+    ).toBe('Just a reminder, this is informational only and not medical advice.');
+  });
+
+  it('leaves a number range as a range instead of saying something else', () => {
+    expect(stripAiDashes('Wait 4–6 weeks after a tattoo.')).toBe(
+      'Wait 4-6 weeks after a tattoo.',
+    );
+    expect(stripAiDashes('Between 18 — 65 years old.')).toBe('Between 18-65 years old.');
+  });
+
+  it('handles en dashes and spaced dashes the same way', () => {
+    expect(stripAiDashes('Eat first – it helps.')).toBe('Eat first, it helps.');
+    expect(stripAiDashes('Eat first — it helps.')).toBe('Eat first, it helps.');
+  });
+
+  it('uses an Arabic comma when the reply is Arabic', () => {
+    expect(stripAiDashes('تذكير—هذه معلومات فقط', 'ar')).toBe('تذكير، هذه معلومات فقط');
+  });
+
+  it('leaves text without dashes untouched', () => {
+    const clean = 'Hello! How can I help you with blood donation today?';
+    expect(stripAiDashes(clean)).toBe(clean);
+  });
+
+  it('does not touch ordinary hyphens, which blood groups depend on', () => {
+    expect(stripAiDashes('O- can donate to A-, B- and AB-.')).toBe(
+      'O- can donate to A-, B- and AB-.',
+    );
+  });
+});
+
 describe('draft_donation_request tool schema', () => {
   const tool = DRAFT_REQUEST_TOOL.function;
 
@@ -72,10 +241,17 @@ describe('draft_donation_request tool schema', () => {
     expect(tool.description).toMatch(/confirm/i);
   });
 
-  it('constrains bloodGroup to the eight real groups', () => {
-    expect(tool.parameters.properties.bloodGroup.enum).toEqual([
-      'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
-    ]);
+  // Regression: this used to be an enum like the donor lookup's. Groq validates
+  // enums before the function ever runs, so when the model called the tool with
+  // bloodGroup "" to say it had not been told one, Groq 400d the whole request
+  // and the user saw an error instead of being asked. The eight groups are named
+  // in the description instead, and resolveDraftArgs is what actually enforces
+  // them.
+  it('names the blood groups without constraining them, so a partial call survives', () => {
+    expect(tool.parameters.properties.bloodGroup.enum).toBeUndefined();
+    for (const group of ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']) {
+      expect(tool.parameters.properties.bloodGroup.description).toContain(group);
+    }
   });
 
   it('requires no arguments, so a partial call comes back as a question', () => {
@@ -155,8 +331,9 @@ describe('resolveDraftArgs', () => {
     });
   });
 
-  // resolveDonorArgs inherits the profile governorate even when the model names
-  // a city in a different one. Here an explicit city wins outright.
+  // Both resolvers now agree that an explicit city decides the governorate.
+  // resolveDonorArgs used to disagree, which is the bug that made asking about
+  // another city return nobody.
   it('derives the governorate from an explicit city instead of inheriting the profile', () => {
     const result = resolveDraftArgs({ ...complete, city: 'Tanta' }, profile, today);
     expect(result).toMatchObject({
@@ -265,16 +442,21 @@ describe('resolveDraftArgs', () => {
     ]);
   });
 
-  // Same fix as the donor counts: the model gets a finished sentence to repeat,
-  // not fields to transcribe. The card already shows the detail.
-  it('hands back a summary that names the card rather than restating every field', () => {
+  // Regression: the summary used to carry its own stage directions ("tell them
+  // to check it and press Confirm, in one short sentence"), and the model read
+  // that as a line to repeat, so users were shown the instruction word for word.
+  // Anything meant for the model lives in a system message now; this is facts.
+  it('states what happened without telling the model what to say', () => {
     const result = resolveDraftArgs(complete, profile, today);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.summary).toContain('O-');
     expect(result.summary).toContain('Wadi El Nil Hospital');
-    expect(result.summary).toMatch(/confirm/i);
+    expect(result.summary).toMatch(/nothing has been saved/i);
     expect(result.summary).not.toMatch(/posted|created|submitted/i);
+    for (const instruction of [/\btell them\b/i, /\bdo not\b/i, /\bone short sentence\b/i]) {
+      expect(result.summary).not.toMatch(instruction);
+    }
   });
 
   it('handles a missing profile without throwing', () => {

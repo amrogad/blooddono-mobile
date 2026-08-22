@@ -22,6 +22,90 @@ export const CAN_RECEIVE_FROM: Record<string, string[]> = {
   'AB+': ['O-', 'O+', 'A-', 'A+', 'B-', 'B+', 'AB-', 'AB+'],
 };
 
+// The prompt asks the model not to use em dashes and it mostly complies, then
+// slips one into "Just a reminder—this is informational only". It is the single
+// clearest sign a machine wrote the text, so it gets enforced here rather than
+// left to the model's good intentions.
+export function stripAiDashes(text: string, locale = 'en'): string {
+  const comma = locale === 'ar' ? '، ' : ', ';
+  return text
+    // A dash between two numbers is a range, "4-6 weeks", not an aside. Turning
+    // that one into a comma would say something different and wrong.
+    .replace(/(\d)\s*[—–]\s*(\d)/g, '$1-$2')
+    .replace(/\s*[—–]\s*/g, comma);
+}
+
+// "Sure, I'll draft that once I know his blood group." Sure what? It agrees with
+// nothing; it is throat-clearing the model does because it was trained to sound
+// eager. The prompt asks it not to, twice, and it still does on about one reply
+// in ten, so the opener comes off here.
+// The punctuation is required, not optional, and that is the whole subtlety.
+// Matching a bare "sure" turned "Sure thing! I'll need a few details" into
+// "Thing! I'll need a few details", which is worse than the tic it was removing.
+// Requiring the comma or the exclamation mark means an opener is only stripped
+// when it is unambiguously an opener, and "Sure I can help" is left alone.
+//
+// Dashes are in the punctuation class so this does not depend on running after
+// stripAiDashes: "Absolutely — eat first." loses the opener either way round.
+const CHATBOT_OPENER =
+  /^\s*(?:sure thing|sure|certainly|of course|absolutely|no problem)\s*[,!.:—–-]+\s*/i;
+
+export function stripChatbotOpener(text: string): string {
+  const stripped = text.replace(CHATBOT_OPENER, '');
+  // A reply that was only "Sure." has nothing left worth showing, so it stands.
+  if (!stripped.trim() || stripped === text) return text;
+  return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+}
+
+// Deliberately anchored at both ends, so it only fires when the whole message is
+// a greeting. "hey can I donate after a tattoo" is a health question wearing a
+// hello and must keep its disclaimer.
+const SMALL_TALK =
+  /^(hi+|hey+|hello|yo|hiya|good (morning|afternoon|evening)|thanks?|thank you|thx|ok(ay)?|cool|nice|bye|goodbye|salam|salaam|مرحبا|السلام عليكم|شكرا|شكرًا|أهلا|اهلا|صباح الخير|مساء الخير)[\s!.,?]*$/i;
+
+export function isSmallTalk(text: string): boolean {
+  return SMALL_TALK.test(text.trim());
+}
+
+// Matches the closing sentence only, in either language. The Arabic question
+// mark is its own character, so leaving it out of the sentence boundary made
+// this swallow the sentence before the disclaimer as well.
+// The word boundaries wrap only the Latin phrases: \b is defined on ASCII word
+// characters, so \bنصيحة طبية\b never matches anything at all.
+const DISCLAIMER_SENTENCE =
+  /\s*[^.!?؟]*(?:\b(?:medical advice|informational only|not a substitute)\b|نصيحة طبية|للعلم فقط)[^.!?؟]*[.!?؟]*\s*$/i;
+
+// The prompt says to leave the not-medical-advice line off greetings, and the
+// model obeys most of the time. It slipped on "hey" often enough that the eval
+// case for it went from passing to failing between runs, and an intermittent
+// answer is worse than a consistently wrong one.
+export function stripDisclaimer(text: string): string {
+  const stripped = text.replace(DISCLAIMER_SENTENCE, '').trim();
+  // If the disclaimer was the entire reply there is nothing to show instead.
+  return stripped || text;
+}
+
+export function hasDisclaimer(text: string): boolean {
+  return DISCLAIMER_SENTENCE.test(text);
+}
+
+const DISCLAIMER = {
+  en: 'This is informational only and not medical advice.',
+  ar: 'هذه معلومات عامة وليست نصيحة طبية.',
+};
+
+// The other half of the same problem. Told to close health answers with the
+// not-medical-advice line the model does it about nine times in ten, and the
+// tenth is the one that matters, on an app that answers questions about who may
+// safely give blood. Whether the line appears is decided by the caller from the
+// turn it just handled, not by the model remembering.
+export function ensureDisclaimer(text: string, locale = 'en'): string {
+  if (hasDisclaimer(text)) return text;
+  const trimmed = text.trim();
+  const line = locale === 'ar' ? DISCLAIMER.ar : DISCLAIMER.en;
+  return trimmed ? `${trimmed} ${line}` : line;
+}
+
 export function compatibilityReference(): string {
   return Object.entries(CAN_RECEIVE_FROM)
     .map(([recipient, donors]) => `a ${recipient} patient can receive from ${donors.join(', ')}`)
@@ -51,10 +135,18 @@ export const DRAFT_REQUEST_TOOL = {
       type: 'object',
       properties: {
         recipientName: { type: 'string', description: 'Name of the patient who needs the blood.' },
+        // Deliberately not an enum, unlike the donor lookup. This tool is built
+        // to be called with gaps so the missing fields come back as a question,
+        // and a model with no blood group to give sends "". Groq validates enums
+        // itself and 400s the whole request over that, so the user got an error
+        // instead of being asked which group. resolveDraftArgs checks the value
+        // against BLOOD_GROUPS anyway, so nothing invalid reaches the card.
         bloodGroup: {
           type: 'string',
-          enum: BLOOD_GROUPS,
-          description: "The patient's blood group. Never assume the user's own group.",
+          description:
+            "The patient's blood group, one of " +
+            BLOOD_GROUPS.join(', ') +
+            ". Never assume the user's own group. Leave it out if you have not been told it.",
         },
         hospitalName: { type: 'string', description: 'Hospital where the donation happens.' },
         governorate: {
@@ -439,14 +531,16 @@ export function resolveDraftArgs(
   return {
     ok: true,
     draft,
-    // Same fix as the donor counts: a finished sentence to repeat beats fields to
-    // transcribe. The card renders the draft itself, so the model only has to
-    // hand the user back to it.
+    // Facts only. This started out carrying its own instructions, along the
+    // lines of "tell them to check it and press Confirm, in one short sentence",
+    // and the model read that as text to repeat: users were shown the
+    // instruction verbatim, stage directions and all. Anything addressed to the
+    // model belongs in a system message, where it cannot be mistaken for
+    // something to say out loud. The card already renders every field, so there
+    // is nothing here for the model to transcribe.
     summary:
-      `Draft ready for ${recipientName}, ${bloodGroup} at ${hospitalName}, ${city} on ` +
-      `${date} at ${time}. It is shown to the user as a card and nothing is saved yet. ` +
-      `Tell them to check it and press Confirm, in one short sentence. Do not repeat the ` +
-      `details back to them and do not claim the request exists.`,
+      `A draft card for ${recipientName} (${bloodGroup}, ${hospitalName}, ${city}, ` +
+      `${date} at ${time}) is now on the user's screen. Nothing has been saved.`,
   };
 }
 

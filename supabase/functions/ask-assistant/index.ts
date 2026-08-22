@@ -5,6 +5,11 @@ import {
   compatibilityReference,
   resolveDonorArgs,
   resolveDraftArgs,
+  ensureDisclaimer,
+  isSmallTalk,
+  stripAiDashes,
+  stripChatbotOpener,
+  stripDisclaimer,
   summarizeDonors,
   toolsFor,
 } from './tools.ts';
@@ -21,7 +26,7 @@ const MODEL = 'openai/gpt-oss-20b';
 // not the origin header.
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-eval-key',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -112,7 +117,20 @@ Deno.serve(async (req) => {
   let quota: { allowed: boolean; used: number; daily_limit: number } | null = null;
   let quotaError: { message: string } | null = null;
 
-  if (user) {
+  // The eval suite signs in as the donor demo account, and one run is 19 of that
+  // account's 50 answers a day. Two runs plus a couple of spot checks locks the
+  // account out, which also locks out the public demo, since they are the same
+  // login. A shared secret lets the suite skip metering without changing what
+  // anybody else is allowed.
+  //
+  // Fails closed: with the secret unset there is no bypass to find, and an empty
+  // header can never match an empty env var.
+  const evalKey = Deno.env.get('EVAL_BYPASS_KEY');
+  const meteringExempt = Boolean(evalKey) && req.headers.get('x-eval-key') === evalKey;
+
+  if (meteringExempt) {
+    quota = null;
+  } else if (user) {
     ({ data: quota, error: quotaError } = await supabase.rpc('bump_assistant_usage').single());
   } else {
     // The anon quota function is service-role only, so it needs its own client.
@@ -173,7 +191,20 @@ Deno.serve(async (req) => {
     `language, but keep every count exactly as given. Be concise and direct. ` +
     `Use this compatibility reference verbatim and never contradict it: ${compatibilityReference()}. ` +
     `When asked who can donate to a group, list every group in that reference entry, including the Rh-negative ones. ` +
-    `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.` +
+    // Left to itself the model answered "hey" with "Sure—how can I help you with
+    // blood donation information today?". Sure what? Nobody opens that way, and
+    // the em dash is the giveaway that a machine wrote it.
+    `Talk like a helpful person, not a chatbot. Greet someone back before anything else when they ` +
+    `greet you, and keep small talk to a sentence. Never open with "Sure", "Certainly" or "Of ` +
+    `course", and never use an em dash or en dash; write two sentences or use a comma instead. ` +
+    // The chat already carries a permanent "Informational only, not medical
+    // advice" line under the input in both apps, so repeating it every turn is
+    // noise that trains people to stop reading it.
+    `Close with a short reminder that this is informational only and not medical advice whenever you ` +
+    `have answered anything about health or blood: eligibility, deferrals, preparation, aftercare, ` +
+    `or which blood groups can give to which. Leave it off greetings, thanks, other small talk, and ` +
+    `anything to do with drafting or posting a request, because no health question was asked. The ` +
+    `app shows that notice under the chat at all times, so repeating it on a hello is noise.` +
     (canCreateRequests
       ? ` Today's date is ${today}. When the user wants to post a request for blood, gather the ` +
         `patient's name and blood group, the hospital, its city and street address, the date and ` +
@@ -255,15 +286,55 @@ Deno.serve(async (req) => {
       // whole request if the model tries to call a tool anyway ("Tool choice is
       // none, but model called a tool"), which surfaced as an intermittent 502,
       // so it gets told in words that the lookup is already done.
+      // The tone and disclaimer rules live in the first system message, and the
+      // model half forgets them by this pass: it opened drafting replies with
+      // "Sure," and closed them with a medical disclaimer nobody had asked for.
+      // Restating the two that kept slipping is cheaper than post-processing the
+      // prose, and it fixes the cause rather than the symptom.
       chat.push({
         role: 'system',
         content:
-          'The tool results above are final. Answer the user in prose now and do not call any tool.',
+          'The tool results above are final. Answer the user in prose now and do not call any ' +
+          'tool. Do not open with "Sure", "Certainly" or "Of course", and do not use an em dash. ' +
+          'If a draft card was prepared, tell the user in one short sentence to look it over and ' +
+          'press Confirm. Do not list the details back to them, the card already shows them, and ' +
+          'do not say the request has been posted, because it has not. ' +
+          'If this turn was about drafting or posting a request rather than a health question, ' +
+          'leave off the not-medical-advice line.',
       });
       completion = await callGroq(groqKey, chat, null);
     }
 
-    const reply: string = completion.choices?.[0]?.message?.content ?? 'No response received.';
+    // The prompt asks for all three of these and the model complies most of the
+    // time. "Most of the time" is not a standard you can ship, so the tics that
+    // survived the asking get removed here instead. The disclaimer is only
+    // dropped when the user said nothing but hello: a health question keeps it,
+    // however casually it was phrased.
+    const raw: string = completion.choices?.[0]?.message?.content ?? 'No response received.';
+    const lang = locale === 'ar' ? 'ar' : 'en';
+    let reply = stripChatbotOpener(stripAiDashes(raw, lang));
+
+    // Whether the not-medical-advice line belongs on this turn is decided here,
+    // from what the turn actually did, rather than left to the model. Asked
+    // nicely it got this right about nine times in ten and flipped both ways
+    // between runs of the same eval case: adding the line to a greeting, then
+    // dropping it from an answer about who can safely donate to an O- patient.
+    // On a health app the tenth time is the one that matters.
+    const lastUserMessage = [...messages].reverse().find((m) => m.role !== 'assistant')?.text ?? '';
+    // Attempted counts, not just succeeded. A call the resolver turned down for
+    // a missing blood group is still a drafting turn, and the reply to it is
+    // "which blood group is it?", which is not health advice either.
+    const draftingTurn = toolsUsed.includes('draft_donation_request');
+    const lookupOnly = toolsUsed.includes('find_compatible_donors') && !draftingTurn;
+
+    if (draftingTurn || isSmallTalk(lastUserMessage)) {
+      // Nothing health-related was answered: a card to confirm, or a hello.
+      reply = stripDisclaimer(reply);
+    } else if (!lookupOnly) {
+      // Everything else this assistant answers is eligibility or compatibility.
+      // A donor count is neither, so it is left however the model wrote it.
+      reply = ensureDisclaimer(reply, lang);
+    }
     return json({ reply, toolsUsed, draft });
   } catch (err) {
     return json({ error: String(err instanceof Error ? err.message : err) }, 502);
