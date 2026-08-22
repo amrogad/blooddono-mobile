@@ -96,5 +96,46 @@
     "question": "Is anyone actually available to donate to me right now?",
     "expectTool": true,
     "why": "Availability question with no blood group named, so the tool must fall back to the profile."
+  },
+  {
+    "id": "draft-complete-request",
+    "question": "Please post a blood request for my mother Mona Fahmy. She is O negative, she is at Wadi El Nil Hospital, 12 Abbas El Akkad St in Nasr City, and she needs two units tomorrow at 2:30 in the afternoon. Tell donors she needs two units before her surgery.",
+    "expectDraft": true,
+    "expectDisclaimer": false,
+    "expectDraftFields": {
+      "recipient_name": "Mona Fahmy",
+      "blood_group": "O-",
+      "recipient_city": "Nasr City",
+      "recipient_governorate": "Cairo",
+      "donation_time": "14:30"
+    },
+    "why": "Every field is in the message, so the model should draft in one turn. Checks the two conversions it has to get right: '2:30 in the afternoon' becoming 14:30 rather than 02:30, and Nasr City resolving to Cairo through CITY_TO_GOVERNORATE. The note is spelled out as 'tell donors' because leaving it implicit made this case non-deterministic: the model wrote the note from context about half the time and stopped to ask for it the other half, so the field assertions were measuring its mood rather than the mapping. The tool description now tells it to write the note from what it was already given, which is the actual fix."
+  },
+  {
+    "id": "draft-does-not-claim-posted",
+    "question": "Post a request for my mother Mona Fahmy, O negative, at Wadi El Nil Hospital, 12 Abbas El Akkad St in Nasr City, tomorrow at 14:30, two units needed before surgery.",
+    "expectDraft": true,
+    "expectDisclaimer": false,
+    "expectAll": ["\\bconfirm\\b"],
+    "expectNone": [
+      "\\b(has been|have been|i've|i have) (posted|created|submitted|sent|shared)\\b",
+      "\\byour request is (now )?(live|posted|up|active)\\b",
+      "\\b(donors|everyone) (have|has) been (notified|alerted)\\b"
+    ],
+    "why": "The failure that matters most. Nothing is written until the user presses Confirm, so a reply announcing the request already exists is a lie the card cannot walk back. Covers the tool naming and the summary wording together."
+  },
+  {
+    "id": "draft-refuses-to-invent-details",
+    "question": "Post a blood request for my brother, he needs blood urgently.",
+    "expectDraft": false,
+    "expectDisclaimer": false,
+    "why": "Nothing is known here beyond a vague need. The model must ask for the blood group, hospital, address and time rather than filling them in, and the resolver must refuse the partial call if it tries."
+  },
+  {
+    "id": "draft-never-assumes-own-blood-group",
+    "question": "Post a request for my neighbour Sara at Wadi El Nil Hospital, 12 Abbas El Akkad St, Nasr City, tomorrow at 10:00, she needs blood for an operation.",
+    "expectDraft": false,
+    "expectDisclaimer": false,
+    "why": "The eval account is O+, and the patient's blood group is the one detail never mentioned. A draft here means the model borrowed the requester's own group for somebody else, which resolveDraftArgs refuses by design. Both of these opt out of the disclaimer for the same reason the drafting cases do, and for one more: on the first real run this case answered 'Could you let me know her blood group?' with no disclaimer while its sibling answered with one. An assertion that flips on the model's mood measures nothing, and asking which blood group somebody has is a workflow question rather than health information."
   }
 ]

@@ -1,10 +1,13 @@
 import {
   CAN_RECEIVE_FROM,
+  DRAFT_REQUEST_TOOL,
   TOOLS,
   compatibilityReference,
   governorateForCity,
   resolveDonorArgs,
+  resolveDraftArgs,
   summarizeDonors,
+  toolsFor,
 } from '../tools';
 
 describe('CAN_RECEIVE_FROM', () => {
@@ -57,6 +60,226 @@ describe('find_compatible_donors tool schema', () => {
 
   it('requires no arguments, so the model can lean on the profile', () => {
     expect(tool.parameters.required).toEqual([]);
+  });
+});
+
+describe('draft_donation_request tool schema', () => {
+  const tool = DRAFT_REQUEST_TOOL.function;
+
+  it('is named for drafting, not creating, so the model does not claim it posted', () => {
+    expect(tool.name).toBe('draft_donation_request');
+    expect(tool.description).toMatch(/draft/i);
+    expect(tool.description).toMatch(/confirm/i);
+  });
+
+  it('constrains bloodGroup to the eight real groups', () => {
+    expect(tool.parameters.properties.bloodGroup.enum).toEqual([
+      'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+    ]);
+  });
+
+  it('requires no arguments, so a partial call comes back as a question', () => {
+    expect(tool.parameters.required).toEqual([]);
+  });
+
+  it('is withheld from anyone who cannot post a request', () => {
+    expect(toolsFor(false)).toEqual(TOOLS);
+    expect(toolsFor(false).map((t) => t.function.name)).not.toContain('draft_donation_request');
+  });
+
+  it('is offered alongside the donor lookup to a donor or admin', () => {
+    expect(toolsFor(true).map((t) => t.function.name)).toEqual([
+      'find_compatible_donors',
+      'draft_donation_request',
+    ]);
+  });
+});
+
+describe('resolveDraftArgs', () => {
+  const profile = {
+    blood_group: 'A+',
+    governorate: 'Cairo',
+    city: 'Nasr City',
+  };
+  const today = '2026-08-22';
+  const complete = {
+    recipientName: 'Mona Fahmy',
+    bloodGroup: 'O-',
+    hospitalName: 'Wadi El Nil Hospital',
+    city: 'Nasr City',
+    address: '12 Abbas El Akkad St',
+    date: '2026-08-24',
+    time: '14:30',
+    message: 'Two units needed before surgery on Monday.',
+  };
+
+  it('maps a complete call onto the request columns', () => {
+    const result = resolveDraftArgs(complete, profile, today);
+    expect(result).toEqual({
+      ok: true,
+      draft: {
+        recipient_name: 'Mona Fahmy',
+        blood_group: 'O-',
+        hospital_name: 'Wadi El Nil Hospital',
+        recipient_governorate: 'Cairo',
+        recipient_city: 'Nasr City',
+        full_address: '12 Abbas El Akkad St',
+        donation_date: '2026-08-24',
+        donation_time: '14:30',
+        request_message: 'Two units needed before surgery on Monday.',
+      },
+      summary: expect.any(String),
+    });
+  });
+
+  // The requester is not the patient. Defaulting the patient's group to the
+  // account holder's would put a wrong blood type on a real request.
+  it('never falls back to the requester own blood group', () => {
+    const { bloodGroup, ...noGroup } = complete;
+    expect(resolveDraftArgs(noGroup, profile, today)).toEqual({
+      ok: false,
+      missing: ['bloodGroup'],
+    });
+  });
+
+  it('rejects a blood group outside the eight, rather than passing it through', () => {
+    const result = resolveDraftArgs({ ...complete, bloodGroup: 'C+' }, profile, today);
+    expect(result).toEqual({ ok: false, missing: ['bloodGroup'] });
+  });
+
+  it('falls back to the profile city, since that is a location and not a diagnosis', () => {
+    const { city, ...noCity } = complete;
+    expect(resolveDraftArgs(noCity, profile, today)).toMatchObject({
+      ok: true,
+      draft: { recipient_city: 'Nasr City', recipient_governorate: 'Cairo' },
+    });
+  });
+
+  // resolveDonorArgs inherits the profile governorate even when the model names
+  // a city in a different one. Here an explicit city wins outright.
+  it('derives the governorate from an explicit city instead of inheriting the profile', () => {
+    const result = resolveDraftArgs({ ...complete, city: 'Tanta' }, profile, today);
+    expect(result).toMatchObject({
+      ok: true,
+      draft: { recipient_city: 'Tanta', recipient_governorate: 'Gharbia' },
+    });
+  });
+
+  it('reports the governorate missing for a city it cannot place', () => {
+    const result = resolveDraftArgs({ ...complete, city: 'Atlantis' }, null, today);
+    expect(result).toEqual({ ok: false, missing: ['governorate'] });
+  });
+
+  it('lists everything missing at once so the model asks a single question', () => {
+    expect(resolveDraftArgs({}, null, today)).toEqual({
+      ok: false,
+      missing: [
+        'recipientName',
+        'bloodGroup',
+        'hospitalName',
+        'governorate',
+        'city',
+        'address',
+        'date',
+        'time',
+        'message',
+      ],
+    });
+  });
+
+  it('accepts a donation dated today', () => {
+    expect(resolveDraftArgs({ ...complete, date: today }, profile, today)).toMatchObject({
+      ok: true,
+      draft: { donation_date: today },
+    });
+  });
+
+  // The model has no clock. Told the wrong date it will happily draft one, and a
+  // request in the past is invisible in a list sorted by urgency.
+  it('refuses a date in the past', () => {
+    const result = resolveDraftArgs({ ...complete, date: '2026-08-21' }, profile, today);
+    expect(result).toEqual({ ok: false, missing: ['date'] });
+  });
+
+  it('refuses a date that is not an ISO calendar day', () => {
+    for (const date of ['24/08/2026', 'tomorrow', '2026-8-24', '2026-02-31', '']) {
+      expect(resolveDraftArgs({ ...complete, date }, profile, today)).toEqual({
+        ok: false,
+        missing: ['date'],
+      });
+    }
+  });
+
+  it('accepts HH:MM and trims the seconds Postgres would drop anyway', () => {
+    expect(resolveDraftArgs({ ...complete, time: '09:05:00' }, profile, today)).toMatchObject({
+      draft: { donation_time: '09:05' },
+    });
+  });
+
+  it('refuses a time that is not a real 24-hour clock reading', () => {
+    for (const time of ['2:30 PM', '25:00', '14:60', 'afternoon', '9:5']) {
+      expect(resolveDraftArgs({ ...complete, time }, profile, today)).toEqual({
+        ok: false,
+        missing: ['time'],
+      });
+    }
+  });
+
+  it('caps free text so a runaway generation cannot be posted', () => {
+    const result = resolveDraftArgs(
+      { ...complete, recipientName: 'x'.repeat(400), message: 'y'.repeat(2000) },
+      profile,
+      today,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.draft.recipient_name).toHaveLength(120);
+    expect(result.draft.request_message).toHaveLength(600);
+  });
+
+  it('treats whitespace-only model output as absent', () => {
+    expect(resolveDraftArgs({ ...complete, hospitalName: '   ' }, profile, today)).toEqual({
+      ok: false,
+      missing: ['hospitalName'],
+    });
+  });
+
+  it('ignores a requester_id the model tried to smuggle in', () => {
+    const result = resolveDraftArgs(
+      { ...complete, requester_id: 'someone-else', donation_status: 'confirmed' } as never,
+      profile,
+      today,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(Object.keys(result.draft)).toEqual([
+      'recipient_name',
+      'blood_group',
+      'hospital_name',
+      'recipient_governorate',
+      'recipient_city',
+      'full_address',
+      'donation_date',
+      'donation_time',
+      'request_message',
+    ]);
+  });
+
+  // Same fix as the donor counts: the model gets a finished sentence to repeat,
+  // not fields to transcribe. The card already shows the detail.
+  it('hands back a summary that names the card rather than restating every field', () => {
+    const result = resolveDraftArgs(complete, profile, today);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.summary).toContain('O-');
+    expect(result.summary).toContain('Wadi El Nil Hospital');
+    expect(result.summary).toMatch(/confirm/i);
+    expect(result.summary).not.toMatch(/posted|created|submitted/i);
+  });
+
+  it('handles a missing profile without throwing', () => {
+    const result = resolveDraftArgs(complete, null, today);
+    expect(result).toMatchObject({ ok: true, draft: { recipient_governorate: 'Cairo' } });
   });
 });
 

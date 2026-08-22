@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useLocale } from '@/providers/LocaleProvider';
 import { askAssistant, Message } from '@/services/assistantService';
+import { RequestDraftCard } from '@/components/RequestDraftCard';
 import { useThemedStyles } from '@/providers/ThemeProvider';
 import { spacing, radius, fonts, type, shadow } from '@/constants/theme';
 import type { ThemeColors } from '@/constants/theme';
@@ -44,8 +45,8 @@ export default function Assistant() {
       setLoading(true);
 
       try {
-        const reply = await askAssistant(next, locale);
-        setMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
+        const { reply, draft } = await askAssistant(next, locale);
+        setMessages((prev) => [...prev, { role: 'assistant', text: reply, draft }]);
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', text: errText }]);
       } finally {
@@ -55,13 +56,30 @@ export default function Assistant() {
     [messages, loading, t, locale],
   );
 
-  const renderMessage = ({ item }: { item: Message }) => {
+  // Posting and discarding are recorded on the message, not inside the card, so
+  // a recycled row cannot come back offering to post the same request twice.
+  const updateMessage = useCallback((index: number, patch: Partial<Message>) => {
+    setMessages((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+  }, []);
+
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const isUser = item.role === 'user';
     return (
-      <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-        <Text style={[styles.bubbleText, isUser ? styles.userText : styles.aiText]}>
-          {item.text}
-        </Text>
+      <View style={styles.row}>
+        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
+          <Text style={[styles.bubbleText, isUser ? styles.userText : styles.aiText]}>
+            {item.text}
+          </Text>
+        </View>
+        {item.draft && !item.discarded && (
+          <RequestDraftCard
+            draft={item.draft}
+            postedId={item.postedId}
+            onPosted={(id) => updateMessage(index, { postedId: id })}
+            onDiscard={() => updateMessage(index, { discarded: true })}
+          />
+        )}
+        {item.discarded && <Text style={styles.discarded}>{t('draft.dismissed')}</Text>}
       </View>
     );
   };
@@ -177,6 +195,13 @@ const makeStyles = (colors: ThemeColors) =>
   },
   chipPressed: { opacity: 0.7 },
   chipText: { ...type.body, color: colors.text },
+  row: { gap: spacing.sm },
+  discarded: {
+    ...type.small,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+  },
   bubble: {
     maxWidth: '80%',
     padding: spacing.md,

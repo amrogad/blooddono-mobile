@@ -65,6 +65,12 @@ export type EditableRequest = {
   request_message: string;
 };
 
+// What the assistant's draft_donation_request tool hands back. Identical to an
+// editable request by design: everything the model can propose is something the
+// user could have typed into the form, and nothing else — no requester_id, no
+// status. Keeping it an alias means the two cannot drift apart.
+export type RequestDraft = EditableRequest;
+
 export const getPendingRequests = async (): Promise<PendingRequest[]> => {
   const { data, error } = await supabase.rpc('get_pending_requests');
   if (error) throw new Error(error.message);

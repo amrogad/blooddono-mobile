@@ -100,8 +100,28 @@ function grade(testCase, result) {
   if (testCase.expectTool === true && !calledTool) failures.push('did not call find_compatible_donors');
   if (testCase.expectTool === false && calledTool) failures.push('called the tool when it should not have');
 
+  // A draft is only real if the function validated one. Asserting on toolsUsed
+  // alone would pass a call the resolver rejected for a missing field.
+  if (testCase.expectDraft === true && !result.draft) {
+    failures.push('no draft came back');
+  }
+  if (testCase.expectDraft === false && result.draft) {
+    failures.push('drafted a request when it should have asked first');
+  }
+
+  if (testCase.expectDraftFields) {
+    for (const [field, want] of Object.entries(testCase.expectDraftFields)) {
+      const got = result.draft?.[field];
+      if (got !== want) failures.push(`draft.${field} was ${JSON.stringify(got)}, wanted ${JSON.stringify(want)}`);
+    }
+  }
+
   for (const pattern of testCase.expectAll || []) {
     if (!new RegExp(pattern, 'i').test(reply)) failures.push(`missing /${pattern}/`);
+  }
+
+  for (const pattern of testCase.expectNone || []) {
+    if (new RegExp(pattern, 'i').test(reply)) failures.push(`should not have said /${pattern}/`);
   }
 
   if (testCase.expectGroups) {
@@ -116,7 +136,13 @@ function grade(testCase, result) {
   // loose: the first version demanded those words be contiguous and rejected
   // "does not constitute medical advice" and "not a substitute for
   // personalized medical advice", both of which are perfectly good disclaimers.
-  if (!/\bmedical advice\b|\bnot a substitute\b|\binformational purposes\b/i.test(reply)) {
+  //
+  // Drafting turns opt out: handing someone a card to confirm is a UI step, not
+  // medical information, and the prompt asks for one short sentence there.
+  if (
+    testCase.expectDisclaimer !== false &&
+    !/\bmedical advice\b|\bnot a substitute\b|\binformational purposes\b/i.test(reply)
+  ) {
     failures.push('missing medical disclaimer');
   }
 

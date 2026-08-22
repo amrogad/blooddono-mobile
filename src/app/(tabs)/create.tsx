@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, ActivityIndicator, StyleSheet, I18nManager } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { Feather } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,15 @@ const fmtDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const fmtTime = (d: Date) => d.toTimeString().slice(0, 5);
 
+// Parses back the date and time the assistant handed over. Both are already
+// validated by the edge function, so a bad value here means the screen was
+// opened some other way — fall back to now rather than showing Invalid Date.
+const parseHandover = (day: unknown, clock: unknown, fallback: Date) => {
+  if (typeof day !== 'string' || typeof clock !== 'string') return fallback;
+  const parsed = new Date(`${day}T${clock}:00`);
+  return Number.isNaN(parsed.getTime()) ? fallback : parsed;
+};
+
 export default function Create() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -34,20 +43,27 @@ export default function Create() {
   const { t } = useTranslation();
   const { session } = useAuth();
   const { data: profile } = useProfile(session?.user.id);
+  // Set when the assistant hands a draft over for a field its card cannot edit.
+  const draft = useLocalSearchParams();
+  const fromDraft = typeof draft.recipient_name === 'string';
 
-  const [step, setStep] = useState(1);
-  const [whoFor, setWhoFor] = useState<string | null>(null);
-  const [recipientName, setRecipientName] = useState('');
-  const [governorate, setGovernorate] = useState('');
-  const [city, setCity] = useState('');
-  const [hospitalName, setHospitalName] = useState('');
-  const [fullAddress, setFullAddress] = useState('');
-  const [bloodGroup, setBloodGroup] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [step, setStep] = useState(fromDraft ? 2 : 1);
+  const [whoFor, setWhoFor] = useState<string | null>(fromDraft ? 'other' : null);
+  const [recipientName, setRecipientName] = useState(String(draft.recipient_name ?? ''));
+  const [governorate, setGovernorate] = useState(String(draft.recipient_governorate ?? ''));
+  const [city, setCity] = useState(String(draft.recipient_city ?? ''));
+  const [hospitalName, setHospitalName] = useState(String(draft.hospital_name ?? ''));
+  const [fullAddress, setFullAddress] = useState(String(draft.full_address ?? ''));
+  const [bloodGroup, setBloodGroup] = useState(String(draft.blood_group ?? ''));
+  const [date, setDate] = useState(() =>
+    parseHandover(draft.donation_date, draft.donation_time, new Date()),
+  );
+  const [time, setTime] = useState(() =>
+    parseHandover(draft.donation_date, draft.donation_time, new Date()),
+  );
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(String(draft.request_message ?? ''));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 

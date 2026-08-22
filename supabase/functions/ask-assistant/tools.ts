@@ -36,6 +36,57 @@ export type Profile = {
 
 export type DonorRow = { blood_group: string };
 
+export const DRAFT_REQUEST_TOOL = {
+  type: 'function',
+  function: {
+    name: 'draft_donation_request',
+    description:
+      'Prepares a draft blood donation request and shows it to the user as a card they must ' +
+      'confirm before anything is saved. Calling this does not post the request and does not ' +
+      'notify anyone. Call it once you have gathered the patient details from the user. Any ' +
+      'detail you leave out comes back as a list of what is still missing, so call it as soon ' +
+      'as you have most of the answers rather than interrogating the user first. Never guess a ' +
+      'blood group, hospital, address, date or time: ask for them.',
+    parameters: {
+      type: 'object',
+      properties: {
+        recipientName: { type: 'string', description: 'Name of the patient who needs the blood.' },
+        bloodGroup: {
+          type: 'string',
+          enum: BLOOD_GROUPS,
+          description: "The patient's blood group. Never assume the user's own group.",
+        },
+        hospitalName: { type: 'string', description: 'Hospital where the donation happens.' },
+        governorate: {
+          type: 'string',
+          description: 'Governorate. Omit to derive it from the city.',
+        },
+        city: { type: 'string', description: "City of the hospital. Defaults to the user's city." },
+        address: { type: 'string', description: 'Street address of the hospital.' },
+        date: {
+          type: 'string',
+          description:
+            'Date needed as YYYY-MM-DD, today or later. Resolve wording like "tomorrow" ' +
+            "against today's date given in your instructions.",
+        },
+        time: { type: 'string', description: 'Time needed as HH:MM on a 24-hour clock.' },
+        // Left to the model to write and it would ask for a note the user had
+        // already given, in different words, roughly half the time. Summarising
+        // what they said is not inventing anything; asking again is just a turn
+        // wasted on somebody in a hurry.
+        message: {
+          type: 'string',
+          description:
+            'Short note for donors saying why the blood is needed. Write it yourself from ' +
+            'what the user already told you, in their words. Only ask for one if they gave ' +
+            'no reason at all.',
+        },
+      },
+      required: [],
+    },
+  },
+};
+
 export const TOOLS = [
   {
     type: 'function',
@@ -69,6 +120,13 @@ export const TOOLS = [
     },
   },
 ];
+
+// Drafting is only offered to someone who could post the request through the
+// form anyway. A signed-out visitor or a volunteer never sees the tool exist,
+// so the model cannot offer them something the database would refuse.
+export function toolsFor(canCreateRequests: boolean) {
+  return canCreateRequests ? [...TOOLS, DRAFT_REQUEST_TOOL] : TOOLS;
+}
 
 // Generated from the same governorates/cities data both apps ship. The donor
 // search needs all three of blood group, governorate and city, but a person
@@ -252,6 +310,136 @@ export function resolveDonorArgs(
   if (missing.length) return { ok: false, missing };
 
   return { ok: true, bloodGroup, governorate, city };
+}
+
+// Shaped as the request columns so the client can spread it straight into an
+// insert. requester_id is deliberately absent: it defaults to auth.uid() and the
+// insert policy checks it, so the draft has no say in who owns the row.
+export type RequestDraft = {
+  recipient_name: string;
+  blood_group: string;
+  hospital_name: string;
+  recipient_governorate: string;
+  recipient_city: string;
+  full_address: string;
+  donation_date: string;
+  donation_time: string;
+  request_message: string;
+};
+
+export type ResolvedDraft =
+  | { ok: true; draft: RequestDraft; summary: string }
+  | { ok: false; missing: string[] };
+
+const CAPS = {
+  recipientName: 120,
+  hospitalName: 160,
+  address: 240,
+  message: 600,
+};
+
+const text = (value: unknown, cap: number) =>
+  typeof value === 'string' ? value.trim().slice(0, cap) : '';
+
+// A calendar day, not a date the model made up in another format. Round-tripping
+// through Date is what rejects 2026-02-31, which the regex alone would accept.
+function isoDate(value: unknown): string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value.trim())) return '';
+  const day = value.trim();
+  const parsed = new Date(`${day}T00:00:00Z`);
+  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== day ? '' : day;
+}
+
+// Postgres stores a `time` column, so seconds are accepted and dropped rather
+// than rejected. "2:30 PM" is refused outright: guessing whether the model meant
+// 02:30 or 14:30 on a hospital appointment is not a guess worth making.
+function clockTime(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value.trim())
+    ? value.trim().slice(0, 5)
+    : '';
+}
+
+type DraftArgKey =
+  | 'recipientName'
+  | 'bloodGroup'
+  | 'hospitalName'
+  | 'governorate'
+  | 'city'
+  | 'address'
+  | 'date'
+  | 'time'
+  | 'message';
+
+// `today` is passed in rather than read from the clock so the rule stays
+// testable and so the caller decides the timezone. Egypt, not UTC: for two hours
+// every night those disagree about what "tomorrow" means.
+export function resolveDraftArgs(
+  args: Partial<Record<DraftArgKey, unknown>>,
+  profile: Profile | null,
+  today: string,
+): ResolvedDraft {
+  const recipientName = text(args.recipientName, CAPS.recipientName);
+  const hospitalName = text(args.hospitalName, CAPS.hospitalName);
+  const address = text(args.address, CAPS.address);
+  const message = text(args.message, CAPS.message);
+
+  // No fallback to the profile. The requester is not the patient, and defaulting
+  // to the account holder's group would put a wrong blood type on a real request.
+  const claimedGroup = text(args.bloodGroup, 8).toUpperCase();
+  const bloodGroup = BLOOD_GROUPS.includes(claimedGroup) ? claimedGroup : '';
+
+  const namedCity = text(args.city, 80);
+  const city = namedCity || text(profile?.city, 80);
+  // An explicit city wins over the profile governorate. Inheriting it instead
+  // would file a Tanta hospital under Cairo for anyone whose profile says Cairo.
+  const governorate =
+    text(args.governorate, 80) ||
+    (namedCity ? governorateForCity(namedCity) : '') ||
+    text(profile?.governorate, 80) ||
+    (city ? governorateForCity(city) : '');
+
+  const date = isoDate(args.date);
+  const time = clockTime(args.time);
+
+  const missing: string[] = [];
+  if (!recipientName) missing.push('recipientName');
+  if (!bloodGroup) missing.push('bloodGroup');
+  if (!hospitalName) missing.push('hospitalName');
+  if (!governorate) missing.push('governorate');
+  if (!city) missing.push('city');
+  if (!address) missing.push('address');
+  // A date already past is as useless as no date: the request would land in the
+  // list already expired, so it goes back as something to ask about.
+  if (!date || date < today) missing.push('date');
+  if (!time) missing.push('time');
+  if (!message) missing.push('message');
+  if (missing.length) return { ok: false, missing };
+
+  const draft: RequestDraft = {
+    recipient_name: recipientName,
+    blood_group: bloodGroup,
+    hospital_name: hospitalName,
+    recipient_governorate: governorate,
+    recipient_city: city,
+    full_address: address,
+    donation_date: date,
+    donation_time: time,
+    request_message: message,
+  };
+
+  return {
+    ok: true,
+    draft,
+    // Same fix as the donor counts: a finished sentence to repeat beats fields to
+    // transcribe. The card renders the draft itself, so the model only has to
+    // hand the user back to it.
+    summary:
+      `Draft ready for ${recipientName}, ${bloodGroup} at ${hospitalName}, ${city} on ` +
+      `${date} at ${time}. It is shown to the user as a card and nothing is saved yet. ` +
+      `Tell them to check it and press Confirm, in one short sentence. Do not repeat the ` +
+      `details back to them and do not claim the request exists.`,
+  };
 }
 
 // Aggregates before the result ever reaches Groq. search_donors returns

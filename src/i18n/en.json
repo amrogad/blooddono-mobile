@@ -148,6 +148,19 @@
       "What should I eat before donating?"
     ]
   },
+  "draft": {
+    "reviewLabel": "Check before posting",
+    "postedLabel": "Posted",
+    "neededBy": "Needed by",
+    "hospital": "Hospital",
+    "confirm": "Confirm and post",
+    "posted": "Your request is live.",
+    "view": "View",
+    "edit": "Open in the full form",
+    "discard": "Discard this draft",
+    "dismissed": "Draft discarded.",
+    "failed": "Could not post that. Try again, or open it in the full form."
+  },
   "myRequests": {
     "updateFailed": "Update failed",
     "deleteFailed": "Delete failed",

@@ -1,6 +1,13 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-import { TOOLS, compatibilityReference, resolveDonorArgs, summarizeDonors } from './tools.ts';
+import {
+  type RequestDraft,
+  compatibilityReference,
+  resolveDonorArgs,
+  resolveDraftArgs,
+  summarizeDonors,
+  toolsFor,
+} from './tools.ts';
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 // Groq retired every llama model, which silently broke this function in
@@ -40,14 +47,26 @@ async function clientKey(req: Request) {
     .join('');
 }
 
-async function callGroq(key: string, messages: ChatMessage[], withTools: boolean) {
+// Egypt, not UTC. The model has no clock, so it is told what today is and asked
+// to resolve "tomorrow" itself; between midnight and 02:00 Cairo time UTC still
+// says yesterday, and a request drafted for "tomorrow" would come back refused
+// as a date in the past.
+function todayInEgypt() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo' }).format(new Date());
+}
+
+async function callGroq(
+  key: string,
+  messages: ChatMessage[],
+  tools: unknown[] | null,
+) {
   const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: MODEL,
       messages,
-      ...(withTools ? { tools: TOOLS, tool_choice: 'auto' } : {}),
+      ...(tools ? { tools, tool_choice: 'auto' } : {}),
     }),
   });
   if (!res.ok) throw new Error(await res.text());
@@ -125,10 +144,17 @@ Deno.serve(async (req) => {
   const { data: profile } = user
     ? await supabase
         .from('profiles')
-        .select('blood_group, governorate, city')
+        .select('blood_group, governorate, city, role')
         .eq('id', user.id)
         .single()
     : { data: null };
+
+  // Mirrors the canCreate check both apps already apply to the New Request
+  // button. Read from the session rather than the request body, and only ever
+  // narrower than the insert policy: a volunteer is not offered the tool, and
+  // would be refused by RLS even if they were.
+  const canCreateRequests = profile?.role === 'donor' || profile?.role === 'admin';
+  const today = todayInEgypt();
 
   const whoTheyAre = user
     ? `The signed-in user's blood group is ${profile?.blood_group || 'unknown'} and they are in ` +
@@ -148,6 +174,13 @@ Deno.serve(async (req) => {
     `Use this compatibility reference verbatim and never contradict it: ${compatibilityReference()}. ` +
     `When asked who can donate to a group, list every group in that reference entry, including the Rh-negative ones. ` +
     `Always end each response with a one-sentence disclaimer that this is informational only and not medical advice.` +
+    (canCreateRequests
+      ? ` Today's date is ${today}. When the user wants to post a request for blood, gather the ` +
+        `patient's name and blood group, the hospital, its city and street address, the date and ` +
+        `time it is needed and a short note, then call draft_donation_request. That tool only ` +
+        `prepares a card for them to confirm; it does not post anything, so never tell the user ` +
+        `their request has been created, sent or shared.`
+      : ``) +
     (locale === 'ar' ? ` Respond entirely in Modern Standard Arabic.` : ``);
 
   const chat: ChatMessage[] = [
@@ -159,9 +192,10 @@ Deno.serve(async (req) => {
   ];
 
   const toolsUsed: string[] = [];
+  let draft: RequestDraft | null = null;
 
   try {
-    let completion = await callGroq(groqKey, chat, true);
+    let completion = await callGroq(groqKey, chat, toolsFor(canCreateRequests));
     const first = completion.choices?.[0]?.message;
     const toolCalls = first?.tool_calls ?? [];
 
@@ -188,6 +222,23 @@ Deno.serve(async (req) => {
             });
             result = error ? { error: error.message } : summarizeDonors(data ?? [], resolved);
           }
+        } else if (call.function.name === 'draft_donation_request' && canCreateRequests) {
+          const parsed = JSON.parse(call.function.arguments || '{}');
+          const resolved = resolveDraftArgs(parsed, profile ?? null, today);
+
+          if (!resolved.ok) {
+            result = {
+              error:
+                `Nothing was drafted. Still needed: ${resolved.missing.join(', ')}. ` +
+                `Ask the user for those, and only those.`,
+            };
+          } else {
+            // The response carries the validated draft, never the model's raw
+            // arguments. Whatever it says next, the card shows a blood group
+            // from the enum and a date that has not already passed.
+            draft = resolved.draft;
+            result = { summary: resolved.summary };
+          }
         } else {
           result = { error: `Unknown tool ${call.function.name}` };
         }
@@ -209,11 +260,11 @@ Deno.serve(async (req) => {
         content:
           'The tool results above are final. Answer the user in prose now and do not call any tool.',
       });
-      completion = await callGroq(groqKey, chat, false);
+      completion = await callGroq(groqKey, chat, null);
     }
 
     const reply: string = completion.choices?.[0]?.message?.content ?? 'No response received.';
-    return json({ reply, toolsUsed });
+    return json({ reply, toolsUsed, draft });
   } catch (err) {
     return json({ error: String(err instanceof Error ? err.message : err) }, 502);
   }
