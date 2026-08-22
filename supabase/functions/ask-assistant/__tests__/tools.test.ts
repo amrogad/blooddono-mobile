@@ -9,7 +9,6 @@ import {
   resolveDonorArgs,
   resolveDraftArgs,
   stripAiDashes,
-  stripChatbotOpener,
   stripDisclaimer,
   summarizeDonors,
   toolsFor,
@@ -141,57 +140,6 @@ describe('ensureDisclaimer', () => {
   it('round-trips with stripDisclaimer', () => {
     const answer = 'You should wait four weeks.';
     expect(stripDisclaimer(ensureDisclaimer(answer))).toBe(answer);
-  });
-});
-
-describe('stripChatbotOpener', () => {
-  it('drops the opener and recapitalises what is left', () => {
-    expect(stripChatbotOpener("Sure, I'll draft that once I know his blood group.")).toBe(
-      "I'll draft that once I know his blood group.",
-    );
-    expect(stripChatbotOpener('Of course! what would you like to know?')).toBe(
-      'What would you like to know?',
-    );
-  });
-
-  it('catches the other openers the model reaches for', () => {
-    expect(stripChatbotOpener('Certainly. You can donate.')).toBe('You can donate.');
-    expect(stripChatbotOpener('Absolutely — eat first.')).toBe('Eat first.');
-    expect(stripChatbotOpener('No problem! You can donate.')).toBe('You can donate.');
-  });
-
-  // Regression, and the reason the punctuation is required. Matching a bare
-  // "sure" left the second word behind and shipped "Thing! I'll need a few
-  // details first" to a real user.
-  it('takes the whole of "Sure thing!" rather than leaving the noun behind', () => {
-    expect(stripChatbotOpener("Sure thing! I'll need a few details first.")).toBe(
-      "I'll need a few details first.",
-    );
-  });
-
-  // "Surely" and "Certainly" mid-sentence are ordinary words, not openers.
-  it('leaves words that merely start the same way alone', () => {
-    expect(stripChatbotOpener('Surely you have eaten today?')).toBe(
-      'Surely you have eaten today?',
-    );
-    expect(stripChatbotOpener('You can certainly donate next month.')).toBe(
-      'You can certainly donate next month.',
-    );
-  });
-
-  // Without punctuation there is no way to tell an opener from the first word of
-  // a sentence, so it is left alone. Under-stripping is the safe direction.
-  it('leaves an opener alone when no punctuation marks it as one', () => {
-    expect(stripChatbotOpener('Sure I can help with that.')).toBe('Sure I can help with that.');
-  });
-
-  it('leaves a reply that is only the opener, since nothing would be left', () => {
-    expect(stripChatbotOpener('Sure.')).toBe('Sure.');
-  });
-
-  it('leaves an ordinary reply untouched', () => {
-    const clean = 'Hello! How can I help you with blood donation today?';
-    expect(stripChatbotOpener(clean)).toBe(clean);
   });
 });
 

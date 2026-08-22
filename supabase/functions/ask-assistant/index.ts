@@ -8,7 +8,6 @@ import {
   ensureDisclaimer,
   isSmallTalk,
   stripAiDashes,
-  stripChatbotOpener,
   stripDisclaimer,
   summarizeDonors,
   toolsFor,
@@ -312,7 +311,7 @@ Deno.serve(async (req) => {
     // however casually it was phrased.
     const raw: string = completion.choices?.[0]?.message?.content ?? 'No response received.';
     const lang = locale === 'ar' ? 'ar' : 'en';
-    let reply = stripChatbotOpener(stripAiDashes(raw, lang));
+    let reply = stripAiDashes(raw, lang);
 
     // Whether the not-medical-advice line belongs on this turn is decided here,
     // from what the turn actually did, rather than left to the model. Asked

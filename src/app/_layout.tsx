@@ -25,6 +25,7 @@ import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { ThemeProvider, useTheme } from '@/providers/ThemeProvider';
 import { LocaleProvider } from '@/providers/LocaleProvider';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { fonts } from '@/constants/theme';
 
 const queryClient = new QueryClient();
@@ -109,15 +110,20 @@ export default function RootLayout() {
     );
   }
 
+  // Outside every provider on purpose. If the thing that threw was a provider,
+  // a boundary nested inside it gets unmounted along with everything else and
+  // never renders.
   return (
-    <ThemeProvider>
-      <LocaleProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
-        </QueryClientProvider>
-      </LocaleProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <LocaleProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+          </QueryClientProvider>
+        </LocaleProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

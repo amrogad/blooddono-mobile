@@ -35,28 +35,6 @@ export function stripAiDashes(text: string, locale = 'en'): string {
     .replace(/\s*[—–]\s*/g, comma);
 }
 
-// "Sure, I'll draft that once I know his blood group." Sure what? It agrees with
-// nothing; it is throat-clearing the model does because it was trained to sound
-// eager. The prompt asks it not to, twice, and it still does on about one reply
-// in ten, so the opener comes off here.
-// The punctuation is required, not optional, and that is the whole subtlety.
-// Matching a bare "sure" turned "Sure thing! I'll need a few details" into
-// "Thing! I'll need a few details", which is worse than the tic it was removing.
-// Requiring the comma or the exclamation mark means an opener is only stripped
-// when it is unambiguously an opener, and "Sure I can help" is left alone.
-//
-// Dashes are in the punctuation class so this does not depend on running after
-// stripAiDashes: "Absolutely — eat first." loses the opener either way round.
-const CHATBOT_OPENER =
-  /^\s*(?:sure thing|sure|certainly|of course|absolutely|no problem)\s*[,!.:—–-]+\s*/i;
-
-export function stripChatbotOpener(text: string): string {
-  const stripped = text.replace(CHATBOT_OPENER, '');
-  // A reply that was only "Sure." has nothing left worth showing, so it stands.
-  if (!stripped.trim() || stripped === text) return text;
-  return stripped.charAt(0).toUpperCase() + stripped.slice(1);
-}
-
 // Deliberately anchored at both ends, so it only fires when the whole message is
 // a greeting. "hey can I donate after a tattoo" is a health question wearing a
 // hello and must keep its disclaimer.
