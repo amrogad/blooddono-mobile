@@ -30,8 +30,9 @@ jest.mock('@/services/donationService', () => ({
   createDonationRequest: jest.fn(),
 }));
 
+const mockUseProfile = jest.fn(() => ({ data: { display_name: 'Demo Donor' } }));
 jest.mock('@/hooks/useProfile', () => ({
-  useProfile: () => ({ data: { display_name: 'Demo Donor' } }),
+  useProfile: (...args: unknown[]) => mockUseProfile(...(args as [])),
 }));
 
 // Has to carry the mock prefix: jest.mock factories are hoisted above the
@@ -74,8 +75,16 @@ const renderCard = (postedId?: string) =>
     </ThemeProvider>,
   );
 
+const PROFILE = { data: { display_name: 'Demo Donor' } };
+
 describe('RequestDraftCard', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset rather than mockReturnValueOnce: AuthProvider resolves its session
+    // asynchronously, so the card renders more than once and a one-shot mock is
+    // spent before the press happens.
+    mockUseProfile.mockReturnValue(PROFILE);
+  });
 
   test('shows the drafted request so it can be checked before posting', async () => {
     renderCard();
@@ -144,6 +153,20 @@ describe('RequestDraftCard', () => {
     );
     expect(onPosted).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Confirm and post')).toBeTruthy();
+  });
+
+  // The web card had the sharper version of this: it read uid off a null user
+  // and reported a failed post that never left the browser. Here the session
+  // guard stopped the crash, but display_name fell back to an empty string, so a
+  // request could go up with no requester name against it.
+  test('waits for the profile rather than posting a blank requester name', async () => {
+    mockUseProfile.mockReturnValue({ data: undefined } as never);
+    renderCard();
+
+    fireEvent.press(await screen.findByLabelText('Confirm and post'));
+
+    expect(createRequest).not.toHaveBeenCalled();
+    expect(onPosted).not.toHaveBeenCalled();
   });
 
   test('discards the draft without posting it', async () => {

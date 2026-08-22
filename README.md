@@ -67,7 +67,7 @@ Groq (tool calling back into the donor table) · Expo push notifications
 - Requests sorted by haversine distance from the donor's live position, falling back to governorate and city when location permission is denied
 - Two database-backed AI tool calls: for availability questions the model runs a real query against the donor table rather than guessing a number, and for posting it returns a validated draft that only a human confirmation turns into a row
 - Hospital and donor rendered on a Leaflet map inside a WebView, so there's no maps API key and no billing account
-- 151 automated tests covering service wrappers, auth bootstrap, the assistant's tool layer, the draft confirmation card, pure utilities like haversine distance and blood compatibility, and a parity check that every English string has an Arabic translation
+- 152 automated tests covering service wrappers, auth bootstrap, the assistant's tool layer, the draft confirmation card, pure utilities like haversine distance and blood compatibility, and a parity check that every English string has an Arabic translation
 - Lint, TypeScript and the full Jest suite on every push through GitHub Actions, with no repository secrets needed, so a fork's CI goes green without any setup
 - Arabic and RTL from one component tree, wired into React Native's `I18nManager` so mirroring is a direction change rather than a second set of styles
 

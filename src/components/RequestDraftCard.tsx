@@ -41,16 +41,22 @@ export function RequestDraftCard({ draft, postedId, onPosted, onDiscard }: Props
   const urgency = getUrgency(draft.donation_date, draft.donation_time);
   const critical = urgency.level === 'critical' || urgency.level === 'pastdue';
 
+  // The profile query can still be in flight just after sign-in. Posting then
+  // would put an empty requester_name on the row, which is the name donors see,
+  // so the button waits rather than falling back to a blank.
+  const requesterName = profile?.display_name ?? '';
+  const ready = Boolean(session && requesterName);
+
   const confirm = async () => {
-    if (saving || postedId || !session) return;
+    if (saving || postedId || !ready) return;
     setSaving(true);
     setFailed(false);
     try {
       const row = await createDonationRequest({
         ...draft,
-        requester_id: session.user.id,
-        requester_name: profile?.display_name ?? '',
-        requester_email: session.user.email ?? '',
+        requester_id: session!.user.id,
+        requester_name: requesterName,
+        requester_email: session!.user.email ?? '',
       });
       onPosted(row.id);
     } catch {
@@ -116,7 +122,7 @@ export function RequestDraftCard({ draft, postedId, onPosted, onDiscard }: Props
             <Pressable
               style={({ pressed }) => [styles.confirm, pressed && styles.pressed]}
               onPress={confirm}
-              disabled={saving}
+              disabled={saving || !ready}
               accessibilityRole="button"
               accessibilityLabel={t('draft.confirm')}
             >
