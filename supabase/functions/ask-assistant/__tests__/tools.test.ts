@@ -295,12 +295,25 @@ describe('resolveDonorArgs', () => {
     });
   });
 
-  it('lets the model override the profile when the user asks about elsewhere', () => {
-    expect(resolveDonorArgs({ bloodGroup: 'O-', city: 'Giza' }, profile)).toEqual({
+  // Regression: this used to expect Cairo, because the profile governorate was
+  // picked ahead of the one derived from the city the user actually named. The
+  // query then ran as "Giza, Cairo" and matched nobody, so asking about another
+  // city reported no donors rather than the donors who are there.
+  it('takes the governorate from the city the user named, not the profile', () => {
+    expect(resolveDonorArgs({ bloodGroup: 'O-', city: 'Giza City' }, profile)).toEqual({
+      ok: true,
+      bloodGroup: 'O-',
+      governorate: 'Giza',
+      city: 'Giza City',
+    });
+  });
+
+  it('still uses the profile governorate when the model names no city', () => {
+    expect(resolveDonorArgs({ bloodGroup: 'O-' }, profile)).toEqual({
       ok: true,
       bloodGroup: 'O-',
       governorate: 'Cairo',
-      city: 'Giza',
+      city: 'Nasr City',
     });
   });
 

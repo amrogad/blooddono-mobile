@@ -297,11 +297,19 @@ export function resolveDonorArgs(
   };
 
   const bloodGroup = pick(args.bloodGroup, profile?.blood_group);
-  const city = pick(args.city, profile?.city);
-  // Falls back to deriving it from the city so a caller who named only their
-  // city does not get asked for something we can already work out.
+  const namedCity = pick(args.city, null);
+  const city = namedCity || pick(null, profile?.city);
+  // An explicit city decides the governorate, ahead of the one on the profile.
+  // The other order looked reasonable and was wrong: asking about Tanta from a
+  // profile that says Cairo searched "Tanta, Cairo", which matches nobody, and
+  // the assistant reported no donors instead of saying it could not tell.
+  // Falls back to deriving from the profile city so a caller who named neither
+  // is not asked for something already known.
   const governorate =
-    pick(args.governorate, profile?.governorate) || (city ? governorateForCity(city) : '');
+    pick(args.governorate, null) ||
+    (namedCity ? governorateForCity(namedCity) : '') ||
+    pick(null, profile?.governorate) ||
+    (city ? governorateForCity(city) : '');
 
   const missing: string[] = [];
   if (!bloodGroup) missing.push('bloodGroup');
