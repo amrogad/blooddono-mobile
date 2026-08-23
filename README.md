@@ -2,7 +2,7 @@
 
 A React Native app that connects blood donors with nearby patients who need them. Donors browse requests sorted by how close the hospital is, see each one on a live map with the distance from wherever they're standing, and get a push notification when a compatible request appears in their governorate. English and Arabic, with the layout mirroring to full RTL.
 
-[Download APK](https://github.com/amrogad/blooddono-mobile/releases/download/v1.0.0/app-release.apk) · [Web version](https://github.com/amrogad/blooddono) · [Live demo](https://blooddono-two.vercel.app/)
+[Download APK](https://github.com/amrogad/blooddono-mobile/releases/download/v1.1.0/app-release.apk) · [Web version](https://github.com/amrogad/blooddono) · [Live demo](https://blooddono-two.vercel.app/)
 
 ## Why I built this
 
