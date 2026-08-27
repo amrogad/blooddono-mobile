@@ -8,7 +8,9 @@ A React Native app that connects blood donors with nearby patients who need them
 
 ## The assistant posts requests, it isn't just a chat box
 
-Tell it in plain language that someone needs blood and it builds a complete donation request from the conversation, then hands you a card to check. It never writes to the database on its own: the request is inserted only when you press Confirm, under your own permissions. The web app has [a picture of the flow](https://github.com/amrogad/blooddono#the-assistant-posts-requests-it-isnt-just-a-chat-box); the mobile card works the same way.
+Tell it in plain language that someone needs blood and it builds a complete donation request from the conversation, asking for anything it still needs, then hands you a card to check. It never writes to the database on its own: the request is inserted only when you press Confirm, under your own permissions.
+
+<img src="screenshots/assistant-draft.png" alt="The assistant asking for a missing address, then showing the finished blood request as a card with a Confirm and post button" width="300" />
 
 It answers eligibility questions too, and for availability like "who can donate to A+?" it runs a real query against the donor table instead of guessing a number. Two database-backed tools drive it, both server-side in a Supabase Edge Function so the Groq key never ships in the app:
 
@@ -41,6 +43,12 @@ A one-tap demo login on the login screen, no signup:
 | Role | Email | Password |
 |---|---|---|
 | User | `donor@blooddono.demo` | `Demo123!` |
+
+## Known limitations
+
+- New requests show up on pull-to-refresh, not live. The feed is served through a name-masking function rather than a direct table read, and Supabase Realtime follows the same row-level security, so live updates would need a broadcast layer rather than a plain subscription.
+- Distribution is a sideloaded APK. There is no Play Store listing yet.
+- iOS is untested. It is an Expo app and should run, but it has only been exercised on Android.
 
 ## Stack
 
