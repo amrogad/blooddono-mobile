@@ -13,9 +13,8 @@ import brandMark from '@/assets/images/brand-mark.png';
 
 const ROLE_ICON: Record<DemoAccount['role'], keyof typeof Feather.glyphMap> = {
   user: 'droplet',
-  admin: 'shield',
 };
-const DEMO_ORDER: DemoAccount['role'][] = ['user', 'admin'];
+const DEMO_ORDER: DemoAccount['role'][] = ['user'];
 
 export default function Login() {
   const { signIn } = useAuth();

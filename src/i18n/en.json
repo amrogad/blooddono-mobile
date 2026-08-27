@@ -137,7 +137,7 @@
     "title": "Eligibility assistant",
     "subtitle": "Answers in seconds",
     "disclaimer": "Informational only — not medical advice",
-    "inputPlaceholder": "Ask a question...",
+    "inputPlaceholder": "Ask a question or create a request.",
     "sendA11y": "Send message",
     "error": "Something went wrong. Try again.",
     "chips": [
