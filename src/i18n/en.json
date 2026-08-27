@@ -86,10 +86,9 @@
     "demoDivider": "EXPLORING? TRY A DEMO ROLE",
     "demoA11y": "{{label}} demo account",
     "staySignedIn": "You stay signed in on this device",
-    "role": { "admin": "Admin", "donor": "Donor", "volunteer": "Volunteer" },
+    "role": { "admin": "Admin", "user": "User" },
     "roleDesc": {
-      "donor": "Browse nearby requests and accept one",
-      "volunteer": "Post and coordinate requests for patients",
+      "user": "Browse nearby requests, accept and post your own",
       "admin": "Verify requests, manage users and funds"
     }
   },

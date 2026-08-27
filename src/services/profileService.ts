@@ -3,7 +3,7 @@ import { supabase } from '@/services/supabase';
 export type Profile = {
   display_name: string | null;
   photo_url: string | null;
-  role: 'donor' | 'admin' | 'volunteer';
+  role: 'user' | 'admin';
   status: 'active' | 'blocked';
   blood_group: string | null;
   governorate: string | null;

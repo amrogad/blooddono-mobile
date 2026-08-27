@@ -67,7 +67,7 @@ export default function Profile() {
                 <Text style={styles.groupBadgeText}>{profile.blood_group}</Text>
               </View>
             ) : null}
-            {profile?.role ? <Text style={styles.role}>{profile.role}</Text> : null}
+            {profile?.role ? <Text style={styles.role}>{t(`auth.role.${profile.role}`)}</Text> : null}
           </View>
         </View>
         <Pressable

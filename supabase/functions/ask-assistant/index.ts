@@ -166,11 +166,9 @@ Deno.serve(async (req) => {
         .single()
     : { data: null };
 
-  // Mirrors the canCreate check both apps already apply to the New Request
-  // button. Read from the session rather than the request body, and only ever
-  // narrower than the insert policy: a volunteer is not offered the tool, and
-  // would be refused by RLS even if they were.
-  const canCreateRequests = profile?.role === 'donor' || profile?.role === 'admin';
+  // Any signed-in user can post a request, which mirrors the insert policy
+  // (requester_id = auth.uid()). Read from the session, never the request body.
+  const canCreateRequests = !!user;
   const today = todayInEgypt();
 
   const whoTheyAre = user

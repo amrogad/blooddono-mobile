@@ -12,11 +12,10 @@ import { isEmail, friendlyAuthError } from '@/utils/errors';
 import brandMark from '@/assets/images/brand-mark.png';
 
 const ROLE_ICON: Record<DemoAccount['role'], keyof typeof Feather.glyphMap> = {
-  donor: 'droplet',
-  volunteer: 'users',
+  user: 'droplet',
   admin: 'shield',
 };
-const DEMO_ORDER: DemoAccount['role'][] = ['donor', 'volunteer', 'admin'];
+const DEMO_ORDER: DemoAccount['role'][] = ['user', 'admin'];
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -105,7 +104,7 @@ export default function Login() {
       <View style={styles.roleList}>
         {demoAccounts.map((acc) => {
           const icon = ROLE_ICON[acc.role];
-          const isDonor = acc.role === 'donor';
+          const isDonor = acc.role === 'user';
           return (
             <Pressable
               key={acc.role}

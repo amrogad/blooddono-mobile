@@ -32,12 +32,12 @@ const renderLogin = () =>
 describe('Login screen', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test('tapping the donor demo button calls signIn with the donor credentials', async () => {
+  test('tapping the user demo button calls signIn with the demo credentials', async () => {
     (authService.signIn as jest.Mock).mockResolvedValue({ user: { id: 'u1' } });
 
     renderLogin();
 
-    fireEvent.press(await screen.findByLabelText(/Donor demo account/i));
+    fireEvent.press(await screen.findByLabelText(/User demo account/i));
 
     await waitFor(() => {
       expect(authService.signIn).toHaveBeenCalledWith('donor@blooddono.demo', 'Demo123!');
